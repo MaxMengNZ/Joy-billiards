@@ -48,3 +48,13 @@
 
 ## 状态
 ✅ 已修复并部署
+
+## 最终修复记录 (2025-01-14 11:00)
+- 重新创建触发器确保使用最新函数定义
+- 验证触发器函数移除所有已删除字段引用
+- 测试确认用户注册功能正常工作
+
+## 文件清单
+- `supabase-fix-user-registration-trigger.sql` - 初始修复
+- `supabase-final-trigger-fix.sql` - 最终修复版本
+- `DEPLOYMENT_FIX_NOTES.md` - 本说明文档
