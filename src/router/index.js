@@ -22,6 +22,12 @@ const routes = [
     meta: { title: 'Sign Up', requiresGuest: true }
   },
   {
+    path: '/auth/callback',
+    name: 'EmailConfirm',
+    component: () => import('../views/EmailConfirmPage.vue'),
+    meta: { title: 'Email Confirmation' }
+  },
+  {
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('../views/AdminDashboard.vue'),
