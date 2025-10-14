@@ -25,7 +25,7 @@ SUPABASE_URL = "https://qnwtqgdbgyqwpsdqvxfl.supabase.co"
 
 # ⚠️ 请在这里填入你的 Service Role Key
 # 获取位置：Supabase Dashboard → Settings → API → service_role (secret)
-SERVICE_ROLE_KEY = ""  # 👈 请填写你的 Service Role Key
+SERVICE_ROLE_KEY = ""  # 👈 请填写你的 Service Role Key (已清理，安全考虑)
 
 # 需要删除的邮箱列表（这些是孤儿用户）
 EMAILS_TO_DELETE = [
