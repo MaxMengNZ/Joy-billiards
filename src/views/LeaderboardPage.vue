@@ -1138,10 +1138,16 @@ export default {
     max-width: 250px;
   }
 
-  .podium-item.first,
-  .podium-item.second,
+  .podium-item.first {
+    order: 1;
+  }
+  
+  .podium-item.second {
+    order: 2;
+  }
+  
   .podium-item.third {
-    order: 0;
+    order: 3;
   }
 
   .ranking-levels {
