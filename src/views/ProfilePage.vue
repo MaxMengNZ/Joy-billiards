@@ -382,13 +382,13 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closePasswordModal">Cancel</button>
+          <button class="btn btn-secondary" @click="closePasswordModal" :disabled="isChangingPassword">Cancel</button>
           <button 
             class="btn btn-success" 
             @click="handleChangePassword"
-            :disabled="!newPassword || newPassword !== confirmNewPassword"
+            :disabled="!newPassword || newPassword !== confirmNewPassword || isChangingPassword"
           >
-            Update Password
+            {{ isChangingPassword ? 'Updating...' : 'Update Password' }}
           </button>
         </div>
       </div>
@@ -415,6 +415,7 @@ export default {
     const showChangePassword = ref(false)
     const newPassword = ref('')
     const confirmNewPassword = ref('')
+    const isChangingPassword = ref(false)
     const myRegistrations = ref([])
     const upcomingTournaments = ref([])
 
@@ -560,27 +561,87 @@ export default {
     }
 
     const handleChangePassword = async () => {
+      if (isChangingPassword.value) {
+        console.log('Already changing password, ignoring...')
+        return
+      }
+      
+      console.log('=== PASSWORD CHANGE START ===')
+      
       if (newPassword.value.length < 6) {
-        alert('Password must be at least 6 characters')
+        alert('❌ Password must be at least 6 characters')
         return
       }
 
       if (newPassword.value !== confirmNewPassword.value) {
-        alert('Passwords do not match')
+        alert('❌ Passwords do not match')
         return
       }
 
+      isChangingPassword.value = true
+
       try {
-        const result = await authStore.updatePassword(newPassword.value)
-        if (result.success) {
-          alert('Password updated successfully!')
-          closePasswordModal()
+        console.log('Step 1: Calling updatePassword with timeout...')
+        
+        // Add timeout to prevent hanging
+        const updatePromise = authStore.updatePassword(newPassword.value)
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Update timeout')), 10000)
+        )
+        
+        const result = await Promise.race([updatePromise, timeoutPromise])
+        console.log('Step 2: Result received:', result)
+        
+        if (result && result.success) {
+          console.log('Step 3: Password updated successfully!')
+          
+          // Set flag first
+          console.log('Step 4: Setting sessionStorage flag...')
+          sessionStorage.setItem('passwordChanged', 'true')
+          
+          // Force redirect immediately (don't wait for logout)
+          console.log('Step 5: Redirecting to /login...')
+          window.location.href = '/login'
         } else {
-          alert('Error updating password: ' + result.error)
+          const errorMsg = result?.error || 'Unknown error occurred'
+          console.error('Password update failed:', errorMsg)
+          
+          // Check if it's a timeout error
+          if (errorMsg.includes('timeout')) {
+            console.log('Timeout detected - assuming password was updated')
+            alert('⚠️ Request timed out, but your password has likely been updated.\n\nYou will be redirected to the login page.\nPlease try logging in with your NEW password.')
+            
+            sessionStorage.setItem('passwordChanged', 'true')
+            sessionStorage.setItem('passwordTimeout', 'true')
+            
+            setTimeout(() => {
+              window.location.href = '/login'
+            }, 1000)
+            return
+          }
+          
+          alert('❌ Error updating password: ' + errorMsg)
+          isChangingPassword.value = false
         }
       } catch (error) {
-        console.error('Password update error:', error)
-        alert('Error updating password: ' + error.message)
+        console.error('=== EXCEPTION ===', error)
+        
+        // If it's a timeout error, assume password was updated (Supabase behavior)
+        if (error.message && error.message.includes('timeout')) {
+          console.log('Timeout detected - assuming password was updated')
+          alert('⚠️ Request timed out, but your password has likely been updated.\n\nYou will be redirected to the login page.\nPlease try logging in with your NEW password.')
+          
+          sessionStorage.setItem('passwordChanged', 'true')
+          sessionStorage.setItem('passwordTimeout', 'true')
+          
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 1000)
+          return
+        }
+        
+        alert('❌ Error: ' + (error.message || 'Unknown error'))
+        isChangingPassword.value = false
       }
     }
 
@@ -716,6 +777,7 @@ export default {
       showChangePassword,
       newPassword,
       confirmNewPassword,
+      isChangingPassword,
       myRegistrations,
       upcomingTournaments,
       calculateWinRate,

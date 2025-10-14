@@ -69,6 +69,17 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
+        // First check if user already exists in our users table
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('email')
+          .eq('email', email)
+          .single()
+
+        if (existingUser) {
+          throw new Error('This email is already registered. Please use a different email or try logging in.')
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -82,10 +93,15 @@ export const useAuthStore = defineStore('auth', {
 
         if (error) {
           // Handle specific error cases
-          if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          if (error.message.includes('already registered') || error.message.includes('already exists') || error.message.includes('User already registered')) {
             throw new Error('This email is already registered. Please use a different email or try logging in.')
           }
           throw error
+        }
+
+        // Check if user was actually created (not just returning existing user)
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('This email is already registered. Please check your inbox for the confirmation email or try logging in.')
         }
 
         // Profile will be created automatically by trigger
@@ -104,10 +120,20 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        console.log('authStore: Starting sign in...')
+        
+        // Add timeout wrapper
+        const signInPromise = supabase.auth.signInWithPassword({
           email,
           password
         })
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Sign in timeout after 10 seconds')), 10000)
+        )
+        
+        const { data, error } = await Promise.race([signInPromise, timeoutPromise])
+        console.log('authStore: Sign in response:', { error: !!error })
 
         if (error) throw error
 
@@ -115,10 +141,11 @@ export const useAuthStore = defineStore('auth', {
         this.user = data.user
         await this.fetchProfile()
 
+        console.log('authStore: Sign in successful')
         return { success: true, data }
       } catch (err) {
         this.error = err.message
-        console.error('Sign in error:', err)
+        console.error('authStore: Sign in error:', err)
         return { success: false, error: err.message }
       } finally {
         this.loading = false
@@ -130,17 +157,34 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const { error } = await supabase.auth.signOut()
+        console.log('authStore: Starting sign out...')
+        
+        // Add timeout wrapper
+        const signOutPromise = supabase.auth.signOut()
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Sign out timeout after 5 seconds')), 5000)
+        )
+        
+        const { error } = await Promise.race([signOutPromise, timeoutPromise])
+        console.log('authStore: Sign out response:', { error })
+        
         if (error) throw error
 
         this.user = null
         this.profile = null
         this.session = null
 
+        console.log('authStore: Sign out successful')
         return { success: true }
       } catch (err) {
         this.error = err.message
-        console.error('Sign out error:', err)
+        console.error('authStore: Sign out error:', err)
+        
+        // Even if error, clear local state
+        this.user = null
+        this.profile = null
+        this.session = null
+        
         return { success: false, error: err.message }
       } finally {
         this.loading = false
@@ -202,16 +246,27 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const { error } = await supabase.auth.updateUser({
+        console.log('authStore: Starting password update...')
+        
+        // Add timeout wrapper
+        const updatePromise = supabase.auth.updateUser({
           password: newPassword
         })
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Supabase API timeout after 8 seconds')), 8000)
+        )
+        
+        const { error, data } = await Promise.race([updatePromise, timeoutPromise])
+        console.log('authStore: Update response:', { error, data })
 
         if (error) throw error
 
+        console.log('authStore: Password updated successfully')
         return { success: true }
       } catch (err) {
         this.error = err.message
-        console.error('Update password error:', err)
+        console.error('authStore: Update password error:', err)
         return { success: false, error: err.message }
       } finally {
         this.loading = false

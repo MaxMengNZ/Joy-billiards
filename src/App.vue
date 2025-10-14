@@ -161,13 +161,25 @@ export default {
     }
 
     const handleLogout = async () => {
-      const confirm = window.confirm('Are you sure you want to logout?')
-      if (confirm) {
-        const result = await authStore.signOut()
-        if (result.success) {
-          closeMobileMenu()
-          router.push('/login')
+      console.log('Logout button clicked')
+      const userConfirmed = confirm('Are you sure you want to logout?')
+      if (userConfirmed) {
+        console.log('User confirmed logout')
+        closeMobileMenu()
+        
+        try {
+          console.log('Calling signOut...')
+          const result = await authStore.signOut()
+          console.log('SignOut result:', result)
+        } catch (error) {
+          console.error('Logout exception:', error)
         }
+        
+        // Always force redirect regardless of success/failure
+        console.log('Forcing redirect to home...')
+        window.location.href = '/'
+      } else {
+        console.log('User cancelled logout')
       }
     }
 

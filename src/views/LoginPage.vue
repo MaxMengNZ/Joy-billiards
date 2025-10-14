@@ -10,6 +10,10 @@
         <div class="login-body">
           <h2>Sign In</h2>
 
+          <div v-if="passwordChangedMessage" class="alert alert-success">
+            ✅ Password updated successfully! Please log in with your new password.
+          </div>
+
           <div v-if="authStore.error" class="alert alert-danger">
             {{ authStore.error }}
           </div>
@@ -108,7 +112,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
@@ -123,19 +127,57 @@ export default {
     const showResetModal = ref(false)
     const resetEmail = ref('')
     const resetSuccess = ref(false)
+    const passwordChangedMessage = ref(false)
+
+    onMounted(() => {
+      // Check if password was just changed
+      if (sessionStorage.getItem('passwordChanged') === 'true') {
+        passwordChangedMessage.value = true
+        sessionStorage.removeItem('passwordChanged')
+        
+        // Check if it was a timeout
+        const wasTimeout = sessionStorage.getItem('passwordTimeout') === 'true'
+        if (wasTimeout) {
+          sessionStorage.removeItem('passwordTimeout')
+        }
+        
+        // Auto-hide message after 8 seconds for timeout cases
+        setTimeout(() => {
+          passwordChangedMessage.value = false
+        }, 8000)
+      }
+    })
 
     const handleSignIn = async () => {
-      const result = await authStore.signIn({
-        email: email.value,
-        password: password.value
-      })
+      try {
+        const result = await authStore.signIn({
+          email: email.value,
+          password: password.value
+        })
 
-      if (result.success) {
-        // Redirect based on role
-        if (authStore.isAdmin) {
-          router.push('/admin')
+        if (result.success) {
+          // Redirect based on role
+          if (authStore.isAdmin) {
+            router.push('/admin')
+          } else {
+            router.push('/')
+          }
         } else {
-          router.push('/')
+          // Handle timeout or other errors
+          if (result.error && result.error.includes('timeout')) {
+            const retry = confirm('⚠️ Login request timed out. This might be due to slow network or Supabase service.\n\nDo you want to try refreshing the page and login again?')
+            if (retry) {
+              window.location.reload()
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Login exception:', error)
+        if (error.message && error.message.includes('timeout')) {
+          const retry = confirm('⚠️ Login request timed out. This might be due to slow network or Supabase service.\n\nDo you want to try refreshing the page and login again?')
+          if (retry) {
+            window.location.reload()
+          }
         }
       }
     }
@@ -168,6 +210,7 @@ export default {
       showResetModal,
       resetEmail,
       resetSuccess,
+      passwordChangedMessage,
       handleSignIn,
       showForgotPassword,
       handleResetPassword

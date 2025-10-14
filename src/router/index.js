@@ -107,10 +107,17 @@ router.beforeEach(async (to, from, next) => {
     const { useAuthStore } = await import('../stores/authStore')
     const authStore = useAuthStore()
     
-    // If not logged in, redirect to home
+    // Wait for auth initialization if not already done
+    if (!authStore.user && !authStore.session) {
+      console.log('Waiting for auth initialization...')
+      await authStore.initialize()
+    }
+    
+    // If not logged in after initialization, redirect to login
     if (!authStore.user) {
+      console.log('User not authenticated, redirecting to login')
       alert('Please login to access this page')
-      next('/')
+      next('/login')
       return
     }
     
