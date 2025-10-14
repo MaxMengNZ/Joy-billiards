@@ -94,7 +94,26 @@ export const useAuthStore = defineStore('auth', {
         if (error) {
           // Handle specific error cases
           if (error.message.includes('already registered') || error.message.includes('already exists') || error.message.includes('User already registered')) {
-            throw new Error('This email is already registered. Please use a different email or try logging in.')
+            // Check if this is an orphaned Auth user (exists in Auth but not in users table)
+            console.log('Auth user exists, checking if orphaned...')
+            
+            // Try to clean up orphaned Auth user by attempting to sign in and then delete
+            try {
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password: 'dummy_password_to_check' // This will fail but help us identify the user
+              })
+              
+              // If we reach here, the user exists in Auth but with different password
+              // This means it's an orphaned Auth user
+              throw new Error('This email exists in our system but appears to be orphaned. Please contact support to resolve this issue, or try using a different email address.')
+            } catch (signInErr) {
+              // User exists in Auth but password is wrong, or user doesn't exist
+              if (signInErr.message.includes('Invalid login credentials')) {
+                throw new Error('This email is already registered in our system. If you believe this is an error, please contact support or try using a different email address.')
+              }
+              throw new Error('This email is already registered. Please use a different email or try logging in.')
+            }
           }
           throw error
         }
