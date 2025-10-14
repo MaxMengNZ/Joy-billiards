@@ -18,6 +18,10 @@
             Registration successful! Please check your email to verify your account.
           </div>
 
+          <div v-if="registrationError" class="alert alert-danger">
+            {{ registrationError }}
+          </div>
+
           <form @submit.prevent="handleSignUp" v-if="!registrationSuccess">
             <div class="form-group">
               <label class="form-label">Full Name *</label>
@@ -121,15 +125,19 @@ export default {
     const confirmPassword = ref('')
     const role = ref('player')
     const registrationSuccess = ref(false)
+    const registrationError = ref('')
 
     const handleSignUp = async () => {
+      // Clear previous errors
+      registrationError.value = ''
+      
       if (password.value !== confirmPassword.value) {
-        alert('Passwords do not match')
+        registrationError.value = 'Passwords do not match'
         return
       }
 
       if (password.value.length < 6) {
-        alert('Password must be at least 6 characters')
+        registrationError.value = 'Password must be at least 6 characters'
         return
       }
 
@@ -142,9 +150,12 @@ export default {
 
       if (result.success) {
         registrationSuccess.value = true
+        registrationError.value = ''
         setTimeout(() => {
           router.push('/login')
         }, 3000)
+      } else {
+        registrationError.value = result.error || 'Registration failed. Please try again.'
       }
     }
 
@@ -156,6 +167,7 @@ export default {
       confirmPassword,
       role,
       registrationSuccess,
+      registrationError,
       handleSignUp
     }
   }

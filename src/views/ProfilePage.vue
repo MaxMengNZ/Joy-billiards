@@ -565,12 +565,22 @@ export default {
         return
       }
 
-      const result = await authStore.updatePassword(newPassword.value)
-      if (result.success) {
-        alert('Password updated successfully!')
-        closePasswordModal()
-      } else {
-        alert('Error updating password: ' + result.error)
+      if (newPassword.value !== confirmNewPassword.value) {
+        alert('Passwords do not match')
+        return
+      }
+
+      try {
+        const result = await authStore.updatePassword(newPassword.value)
+        if (result.success) {
+          alert('Password updated successfully!')
+          closePasswordModal()
+        } else {
+          alert('Error updating password: ' + result.error)
+        }
+      } catch (error) {
+        console.error('Password update error:', error)
+        alert('Error updating password: ' + error.message)
       }
     }
 

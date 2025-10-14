@@ -7,7 +7,16 @@
             <h1 class="logo-title">🎱 Joy Billiards NZ</h1>
             <p class="logo-subtitle">Tournament Management System</p>
           </div>
-          <nav class="main-nav">
+          
+          <!-- Mobile menu button -->
+          <button class="mobile-menu-btn" @click="toggleMobileMenu" :class="{ active: isMobileMenuOpen }">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+          
+          <!-- Desktop Navigation -->
+          <nav class="main-nav desktop-nav">
             <router-link to="/" class="nav-link">Home</router-link>
             <router-link to="/membership" class="nav-link">💳 Membership</router-link>
             <router-link to="/leaderboard" class="nav-link">🏆 Rankings</router-link>
@@ -27,6 +36,31 @@
               <template v-else>
                 <router-link to="/login" class="nav-link">Login</router-link>
                 <router-link to="/register" class="nav-link btn-register">Sign Up</router-link>
+              </template>
+            </div>
+          </nav>
+          
+          <!-- Mobile Navigation -->
+          <nav class="main-nav mobile-nav" :class="{ open: isMobileMenuOpen }">
+            <router-link to="/" class="nav-link" @click="closeMobileMenu">Home</router-link>
+            <router-link to="/membership" class="nav-link" @click="closeMobileMenu">💳 Membership</router-link>
+            <router-link to="/leaderboard" class="nav-link" @click="closeMobileMenu">🏆 Rankings</router-link>
+            <router-link to="/tournaments" class="nav-link" @click="closeMobileMenu">Tournaments</router-link>
+            <router-link v-if="authStore.isAdmin" to="/players" class="nav-link" @click="closeMobileMenu">Players</router-link>
+            <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link" @click="closeMobileMenu">Admin</router-link>
+            
+            <!-- Mobile Auth buttons -->
+            <div class="auth-nav mobile-auth">
+              <template v-if="authStore.isAuthenticated">
+                <router-link to="/profile" class="nav-link user-info" @click="closeMobileMenu">
+                  👤 {{ authStore.userName }}
+                  <span v-if="authStore.isAdmin" class="role-badge">👑</span>
+                </router-link>
+                <button class="nav-link btn-logout" @click="handleLogout">Logout</button>
+              </template>
+              <template v-else>
+                <router-link to="/login" class="nav-link" @click="closeMobileMenu">Login</router-link>
+                <router-link to="/register" class="nav-link btn-register" @click="closeMobileMenu">Sign Up</router-link>
               </template>
             </div>
           </nav>
@@ -92,6 +126,7 @@ export default {
     const authStore = useAuthStore()
     
     const isConnected = ref(false)
+    const isMobileMenuOpen = ref(false)
     const currentYear = computed(() => new Date().getFullYear())
     const isAuthPage = computed(() => {
       return route.path === '/login' || route.path === '/register'
@@ -117,11 +152,20 @@ export default {
       monitor.start()
     })
 
+    const toggleMobileMenu = () => {
+      isMobileMenuOpen.value = !isMobileMenuOpen.value
+    }
+
+    const closeMobileMenu = () => {
+      isMobileMenuOpen.value = false
+    }
+
     const handleLogout = async () => {
       const confirm = window.confirm('Are you sure you want to logout?')
       if (confirm) {
         const result = await authStore.signOut()
         if (result.success) {
+          closeMobileMenu()
           router.push('/login')
         }
       }
@@ -130,8 +174,11 @@ export default {
     return {
       authStore,
       isConnected,
+      isMobileMenuOpen,
       currentYear,
       isAuthPage,
+      toggleMobileMenu,
+      closeMobileMenu,
       handleLogout
     }
   }

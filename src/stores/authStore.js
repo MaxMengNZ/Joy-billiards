@@ -80,7 +80,13 @@ export const useAuthStore = defineStore('auth', {
           }
         })
 
-        if (error) throw error
+        if (error) {
+          // Handle specific error cases
+          if (error.message.includes('already registered') || error.message.includes('already exists')) {
+            throw new Error('This email is already registered. Please use a different email or try logging in.')
+          }
+          throw error
+        }
 
         // Profile will be created automatically by trigger
         return { success: true, data }
