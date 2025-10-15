@@ -315,15 +315,15 @@ export default {
     const availableYears = [currentYear, currentYear - 1]
 
     const rankingLevels = [
-      { level: 'hall_of_fame', name: '殿堂 Hall of Fame', badge: '👑', points: '550+' },
-      { level: 'pro_level', name: '职业段 Pro Level', badge: '💎', points: '450-549' },
-      { level: 'grand_master', name: '特级大师 Grand Master', badge: '🌟', points: '350-449' },
-      { level: 'master', name: '大师 Master', badge: '⭐', points: '250-349' },
-      { level: 'elite', name: '精英 Elite', badge: '🔷', points: '150-249' },
-      { level: 'expert', name: '专家 Expert', badge: '🔶', points: '80-149' },
-      { level: 'advance', name: '高阶 Advance', badge: '🔺', points: '40-79' },
-      { level: 'intermediate', name: '进阶 Intermediate', badge: '🔸', points: '15-39' },
-      { level: 'beginner', name: '初学 Beginner', badge: '⚪', points: '0-14' }
+      { level: 'hall_of_fame', name: 'Hall of Fame', badge: '👑', points: '550+' },
+      { level: 'pro_level', name: 'Pro Level', badge: '💎', points: '450-549' },
+      { level: 'grand_master', name: 'Grand Master', badge: '🌟', points: '350-449' },
+      { level: 'master', name: 'Master', badge: '⭐', points: '250-349' },
+      { level: 'elite', name: 'Elite', badge: '🔷', points: '150-249' },
+      { level: 'expert', name: 'Expert', badge: '🔶', points: '80-149' },
+      { level: 'advance', name: 'Advance', badge: '🔺', points: '40-79' },
+      { level: 'intermediate', name: 'Intermediate', badge: '🔸', points: '15-39' },
+      { level: 'beginner', name: 'Beginner', badge: '⚪', points: '0-14' }
     ]
 
     const rankedPlayers = computed(() => {
