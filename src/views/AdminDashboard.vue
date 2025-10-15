@@ -404,20 +404,12 @@
           <div class="form-group">
             <label class="form-label">Membership Level</label>
             <select class="form-control" v-model="membershipForm.level">
-              <option value="lite">🎱 Lite (Free)</option>
-              <option value="plus">⭐ Plus (≥200 NZD)</option>
-              <option value="pro">💎 Pro (≥500 NZD)</option>
-              <option value="pro_max">🌟 Pro Max (≥1000 NZD)</option>
+              <option value="lite">🎱 Lite (Free - Permanent)</option>
+              <option value="plus">⭐ Plus (≥200 NZD - 12 months)</option>
+              <option value="pro">💎 Pro (≥500 NZD - 12 months)</option>
+              <option value="pro_max">🌟 Pro Max (≥1000 NZD - 12 months)</option>
             </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Expiry Date</label>
-            <input 
-              type="date" 
-              class="form-control" 
-              v-model="membershipForm.expires_at"
-            >
+            <small class="form-text">Expiry date will be automatically set to 12 months from today for Plus/Pro/Pro Max</small>
           </div>
 
           <div class="membership-preview-box">
@@ -820,17 +812,29 @@ export default {
       if (!confirm(confirmMsg)) return
 
       try {
+        // Calculate expiry date based on membership level
+        let expiresAt = null
+        
+        if (membershipForm.value.level !== 'lite') {
+          // Plus, Pro, and Pro Max all have 12 months validity
+          const expiryDate = new Date()
+          expiryDate.setFullYear(expiryDate.getFullYear() + 1) // Add 12 months
+          expiresAt = expiryDate.toISOString()
+        }
+        // Lite membership has no expiry (null)
+
         const { error } = await supabase
           .from('users')
           .update({
             membership_level: membershipForm.value.level,
-            membership_expires_at: membershipForm.value.expires_at || null
+            membership_expires_at: expiresAt
           })
           .eq('id', selectedUser.value.id)
 
         if (error) throw error
 
-        alert(`✅ Membership updated to ${formatMembershipLevel(membershipForm.value.level)}!`)
+        const expiryMsg = expiresAt ? `\nExpires: ${new Date(expiresAt).toLocaleDateString()}` : '\nExpires: Never (Permanent)'
+        alert(`✅ Membership updated to ${formatMembershipLevel(membershipForm.value.level)}!${expiryMsg}`)
         closeMembershipModal()
         await loadData()
       } catch (err) {
