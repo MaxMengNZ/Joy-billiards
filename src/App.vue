@@ -4,7 +4,9 @@
       <header class="app-header" v-if="!isAuthPage">
         <div class="header-content">
           <div class="logo-section">
-            <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards NZ" class="logo-image">
+            <router-link to="/" class="logo-link">
+              <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards NZ" class="logo-image">
+            </router-link>
           </div>
           
           <!-- Mobile menu button -->
@@ -206,6 +208,22 @@ export default {
 </style>
 
 <style scoped>
+/* Logo Link */
+.logo-link {
+  display: inline-block;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.logo-link:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.logo-link:active {
+  transform: translateY(0);
+}
+
 /* Logo Image */
 .logo-image {
   height: 80px;
@@ -217,6 +235,11 @@ export default {
   padding: 8px 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.2s ease;
+}
+
+.logo-link:hover .logo-image {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 768px) {
