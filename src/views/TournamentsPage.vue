@@ -829,14 +829,121 @@ export default {
 
   .tournaments-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .tournament-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .tournament-header h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .tournament-details {
+    font-size: 14px;
   }
 
   .tournament-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
   .tournament-actions .btn {
     width: 100%;
+    min-height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* Optimize tabs for mobile */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .tab-button {
+    flex-shrink: 0;
+    min-width: auto;
+    padding: 10px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* 模态框固定居中 */
+  .modal {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-content {
+    width: 92vw;
+    max-width: 92vw;
+    margin: 0 auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-header {
+    padding: 1.25rem;
+    flex-direction: row !important;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-body .form-control,
+  .modal-body select,
+  .modal-body input,
+  .modal-body textarea {
+    min-height: 52px;
+    font-size: 17px;
+  }
+
+  .modal-body textarea {
+    min-height: 100px;
+  }
+
+  .modal-body .form-label {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .modal-footer {
+    padding: 1.25rem;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 17px;
+    font-weight: 700;
   }
 }
 </style>

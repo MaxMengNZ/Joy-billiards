@@ -4,8 +4,7 @@
       <header class="app-header" v-if="!isAuthPage">
         <div class="header-content">
           <div class="logo-section">
-            <h1 class="logo-title">🎱 Joy Billiards NZ</h1>
-            <p class="logo-subtitle">Tournament Management System</p>
+            <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards NZ" class="logo-image">
           </div>
           
           <!-- Mobile menu button -->
@@ -102,6 +101,9 @@
           </div>
         </div>
       </footer>
+
+      <!-- Mobile Bottom Navigation -->
+      <MobileBottomNav v-if="!isAuthPage" />
     </div>
   </ErrorBoundary>
 </template>
@@ -112,13 +114,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { testConnection } from './config/supabase'
 import { useAuthStore } from './stores/authStore'
 import ErrorBoundary from './components/ErrorBoundary.vue'
+import MobileBottomNav from './components/MobileBottomNav.vue'
 import { setupGlobalErrorHandler } from './utils/errorHandler'
 import { ConnectionMonitor } from './utils/supabaseWithRetry'
 
 export default {
   name: 'App',
   components: {
-    ErrorBoundary
+    ErrorBoundary,
+    MobileBottomNav
   },
   setup() {
     const route = useRoute()
@@ -202,6 +206,26 @@ export default {
 </style>
 
 <style scoped>
+/* Logo Image */
+.logo-image {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  /* 白色背景，圆角，让黑色 Logo 清晰可见 */
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .logo-image {
+    height: 60px;
+    padding: 6px 12px;
+  }
+}
+
 /* Announcement Bar */
 .announcement-bar {
   background: linear-gradient(90deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);

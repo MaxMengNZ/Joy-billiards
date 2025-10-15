@@ -45,7 +45,178 @@
 }
 
 /* ============================================
-   Base Styles
+   VISUAL ENHANCEMENTS - 100% Design
+   ============================================ */
+
+/* Enhanced button hover effects */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Button ripple effect */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Enhanced card hover */
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced loading spinner */
+@keyframes spin-rainbow {
+  0% { transform: rotate(0deg); border-top-color: #667eea; }
+  25% { transform: rotate(90deg); border-top-color: #764ba2; }
+  50% { transform: rotate(180deg); border-top-color: #f093fb; }
+  75% { transform: rotate(270deg); border-top-color: #4facfe; }
+  100% { transform: rotate(360deg); border-top-color: #667eea; }
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(102, 126, 234, 0.1);
+  border-top: 5px solid #667eea;
+  border-radius: 50%;
+  animation: spin-rainbow 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+}
+
+/* Pulse animation for important elements */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.7);
+  }
+}
+
+/* Enhanced focus states */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2),
+              0 0 30px rgba(102, 126, 234, 0.3);
+  transform: scale(1.01);
+}
+
+/* Gradient backgrounds for sections */
+.gradient-bg-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg-blue {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-bg-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.gradient-bg-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Enhanced rank badge glow effects */
+.rank-badge-small,
+.rank-badge-large {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.rank-badge-small:hover,
+.rank-badge-large:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
+
+/* Top rank badges special glow */
+.rank-hall_of_fame {
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+  animation: glow-gold 2s ease-in-out infinite;
+}
+
+.rank-pro_level {
+  box-shadow: 0 0 25px rgba(138, 92, 246, 0.6);
+  animation: glow-purple 2s ease-in-out infinite;
+}
+
+.rank-grand_master {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+  animation: glow-orange 2s ease-in-out infinite;
+}
+
+@keyframes glow-gold {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 35px rgba(255, 215, 0, 0.8); }
+}
+
+@keyframes glow-purple {
+  0%, 100% { box-shadow: 0 0 20px rgba(138, 92, 246, 0.5); }
+  50% { box-shadow: 0 0 35px rgba(138, 92, 246, 0.8); }
+}
+
+@keyframes glow-orange {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+  50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.8); }
+}
+
+/* Number count-up animation */
+@keyframes number-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stat-number,
+.current-value {
+  animation: number-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   BASE STYLES
    ============================================ */
 * {
   margin: 0;
@@ -194,11 +365,15 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
   .mobile-menu-btn {
-    display: flex;
+    display: none; /* Hide hamburger menu, use bottom nav instead */
   }
   
   .desktop-nav {
     display: none;
+  }
+  
+  .mobile-nav {
+    display: none; /* Hide mobile dropdown menu */
   }
   
   .logo-subtitle {
@@ -210,8 +385,20 @@ body {
   }
   
   .header-content {
-    justify-content: space-between;
+    justify-content: center; /* Center logo when no menu */
     align-items: center;
+  }
+
+  .logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .logo-subtitle {
+    font-size: 0.75rem;
   }
 }
 
@@ -785,6 +972,7 @@ textarea.form-control {
 
   .app-main {
     padding: var(--spacing-lg) var(--spacing-sm);
+    padding-bottom: calc(80px + var(--spacing-lg)); /* Add space for bottom nav */
   }
 
   .footer-content {
@@ -855,6 +1043,109 @@ textarea.form-control {
 
   .form-control {
     font-size: var(--font-size-sm);
+  }
+  
+  /* Mobile Optimization - Touch Targets */
+  .btn,
+  button,
+  .nav-link,
+  .tab-button,
+  a.btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  /* Mobile Optimization - Button Spacing */
+  .btn + .btn,
+  button + button {
+    margin-left: 8px;
+  }
+  
+  /* Mobile Optimization - Font Sizes */
+  body {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  h3 {
+    font-size: 18px;
+  }
+  
+  p, li, td, th {
+    font-size: 14px;
+  }
+  
+  small, .small {
+    font-size: 12px;
+  }
+  
+  /* Mobile Optimization - Card Spacing */
+  .card {
+    margin-bottom: 16px;
+  }
+  
+  .card-body {
+    padding: 16px;
+  }
+  
+  /* Mobile Optimization - Form Elements */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-control {
+    min-height: 44px;
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  
+  /* 全局模态框移动端固定居中 */
+  .modal {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-content {
+    width: 92vw;
+    max-width: 92vw;
+    margin: 0 auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile Optimization - Table to Card */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hide footer on mobile to save space */
+  .app-footer {
+    display: none;
   }
 }
 

@@ -40,9 +40,24 @@
     <!-- Membership Tiers -->
     <section class="tiers-section">
       <h2 class="section-title">Choose Your Membership Level</h2>
+      
+      <!-- Mobile: Tabs for tier selection -->
+      <div class="mobile-tier-tabs">
+        <button 
+          v-for="tier in tierTabs" 
+          :key="tier.id"
+          class="tier-tab-btn"
+          :class="{ active: activeTier === tier.id }"
+          @click="activeTier = tier.id"
+        >
+          <span class="tier-tab-icon">{{ tier.icon }}</span>
+          <span class="tier-tab-label">{{ tier.label }}</span>
+        </button>
+      </div>
+
       <div class="tiers-grid">
         <!-- Lite -->
-        <div class="tier-card tier-lite">
+        <div class="tier-card tier-lite" :class="{ 'mobile-hidden': activeTier !== 'lite' }">
           <div class="tier-header">
             <div class="tier-icon">🎱</div>
             <h3 class="tier-name">Lite</h3>
@@ -65,7 +80,7 @@
         </div>
 
         <!-- Plus -->
-        <div class="tier-card tier-plus">
+        <div class="tier-card tier-plus" :class="{ 'mobile-hidden': activeTier !== 'plus' }">
           <div class="tier-header">
             <div class="tier-icon">⭐</div>
             <h3 class="tier-name">Plus</h3>
@@ -88,7 +103,7 @@
         </div>
 
         <!-- Pro -->
-        <div class="tier-card tier-pro recommended">
+        <div class="tier-card tier-pro recommended" :class="{ 'mobile-hidden': activeTier !== 'pro' }">
           <div class="recommended-badge">⭐ POPULAR</div>
           <div class="tier-header">
             <div class="tier-icon">💎</div>
@@ -112,7 +127,7 @@
         </div>
 
         <!-- Pro Max -->
-        <div class="tier-card tier-pro-max vip">
+        <div class="tier-card tier-pro-max vip" :class="{ 'mobile-hidden': activeTier !== 'pro_max' }">
           <div class="vip-badge">👑 LIMITED SEATS</div>
           <div class="tier-header">
             <div class="tier-icon">🌟</div>
@@ -483,9 +498,20 @@
 </template>
 
 <script>
+import { ref } from 'vue'
+
 export default {
   name: 'MembershipPage',
   setup() {
+    const activeTier = ref('plus') // Default to Plus (most popular)
+
+    const tierTabs = [
+      { id: 'lite', icon: '🎱', label: 'Lite' },
+      { id: 'plus', icon: '⭐', label: 'Plus' },
+      { id: 'pro', icon: '💎', label: 'Pro' },
+      { id: 'pro_max', icon: '🌟', label: 'Pro M' }
+    ]
+
     const scrollToSignup = () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
     }
@@ -495,6 +521,8 @@ export default {
     }
 
     return {
+      activeTier,
+      tierTabs,
       scrollToSignup,
       contactUs
     }
@@ -1399,6 +1427,101 @@ export default {
 
   .cta-buttons .btn {
     width: 100%;
+  }
+  
+  /* Mobile: Tier Tabs */
+  .mobile-tier-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tier-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 16px;
+    min-width: 70px;
+    min-height: 70px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .tier-tab-btn:active {
+    transform: scale(0.95);
+  }
+
+  .tier-tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .tier-tab-icon {
+    font-size: 28px;
+    transition: all 0.3s ease;
+  }
+
+  .tier-tab-btn.active .tier-tab-icon {
+    transform: scale(1.2);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  }
+
+  .tier-tab-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    transition: all 0.3s ease;
+  }
+
+  .tier-tab-btn.active .tier-tab-label {
+    color: white;
+    font-weight: 700;
+  }
+
+  /* Mobile: Single Column Layout */
+  .tiers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tier-card {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 0;
+  }
+
+  .tier-card.mobile-hidden {
+    display: none;
+  }
+
+  /* Mobile: Simplify comparison table */
+  .comparison-section {
+    display: none; /* Hide on mobile, too complex */
+  }
+
+  /* Mobile: Optimize pricing examples */
+  .examples-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Desktop: Hide mobile tabs */
+@media (min-width: 769px) {
+  .mobile-tier-tabs {
+    display: none;
   }
 }
 </style>

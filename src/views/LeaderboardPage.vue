@@ -75,7 +75,8 @@
           <div class="player-card" :class="{ 'empty-card': !topThree[1] }">
             <template v-if="topThree[1]">
               <div class="rank-badge-large" :class="`rank-${topThree[1].ranking_level}`">
-                {{ formatRankBadge(topThree[1].ranking_level) }}
+                <span class="badge-emoji">{{ formatRankBadge(topThree[1].ranking_level) }}</span>
+                <span class="badge-name">{{ formatRankName(topThree[1].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[1].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[1]) }} pts</p>
@@ -94,7 +95,8 @@
           <div class="player-card champion" :class="{ 'empty-card': !topThree[0] }">
             <template v-if="topThree[0]">
               <div class="rank-badge-large" :class="`rank-${topThree[0].ranking_level}`">
-                {{ formatRankBadge(topThree[0].ranking_level) }}
+                <span class="badge-emoji">{{ formatRankBadge(topThree[0].ranking_level) }}</span>
+                <span class="badge-name">{{ formatRankName(topThree[0].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[0].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[0]) }} pts</p>
@@ -113,7 +115,8 @@
           <div class="player-card" :class="{ 'empty-card': !topThree[2] }">
             <template v-if="topThree[2]">
               <div class="rank-badge-large" :class="`rank-${topThree[2].ranking_level}`">
-                {{ formatRankBadge(topThree[2].ranking_level) }}
+                <span class="badge-emoji">{{ formatRankBadge(topThree[2].ranking_level) }}</span>
+                <span class="badge-name">{{ formatRankName(topThree[2].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[2].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[2]) }} pts</p>
@@ -1129,25 +1132,91 @@ export default {
   }
 
   .podium {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .podium-item {
-    width: 100%;
-    max-width: 250px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 8px;
   }
 
   .podium-item.first {
+    grid-column: 1 / 3;
     order: 1;
+    width: 100%;
+    max-width: none;
   }
   
   .podium-item.second {
+    grid-column: 1;
     order: 2;
+    width: 100%;
+    max-width: none;
   }
   
   .podium-item.third {
+    grid-column: 2;
     order: 3;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .podium-item.first .player-card {
+    padding: 24px 16px;
+  }
+  
+  .podium-item.second .player-card,
+  .podium-item.third .player-card {
+    padding: 16px 12px;
+  }
+  
+  .podium-item.second .player-card h3,
+  .podium-item.third .player-card h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  
+  .podium-item.second .player-card .points,
+  .podium-item.third .player-card .points {
+    font-size: 0.875rem;
+  }
+  
+  .podium-item.second .rank-badge-large,
+  .podium-item.third .rank-badge-large {
+    padding: 8px 12px;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .podium-item.second .rank-badge-large .badge-emoji,
+  .podium-item.third .rank-badge-large .badge-emoji {
+    font-size: 1.75rem;
+  }
+
+  .podium-item.second .rank-badge-large .badge-name,
+  .podium-item.third .rank-badge-large .badge-name {
+    font-size: 0.6rem;
+    letter-spacing: 0.3px;
+  }
+
+  .podium-item.first .rank-badge-large {
+    padding: 12px 16px;
+    gap: 6px;
+  }
+
+  .podium-item.first .rank-badge-large .badge-emoji {
+    font-size: 2.5rem;
+  }
+
+  .podium-item.first .rank-badge-large .badge-name {
+    font-size: 0.75rem;
+  }
+  
+  .podium-item.second .trophy,
+  .podium-item.third .trophy {
+    font-size: 2rem;
+    margin-bottom: 8px;
   }
 
   .ranking-levels {
@@ -1348,6 +1417,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
   padding: 1rem 1.5rem;
   background: white;
   border-radius: 12px;
@@ -1358,6 +1428,21 @@ export default {
 
 .rank-badge-large:hover {
   transform: scale(1.05);
+}
+
+.rank-badge-large .badge-emoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.rank-badge-large .badge-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  color: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .rank-badge-large.rank-hall_of_fame { border-color: #FFD700; background: linear-gradient(135deg, #FFF9E6, #FFEDD5); }

@@ -3,7 +3,7 @@
     <div class="confirm-container">
       <div class="confirm-card card">
         <div class="confirm-header">
-          <h1>🎱 Joy Billiards</h1>
+          <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="confirm-logo">
           <p>Email Confirmation</p>
         </div>
 
@@ -135,9 +135,17 @@ export default {
   text-align: center;
 }
 
-.confirm-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+.confirm-logo {
+  height: 120px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  /* 白色背景，让黑色 Logo 清晰可见 */
+  background: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .confirm-header p {

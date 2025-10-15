@@ -62,7 +62,7 @@
         </div>
       </div>
 
-      <!-- Players Table -->
+      <!-- Desktop Players Table -->
       <div class="table-container">
         <table class="table">
           <thead>
@@ -140,6 +140,74 @@
         </table>
         <div v-if="filteredPlayers.length === 0" class="text-center p-4">
           <p class="text-secondary">No players found</p>
+        </div>
+      </div>
+
+      <!-- Mobile Players Cards -->
+      <div class="mobile-players-grid">
+        <div v-for="player in filteredPlayers" :key="player.id" class="mobile-player-card">
+          <!-- Card Header: Name + Badges -->
+          <div class="mobile-player-header">
+            <div class="mobile-player-info">
+              <div class="mobile-player-name">{{ player.name }}</div>
+              <div class="mobile-player-card-num">Card #{{ player.membership_card_number || 'N/A' }}</div>
+            </div>
+            <div class="mobile-player-badges">
+              <span class="rank-badge-small" :class="`rank-${player.ranking_level}`">
+                {{ formatRankLevel(player.ranking_level) }}
+              </span>
+              <span class="badge" :class="player.is_active ? 'badge-success' : 'badge-danger'">
+                {{ player.is_active ? '✅' : '⛔' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Stats Grid: 2x3 -->
+          <div class="mobile-player-stats">
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">W/L</div>
+              <div class="mobile-stat-value">
+                <span style="color: #10b981;">{{ player.wins || 0 }}</span> / 
+                <span style="color: #ef4444;">{{ player.losses || 0 }}</span>
+              </div>
+            </div>
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">Win Rate</div>
+              <div class="mobile-stat-value">{{ calculateWinRate(player) }}%</div>
+            </div>
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">Break & Run</div>
+              <div class="mobile-stat-value" style="color: #667eea;">{{ player.break_and_run || 0 }}</div>
+            </div>
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">B&R Rate</div>
+              <div class="mobile-stat-value">{{ calculateBreakRunRate(player) }}%</div>
+            </div>
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">Rank Points</div>
+              <div class="mobile-stat-value">{{ player.ranking_points || 0 }}</div>
+            </div>
+            <div class="mobile-stat-item">
+              <div class="mobile-stat-label">Matches</div>
+              <div class="mobile-stat-value">{{ (player.wins || 0) + (player.losses || 0) }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons: 2x2 -->
+          <div class="mobile-player-actions">
+            <button class="mobile-action-btn view" @click="openStatsModal(player)">
+              📊 Stats
+            </button>
+            <button class="mobile-action-btn edit" @click="openPointsModal(player)">
+              🏆 Points
+            </button>
+            <button class="mobile-action-btn edit" @click="editPlayer(player)">
+              ✏️ Edit
+            </button>
+            <button class="mobile-action-btn delete" @click="confirmDelete(player)">
+              🗑️ Delete
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -790,6 +858,11 @@ export default {
   padding: 1.5rem;
 }
 
+/* Mobile players grid - hidden by default, shown on mobile */
+.mobile-players-grid {
+  display: none;
+}
+
 .modal-footer {
   padding: 1.5rem;
   border-top: 2px solid #dee2e6;
@@ -799,13 +872,163 @@ export default {
 }
 
 @media (max-width: 768px) {
+  /* 页面标题优化 */
   .page-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .page-header h1 {
-    font-size: 1.5rem;
+    font-size: 20px;
+  }
+
+  .page-header .btn-primary {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* 筛选栏优化 */
+  .filter-section .row {
+    flex-direction: column;
+  }
+
+  .col {
+    width: 100% !important;
+  }
+
+  .form-control {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* 隐藏表格，显示卡片 */
+  .table-container {
+    display: none;
+  }
+
+  /* 玩家卡片布局 */
+  .mobile-players-grid {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .mobile-player-card {
+    background: var(--color-card-bg);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+  }
+
+  .mobile-player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-player-info {
+    flex: 1;
+  }
+
+  .mobile-player-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+
+  .mobile-player-card-num {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  .mobile-player-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+
+  .mobile-player-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-stat-item {
+    background: rgba(102, 126, 234, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .mobile-stat-label {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .mobile-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  .mobile-player-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .mobile-action-btn {
+    min-height: 44px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .mobile-action-btn.view {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .mobile-action-btn.edit {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+  }
+
+  .mobile-action-btn.delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
   }
 
   .action-buttons {
@@ -814,6 +1037,40 @@ export default {
 
   .action-buttons .btn {
     width: 100%;
+  }
+
+  /* 模态框移动端优化 */
+  .modal-content {
+    width: 95vw;
+    max-width: 95vw;
+    margin: 20px auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body .form-control {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .modal-body .form-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
   }
 }
 

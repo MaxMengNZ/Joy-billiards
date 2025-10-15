@@ -3,7 +3,7 @@
     <div class="register-container">
       <div class="register-card card">
         <div class="register-header">
-          <h1>🎱 Joy Billiards</h1>
+          <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="register-logo">
           <p>Create Your Account</p>
         </div>
 
@@ -202,9 +202,17 @@ export default {
   text-align: center;
 }
 
-.register-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+.register-logo {
+  height: 120px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  /* 白色背景，让黑色 Logo 清晰可见 */
+  background: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .register-header p {
@@ -270,17 +278,97 @@ export default {
   margin: 0.5rem 0;
 }
 
-@media (max-width: 480px) {
+/* Mobile Optimization */
+@media (max-width: 768px) {
   .register-page {
     padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
   }
 
-  .register-header h1 {
-    font-size: 1.5rem;
+  .register-header {
+    padding: 1.5rem;
+  }
+
+  .register-logo {
+    height: 100px;
+    max-width: 240px;
+    padding: 10px 20px;
+  }
+
+  .register-header p {
+    font-size: 0.875rem;
   }
 
   .register-body {
     padding: 1.5rem;
+  }
+
+  .register-body h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* 大输入框 */
+  .form-control {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  /* 大注册按钮 */
+  .btn-lg {
+    min-height: 52px;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  /* 优化链接大小 */
+  .register-footer {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .register-footer p {
+    font-size: 14px;
+    margin: 0.75rem 0;
+  }
+
+  .link {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* Select 下拉框优化 */
+  select.form-control {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  /* 帮助文本 */
+  .form-help {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  /* 场馆信息 */
+  .venue-info {
+    margin-top: 1.25rem;
+    font-size: 14px;
+  }
+
+  .venue-info p {
+    margin: 0.5rem 0;
   }
 }
 </style>

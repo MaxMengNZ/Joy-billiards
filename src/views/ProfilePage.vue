@@ -32,7 +32,7 @@
         <div class="membership-card" :class="`membership-${profile?.membership_level || 'lite'}`">
           <div class="card-header-section">
             <div class="card-logo">
-              <h2>🎱 Joy Billiards</h2>
+              <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="membership-card-logo">
               <p>New Zealand</p>
             </div>
             <div class="card-level">
@@ -126,7 +126,7 @@
       </div>
 
       <!-- Personal Information -->
-      <div class="row">
+      <div class="row personal-info-section">
         <div class="col col-2">
           <div class="card">
             <div class="card-header">
@@ -286,13 +286,16 @@
               <button class="btn btn-secondary btn-sm mt-3" @click="showChangePassword = true">
                 Change Password
               </button>
+              <button class="btn btn-danger btn-sm mt-2" @click="handleLogout" style="width: 100%;">
+                🚪 Logout
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- My Tournaments Section -->
-      <div class="card mt-3">
+      <div class="card mt-3 tournaments-section">
         <div class="card-header">
           <h2 class="card-title">🎯 My Registered Tournaments</h2>
           <router-link to="/tournaments" class="btn btn-primary btn-sm">
@@ -399,6 +402,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../config/supabase'
 
@@ -406,6 +410,7 @@ export default {
   name: 'ProfilePage',
   setup() {
     const authStore = useAuthStore()
+    const router = useRouter()
 
     const loading = ref(true)
     const profile = ref(null)
@@ -761,6 +766,13 @@ export default {
       }
     }
 
+    const handleLogout = async () => {
+      if (confirm('Are you sure you want to logout?')) {
+        await authStore.signOut()
+        router.push('/login')
+      }
+    }
+
     onMounted(() => {
       loadProfile()
     })
@@ -795,7 +807,8 @@ export default {
       formatTournamentType,
       formatTournamentStatus,
       getTournamentStatusClass,
-      cancelTournamentReg
+      cancelTournamentReg,
+      handleLogout
     }
   }
 }
@@ -1011,10 +1024,16 @@ export default {
   margin-bottom: 2rem;
 }
 
-.card-logo h2 {
-  font-size: 1.75rem;
-  margin: 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+.membership-card-logo {
+  height: 70px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  /* 白色背景，让黑色 Logo 清晰可见 */
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .card-logo p {
@@ -1277,12 +1296,63 @@ export default {
 }
 
 @media (max-width: 768px) {
+  /* 调整移动端布局顺序 */
+  .profile-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* My Registered Tournaments 放在最前面 */
+  .tournaments-section {
+    order: 1;
+  }
+
+  /* 个人信息和统计信息区域 */
+  .personal-info-section {
+    order: 2;
+  }
+
+  /* 优化退出登录按钮 */
+  .btn-danger {
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* 优化 Change Password 按钮 */
+  .btn-secondary.btn-sm {
+    min-height: 44px;
+    font-size: 15px;
+    width: 100%;
+  }
+
   .tournament-actions {
     flex-direction: column;
   }
 
   .tournament-actions .btn {
     width: 100%;
+    min-height: 44px;
+  }
+
+  /* 优化表单输入框 */
+  .form-control {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  textarea.form-control {
+    min-height: 80px;
+  }
+
+  /* 优化卡片间距 */
+  .card.mt-3,
+  .row + .row {
+    margin-top: 1rem !important;
   }
 }
 
@@ -1291,8 +1361,10 @@ export default {
     padding: 1rem;
   }
 
-  .card-logo h2 {
-    font-size: 1.5rem;
+  .membership-card-logo {
+    height: 55px;
+    max-width: 180px;
+    padding: 6px 12px;
   }
 
   .stat-item {
@@ -1309,6 +1381,34 @@ export default {
 
   .tournament-item {
     padding: 1rem;
+  }
+
+  /* 模态框固定居中 */
+  .modal {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-content {
+    width: 92vw;
+    max-width: 92vw;
+    margin: 0 auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>

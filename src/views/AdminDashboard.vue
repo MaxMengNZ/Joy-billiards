@@ -219,105 +219,190 @@
           <button class="btn btn-secondary btn-sm" @click="clearAllFilters">Clear All Filters</button>
         </div>
 
-        <div v-else class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Card #</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Membership</th>
-                <th>Rank</th>
-                <th>Loyalty Points</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in filteredUsers" :key="user.id">
-                <td>
-                  <span class="badge badge-info">{{ user.membership_card_number || 'N/A' }}</span>
-                </td>
-                <td><strong>{{ user.name || 'N/A' }}</strong></td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.phone || 'N/A' }}</td>
-                <td>
-                  <span class="membership-badge" :class="`membership-${user.membership_level}`">
-                    {{ formatMembershipLevel(user.membership_level) }}
-                    <span v-if="user.membership_level === 'pro_max'">🌟</span>
-                    <span v-else-if="user.membership_level === 'pro'">💎</span>
-                    <span v-else-if="user.membership_level === 'plus'">⭐</span>
-                    <span v-else>🎱</span>
-                  </span>
-                </td>
-                <td>
-                  <span class="rank-badge-small" :class="`rank-${user.ranking_level}`">
-                    {{ formatRankLevel(user.ranking_level) }}
-                  </span>
-                </td>
-                <td>
-                  <strong class="points-display loyalty-points-value">
-                    {{ user.loyalty_points?.toFixed(2) || '0.00' }}
-                  </strong>
-                </td>
-                <td>
-                  <span class="badge" :class="user.role === 'admin' ? 'badge-warning' : 'badge-info'">
-                    {{ user.role === 'admin' ? '👑 Admin' : '🎯 Player' }}
-                  </span>
-                </td>
-                <td>
-                  <span class="badge" :class="user.is_active ? 'badge-success' : 'badge-danger'">
-                    {{ user.is_active ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                <td>
-                  <div class="action-buttons">
-                    <button 
-                      class="btn btn-sm btn-primary" 
-                      @click="viewUserDetails(user)"
-                      title="View/Edit Details"
-                    >
-                      📝 Edit
-                    </button>
-                    <button 
-                      class="btn btn-sm btn-warning" 
-                      @click="openMembershipModal(user)"
-                      title="Manage Membership"
-                      :disabled="isCurrentUser(user)"
-                    >
-                      💳 Card
-                    </button>
-                    <button 
-                      class="btn btn-sm btn-success" 
-                      @click="openLoyaltyPointsModal(user)"
-                      title="Manage Loyalty Points"
-                    >
-                      💰 Loyalty
-                    </button>
-                    <button 
-                      class="btn btn-sm" 
-                      :class="user.role === 'admin' ? 'btn-secondary' : 'btn-info'"
-                      @click="toggleRole(user)"
-                      :disabled="isCurrentUser(user)"
-                    >
-                      {{ user.role === 'admin' ? 'Make Player' : 'Make Admin' }}
-                    </button>
-                    <button 
-                      class="btn btn-sm" 
-                      :class="user.is_active ? 'btn-danger' : 'btn-success'"
-                      @click="toggleStatus(user)"
-                      :disabled="isCurrentUser(user)"
-                    >
-                      {{ user.is_active ? 'Deactivate' : 'Activate' }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <template v-else>
+          <!-- Desktop Table View -->
+          <div class="table-container admin-table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Card #</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Membership</th>
+                  <th>Rank</th>
+                  <th>Loyalty Points</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in filteredUsers" :key="user.id">
+                  <td>
+                    <span class="badge badge-info">{{ user.membership_card_number || 'N/A' }}</span>
+                  </td>
+                  <td><strong>{{ user.name || 'N/A' }}</strong></td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.phone || 'N/A' }}</td>
+                  <td>
+                    <span class="membership-badge" :class="`membership-${user.membership_level}`">
+                      {{ formatMembershipLevel(user.membership_level) }}
+                      <span v-if="user.membership_level === 'pro_max'">🌟</span>
+                      <span v-else-if="user.membership_level === 'pro'">💎</span>
+                      <span v-else-if="user.membership_level === 'plus'">⭐</span>
+                      <span v-else>🎱</span>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="rank-badge-small" :class="`rank-${user.ranking_level}`">
+                      {{ formatRankLevel(user.ranking_level) }}
+                    </span>
+                  </td>
+                  <td>
+                    <strong class="points-display loyalty-points-value">
+                      {{ user.loyalty_points?.toFixed(2) || '0.00' }}
+                    </strong>
+                  </td>
+                  <td>
+                    <span class="badge" :class="user.role === 'admin' ? 'badge-warning' : 'badge-info'">
+                      {{ user.role === 'admin' ? '👑 Admin' : '🎯 Player' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge" :class="user.is_active ? 'badge-success' : 'badge-danger'">
+                      {{ user.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button 
+                        class="btn btn-sm btn-primary" 
+                        @click="viewUserDetails(user)"
+                        title="View/Edit Details"
+                      >
+                        📝 Edit
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-warning" 
+                        @click="openMembershipModal(user)"
+                        title="Manage Membership"
+                        :disabled="isCurrentUser(user)"
+                      >
+                        💳 Card
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-success" 
+                        @click="openLoyaltyPointsModal(user)"
+                        title="Manage Loyalty Points"
+                      >
+                        💰 Loyalty
+                      </button>
+                      <button 
+                        class="btn btn-sm" 
+                        :class="user.role === 'admin' ? 'btn-secondary' : 'btn-info'"
+                        @click="toggleRole(user)"
+                        :disabled="isCurrentUser(user)"
+                      >
+                        {{ user.role === 'admin' ? 'Make Player' : 'Make Admin' }}
+                      </button>
+                      <button 
+                        class="btn btn-sm" 
+                        :class="user.is_active ? 'btn-danger' : 'btn-success'"
+                        @click="toggleStatus(user)"
+                        :disabled="isCurrentUser(user)"
+                      >
+                        {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Card View -->
+          <div class="mobile-users-grid">
+          <div v-for="user in filteredUsers" :key="user.id" class="mobile-user-card" :class="`membership-card-${user.membership_level}`">
+            <!-- Card Header: Name, Email, Status Badge -->
+            <div class="mobile-user-header">
+              <div class="mobile-user-info">
+                <div class="mobile-user-name">{{ user.name || 'N/A' }}</div>
+                <div class="mobile-user-email">{{ user.email }}</div>
+              </div>
+              <div class="mobile-user-badges">
+                <span class="badge" :class="user.is_active ? 'badge-success' : 'badge-danger'">
+                  {{ user.is_active ? '✅' : '⛔' }}
+                </span>
+                <span class="badge" :class="user.role === 'admin' ? 'badge-warning' : 'badge-info'">
+                  {{ user.role === 'admin' ? '👑' : '🎯' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Details: 2x2 Grid -->
+            <div class="mobile-user-details">
+              <div class="mobile-detail-item">
+                <span class="mobile-detail-label">Card #</span>
+                <span class="mobile-detail-value">{{ user.membership_card_number || 'N/A' }}</span>
+              </div>
+              <div class="mobile-detail-item">
+                <span class="mobile-detail-label">Phone</span>
+                <span class="mobile-detail-value">{{ user.phone || 'N/A' }}</span>
+              </div>
+              <div class="mobile-detail-item">
+                <span class="mobile-detail-label">Membership</span>
+                <span class="mobile-detail-value">
+                  {{ formatMembershipLevel(user.membership_level) }}
+                  <span v-if="user.membership_level === 'pro_max'">🌟</span>
+                  <span v-else-if="user.membership_level === 'pro'">💎</span>
+                  <span v-else-if="user.membership_level === 'plus'">⭐</span>
+                  <span v-else>🎱</span>
+                </span>
+              </div>
+              <div class="mobile-detail-item">
+                <span class="mobile-detail-label">Rank</span>
+                <span class="mobile-detail-value">{{ formatRankLevel(user.ranking_level) }}</span>
+              </div>
+              <div class="mobile-detail-item">
+                <span class="mobile-detail-label">Loyalty Points</span>
+                <span class="mobile-detail-value">{{ user.loyalty_points?.toFixed(2) || '0.00' }}</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons: 2x2 Grid -->
+            <div class="mobile-user-actions">
+              <button 
+                class="mobile-action-btn primary" 
+                @click="viewUserDetails(user)"
+              >
+                📝 Edit
+              </button>
+              <button 
+                class="mobile-action-btn warning" 
+                @click="openMembershipModal(user)"
+                :disabled="isCurrentUser(user)"
+              >
+                💳 Card
+              </button>
+              <button 
+                class="mobile-action-btn secondary" 
+                @click="openLoyaltyPointsModal(user)"
+              >
+                💰 Loyalty
+              </button>
+              <button 
+                class="mobile-action-btn" 
+                :class="user.is_active ? 'danger' : 'secondary'"
+                @click="toggleStatus(user)"
+                :disabled="isCurrentUser(user)"
+              >
+                {{ user.is_active ? '⛔ Block' : '✅ Allow' }}
+              </button>
+            </div>
+          </div>
         </div>
+        </template>
       </div>
     </div>
     </section>
@@ -2157,18 +2242,341 @@ export default {
   margin-bottom: 1rem;
 }
 
-/* Responsive adjustments */
+/* Mobile users grid - hidden by default, shown on mobile */
+.mobile-users-grid {
+  display: none;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION (≤768px)
+   ============================================ */
+
 @media (max-width: 768px) {
+  /* 页面标题 */
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+  /* 统计卡片：单列堆叠 */
+  .stats-management-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .stat-management-card {
+    padding: 16px;
+  }
+
+  .stat-icon-large {
+    font-size: 2rem;
+    width: 48px;
+    height: 48px;
+  }
+
+  .stat-title {
+    font-size: 14px;
+  }
+
+  .current-value {
+    font-size: 24px;
+  }
+
+  .stat-note {
+    font-size: 11px;
+  }
+
+  /* 搜索筛选栏：垂直堆叠 */
   .search-filter-bar {
     padding: 1rem;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-box {
+    width: 100%;
   }
 
   .filter-group {
     grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .search-input {
-    font-size: 0.875rem;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .filter-select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    min-height: 36px;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border-radius: 50%;
+    background: rgba(108, 117, 125, 0.9);
+  }
+
+  .clear-search:hover {
+    background: rgba(90, 98, 104, 1);
+  }
+
+  /* 输入框右侧留空间给清除按钮 */
+  .search-input {
+    padding-right: 48px !important;
+  }
+
+  /* 用户表格：隐藏，改用卡片 */
+  .admin-table-container {
+    display: none !important;
+  }
+
+  /* 用户卡片布局（仅移动端） */
+  .mobile-users-grid {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .mobile-user-card {
+    border: 2px solid;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 会员等级卡片底色 */
+  .mobile-user-card.membership-card-lite {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-color: #9ca3af;
+  }
+
+  .mobile-user-card.membership-card-plus {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+  }
+
+  .mobile-user-card.membership-card-pro {
+    background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+    border-color: #8b5cf6;
+  }
+
+  .mobile-user-card.membership-card-pro_max {
+    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+    border-color: #ec4899;
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+  }
+
+  .mobile-user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Pro Max 会员卡片添加闪光效果 */
+  .mobile-user-card.membership-card-pro_max::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      left: -50%;
+    }
+    100% {
+      left: 150%;
+    }
+  }
+
+  .mobile-user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-user-info {
+    flex: 1;
+  }
+
+  .mobile-user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .mobile-user-email {
+    font-size: 13px;
+    color: #374151;
+    word-break: break-all;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .mobile-user-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+
+  .mobile-user-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-detail-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .mobile-detail-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .mobile-user-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .mobile-action-btn {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .mobile-action-btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  .mobile-action-btn.primary:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .mobile-action-btn.secondary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+
+  .mobile-action-btn.secondary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+
+  .mobile-action-btn.danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+
+  .mobile-action-btn.danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+
+  .mobile-action-btn.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  }
+
+  .mobile-action-btn.warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  }
+
+  /* 模态框优化 */
+  .modal-content {
+    width: 95vw;
+    max-width: 95vw;
+    margin: 20px auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-control {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    min-height: 48px;
   }
 }
 </style>

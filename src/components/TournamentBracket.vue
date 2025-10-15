@@ -1032,27 +1032,128 @@ export default {
 @media (max-width: 768px) {
   .tournament-bracket {
     padding: 1rem;
+    width: 100%;
   }
   
+  .bracket-header {
+    margin-bottom: 1rem;
+  }
+
   .bracket-header h3 {
-    font-size: 1.5rem;
+    font-size: 18px;
   }
-  
+
+  /* 添加横向滚动提示 */
+  .bracket-container::before {
+    content: '👈 Scroll horizontally to view all rounds 👉';
+    display: block;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  /* 横向滚动容器 */
+  .bracket-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 20px;
+    margin: 0 -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .bracket-section {
+    min-width: max-content;
+    margin-bottom: 2rem;
+  }
+
+  .bracket-section-title {
+    font-size: 16px;
+    margin-bottom: 1rem;
+    position: sticky;
+    left: 0;
+    background: var(--color-bg);
+    padding: 8px 0;
+    z-index: 10;
+  }
+
+  .bracket-grid {
+    display: block;
+    min-width: max-content;
+  }
+
+  .round-headers {
+    display: flex;
+    gap: 60px;
+    margin-bottom: 1rem;
+  }
+
   .round-header {
-    font-size: 1rem;
-    min-width: 150px;
+    font-size: 13px;
+    min-width: 200px;
+    max-width: 200px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .bracket-structure {
+    display: flex;
+    gap: 60px;
+  }
+
+  .bracket-column {
+    min-width: 200px;
+    max-width: 200px;
   }
   
   .match-slot {
-    width: 150px;
+    width: 200px;
+    margin-bottom: 40px;
+  }
+
+  .match-title {
+    font-size: 12px;
+    padding: 6px 10px;
   }
   
   .player-name {
-    font-size: 0.75rem;
+    font-size: 14px;
+    padding: 10px;
   }
   
   .player-score {
-    font-size: 0.875rem;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 32px;
+  }
+
+  .player-score.clickable-score {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .player-score.clickable-score:hover {
+    background: rgba(102, 126, 234, 0.1);
+  }
+
+  .match-actions {
+    padding: 8px;
+  }
+
+  .btn-advance {
+    width: 100%;
+    min-height: 36px;
+    font-size: 12px;
+    padding: 6px 10px;
   }
 }
 </style>

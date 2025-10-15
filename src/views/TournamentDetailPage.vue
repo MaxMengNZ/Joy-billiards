@@ -70,7 +70,7 @@
             <div class="card-body">
               <div class="stats-grid">
                 <div class="stat-box">
-                  <div class="stat-number">{{ participants.length }}</div>
+                  <div class="stat-number">{{ registrations.length }}</div>
                   <div class="stat-label">Participants</div>
                 </div>
                 <div class="stat-box">
@@ -1147,6 +1147,7 @@ export default {
     }
 
     const formatSkillLevel = (level) => {
+      if (!level) return 'N/A'
       return level.charAt(0).toUpperCase() + level.slice(1)
     }
 
@@ -1403,30 +1404,377 @@ export default {
 }
 
 @media (max-width: 768px) {
+  /* 头部区域优化 */
+  .tournament-header-section {
+    padding: 1rem;
+  }
+
   .header-content {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .header-content h1 {
-    font-size: 1.5rem;
+    font-size: 20px;
+    order: 1;
+  }
+
+  .header-content .btn-secondary {
+    order: 0;
+    min-height: 44px;
+    font-size: 15px;
+    align-self: flex-start;
+    padding: 10px 20px;
+  }
+
+  .header-content .badge-lg {
+    order: 2;
+    align-self: flex-start;
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  /* 信息卡片单列显示 */
+  .row {
+    flex-direction: column;
+  }
+
+  .col {
+    width: 100% !important;
+  }
+
+  /* 信息网格优化 */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-item {
+    padding: 12px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+  }
+
+  .info-label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .info-value {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* 统计卡片优化 */
+  .stats-grid {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .stat-box {
+    flex: 1;
+    padding: 12px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  /* 参赛玩家卡片优化 */
+  .card-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .card-header .btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* Add Player 按钮特殊样式 */
+  .card-header .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .card-header .btn-primary::before {
+    content: '➕';
+    font-size: 18px;
+  }
+
+  /* Register 按钮特殊样式 */
+  .card-header .btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Cancel Registration 按钮特殊样式 */
+  .card-header .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+
+  .card-title {
+    font-size: 18px;
   }
 
   .participants-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .stats-grid {
+  .participant-card {
+    padding: 16px;
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-card-bg);
+  }
+
+  .participant-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .participant-info strong {
+    font-size: 16px;
+  }
+
+  .participant-stats {
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .participant-date {
+    margin-bottom: 8px;
+  }
+
+  .participant-card .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Bracket Actions 优化 */
+  .bracket-actions-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bracket-actions-header .btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  /* Race to X 设置优化 */
+  .race-setting .row {
     flex-direction: column;
   }
 
+  .race-setting .form-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .race-setting .input-group {
+    width: 100%;
+  }
+
+  .race-setting input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .race-setting .btn {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  /* 对阵表横向滚动 */
+  .bracket-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 0;
+  }
+
+  /* 添加滚动提示 */
+  .bracket-container::before {
+    content: '👈 Swipe to view bracket 👉';
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 6px;
+  }
+
+  /* 比赛卡片优化 */
   .match-body {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 8px;
   }
 
   .match-vs {
     order: -1;
+    font-size: 16px;
+    padding: 8px 0;
+  }
+
+  .match-player {
+    padding: 12px;
+  }
+
+  .player-name {
+    font-size: 15px;
+  }
+
+  .match-score input {
+    min-height: 44px;
+    width: 60px;
+    font-size: 18px;
+  }
+
+  .match-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .match-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* 模态框优化 */
+  .modal {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-content {
+    width: 92vw;
+    max-width: 92vw;
+    margin: 0 auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-header {
+    padding: 1.25rem;
+    border-bottom: 2px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row !important;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+    margin: 0;
+    flex: 1;
+  }
+
+  .modal-header .btn {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-body .form-label {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: block;
+    color: var(--color-text-primary);
+  }
+
+  .modal-body .form-control,
+  .modal-body select {
+    min-height: 52px;
+    font-size: 17px;
+    padding: 12px 16px;
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+  }
+
+  .modal-body select {
+    background-color: white;
+    cursor: pointer;
+  }
+
+  .modal-footer {
+    padding: 1.25rem;
+    border-top: 2px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+  }
+
+  .modal-footer .btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    order: -1;
+  }
+
+  .modal-footer .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
   }
 }
 </style>

@@ -3,7 +3,7 @@
     <div class="login-container">
       <div class="login-card card">
         <div class="login-header">
-          <h1>🎱 Joy Billiards</h1>
+          <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="login-logo">
           <p>Tournament Management System</p>
         </div>
 
@@ -247,9 +247,17 @@ export default {
   text-align: center;
 }
 
-.login-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+.login-logo {
+  height: 120px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  /* 白色背景，让黑色 Logo 清晰可见 */
+  background: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .login-header p {
@@ -308,17 +316,171 @@ export default {
   margin: 0.5rem 0;
 }
 
-@media (max-width: 480px) {
+/* Mobile Optimization */
+@media (max-width: 768px) {
   .login-page {
     padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
   }
 
-  .login-header h1 {
-    font-size: 1.5rem;
+  /* 模态框容器优化 */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .login-header {
+    padding: 1.5rem;
+  }
+
+  .login-logo {
+    height: 100px;
+    max-width: 240px;
+    padding: 10px 20px;
+  }
+
+  .login-header p {
+    font-size: 0.875rem;
   }
 
   .login-body {
     padding: 1.5rem;
+  }
+
+  .login-body h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* 大输入框 */
+  .form-control {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  /* 大登录按钮 */
+  .btn-lg {
+    min-height: 52px;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  /* 优化链接大小 */
+  .login-footer {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .login-footer p {
+    font-size: 14px;
+    margin: 0.75rem 0;
+  }
+
+  .link {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* 场馆信息 */
+  .venue-info {
+    margin-top: 1.25rem;
+    font-size: 14px;
+  }
+
+  .venue-info p {
+    margin: 0.5rem 0;
+  }
+
+  /* 模态框优化 */
+  .modal-content {
+    width: 90vw;
+    max-width: 90vw;
+    max-height: 85vh;
+    margin: 0 auto;
+    padding: 1.25rem;
+    overflow-y: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .modal-header .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .modal-body {
+    padding: 1rem 0;
+  }
+
+  .modal-body p {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  .modal-body .form-control {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .modal-body .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    margin-top: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* 成功提示优化 */
+  .alert {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 8px;
   }
 }
 </style>
