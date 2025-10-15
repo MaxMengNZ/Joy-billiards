@@ -931,7 +931,7 @@ export default {
           // Deduct loyalty points
           const { data, error } = await supabase.rpc('deduct_loyalty_points', {
             p_user_id: selectedUser.value.id,
-            p_points: loyaltyForm.value.pointsToDeduct,
+            p_points_to_deduct: loyaltyForm.value.pointsToDeduct,
             p_description: loyaltyForm.value.description || 'Loyalty Points redemption',
             p_recorded_by: authStore.user.id
           })
