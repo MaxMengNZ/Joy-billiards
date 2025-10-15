@@ -166,8 +166,57 @@
         <h2 class="card-title">👥 User Management</h2>
       </div>
       <div class="card-body">
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+          <div class="search-box">
+            <input 
+              type="text" 
+              class="form-control search-input" 
+              v-model="searchQuery"
+              placeholder="🔍 Search by name, email, card number, or phone..."
+            >
+            <button 
+              v-if="searchQuery" 
+              class="btn btn-sm btn-secondary clear-search"
+              @click="clearSearch"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="filter-group">
+            <select class="form-control filter-select" v-model="filterMembership">
+              <option value="">All Memberships</option>
+              <option value="lite">🎱 Lite</option>
+              <option value="plus">⭐ Plus</option>
+              <option value="pro">💎 Pro</option>
+              <option value="pro_max">🌟 Pro Max</option>
+            </select>
+            <select class="form-control filter-select" v-model="filterRole">
+              <option value="">All Roles</option>
+              <option value="player">🎯 Player</option>
+              <option value="admin">👑 Admin</option>
+            </select>
+            <select class="form-control filter-select" v-model="filterStatus">
+              <option value="">All Status</option>
+              <option value="active">✅ Active</option>
+              <option value="inactive">⛔ Inactive</option>
+            </select>
+          </div>
+          <div class="search-results-info">
+            <span class="results-count">
+              Showing {{ filteredUsers.length }} of {{ users.length }} users
+            </span>
+          </div>
+        </div>
+
         <div v-if="loading" class="loading">
           <div class="spinner"></div>
+        </div>
+
+        <div v-else-if="filteredUsers.length === 0" class="no-results">
+          <p>😕 No users found matching your search criteria.</p>
+          <button class="btn btn-secondary btn-sm" @click="clearAllFilters">Clear All Filters</button>
         </div>
 
         <div v-else class="table-container">
@@ -187,7 +236,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="user in users" :key="user.id">
+              <tr v-for="user in filteredUsers" :key="user.id">
                 <td>
                   <span class="badge badge-info">{{ user.membership_card_number || 'N/A' }}</span>
                 </td>
@@ -617,6 +666,62 @@ export default {
       description: ''
     })
 
+    // Search and Filter
+    const searchQuery = ref('')
+    const filterMembership = ref('')
+    const filterRole = ref('')
+    const filterStatus = ref('')
+
+    // Computed: Filtered Users
+    const filteredUsers = computed(() => {
+      let result = users.value
+
+      // Search filter
+      if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase().trim()
+        result = result.filter(user => {
+          return (
+            user.name?.toLowerCase().includes(query) ||
+            user.email?.toLowerCase().includes(query) ||
+            user.phone?.toLowerCase().includes(query) ||
+            user.membership_card_number?.toLowerCase().includes(query)
+          )
+        })
+      }
+
+      // Membership filter
+      if (filterMembership.value) {
+        result = result.filter(user => user.membership_level === filterMembership.value)
+      }
+
+      // Role filter
+      if (filterRole.value) {
+        result = result.filter(user => user.role === filterRole.value)
+      }
+
+      // Status filter
+      if (filterStatus.value) {
+        if (filterStatus.value === 'active') {
+          result = result.filter(user => user.is_active === true)
+        } else if (filterStatus.value === 'inactive') {
+          result = result.filter(user => user.is_active === false)
+        }
+      }
+
+      return result
+    })
+
+    const clearSearch = () => {
+      searchQuery.value = ''
+    }
+
+    const clearAllFilters = () => {
+      searchQuery.value = ''
+      filterMembership.value = ''
+      filterRole.value = ''
+      filterStatus.value = ''
+    }
+
     const loadData = async () => {
       loading.value = true
       
@@ -1000,7 +1105,15 @@ export default {
       isLoyaltyFormValid,
       openLoyaltyPointsModal,
       closeLoyaltyPointsModal,
-      recordLoyaltyPoints
+      recordLoyaltyPoints,
+      // Search and Filter
+      searchQuery,
+      filterMembership,
+      filterRole,
+      filterStatus,
+      filteredUsers,
+      clearSearch,
+      clearAllFilters
     }
   }
 }
@@ -1946,6 +2059,117 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Search and Filter Bar Styles */
+.search-filter-bar {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.search-box {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #ced4da;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  outline: none;
+}
+
+.clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem 0.5rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.2s ease;
+}
+
+.clear-search:hover {
+  background: #5a6268;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  border: 2px solid #ced4da;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+  outline: none;
+}
+
+.search-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.results-count {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.no-results p {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-filter-bar {
+    padding: 1rem;
+  }
+
+  .filter-group {
+    grid-template-columns: 1fr;
+  }
+
+  .search-input {
+    font-size: 0.875rem;
+  }
 }
 </style>
 
