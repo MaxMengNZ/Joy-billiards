@@ -28,6 +28,16 @@ export const useAuthStore = defineStore('auth', {
         this.session = session
         this.user = session.user
         await this.fetchProfile()
+        
+        // Check if user account is active
+        if (this.profile && this.profile.is_active === false) {
+          // Sign out immediately if account is deactivated
+          await supabase.auth.signOut()
+          this.session = null
+          this.user = null
+          this.profile = null
+          this.error = 'Your account has been deactivated. Please contact staff for assistance.'
+        }
       }
 
       // Listen for auth changes
@@ -37,6 +47,16 @@ export const useAuthStore = defineStore('auth', {
         
         if (session?.user) {
           await this.fetchProfile()
+          
+          // Check if user account is active
+          if (this.profile && this.profile.is_active === false) {
+            // Sign out immediately if account is deactivated
+            await supabase.auth.signOut()
+            this.session = null
+            this.user = null
+            this.profile = null
+            this.error = 'Your account has been deactivated. Please contact staff for assistance.'
+          }
         } else {
           this.profile = null
         }
@@ -159,6 +179,16 @@ export const useAuthStore = defineStore('auth', {
         this.session = data.session
         this.user = data.user
         await this.fetchProfile()
+
+        // Check if user account is active
+        if (this.profile && this.profile.is_active === false) {
+          // Sign out immediately if account is deactivated
+          await supabase.auth.signOut()
+          this.session = null
+          this.user = null
+          this.profile = null
+          throw new Error('Your account has been deactivated. Please contact staff for assistance.')
+        }
 
         console.log('authStore: Sign in successful')
         return { success: true, data }
