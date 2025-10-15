@@ -54,7 +54,7 @@
           </div>
           <ul class="tier-features">
             <li><span class="feature-icon">✅</span> Free registration</li>
-            <li><span class="feature-icon">🎱</span> Q7: $28/h | Q8: $33/h</li>
+            <li><span class="feature-icon">🎱</span> Q7 (Silver Leg): $28/h | Q8 (Gold Leg): $33/h</li>
             <li><span class="feature-icon">🎯</span> Basic cue sticks</li>
             <li><span class="feature-icon">📊</span> Basic statistics</li>
             <li><span class="feature-icon">📅</span> Same-day booking (2h advance)</li>
@@ -76,7 +76,7 @@
             <span class="price-period">Get $210 credit (+5% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7: $23.8/h | Q8: $28.6/h</li>
+            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $23.8/h | Q8 (Gold Leg): $28.6/h</li>
             <li><span class="feature-icon">🎁</span> +5% bonus = $210 credit</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.2x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
@@ -100,7 +100,7 @@
             <span class="price-period">Get $540 credit (+8% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7: $19.5/h | Q8: $24.1/h</li>
+            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $19.5/h | Q8 (Gold Leg): $24.1/h</li>
             <li><span class="feature-icon">🎁</span> +8% bonus = $540 credit</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.4x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
@@ -124,7 +124,7 @@
             <span class="price-period">Get $1100 credit (+10% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7: $17.3/h | Q8: $21.8/h</li>
+            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $17.3/h | Q8 (Gold Leg): $21.8/h</li>
             <li><span class="feature-icon">🎁</span> +10% bonus = $1100 credit</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.6x fastest</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
@@ -167,14 +167,14 @@
               <td class="best">$1100</td>
             </tr>
             <tr>
-              <td class="feature-name">Q7 Rate (with bonus)</td>
+              <td class="feature-name">Q7 (Silver Leg Table) Rate</td>
               <td>$28/hour</td>
               <td class="highlight">$23.8/hour</td>
               <td class="highlight">$19.5/hour</td>
               <td class="highlight best">$17.3/hour</td>
             </tr>
             <tr>
-              <td class="feature-name">Q8 Rate (with bonus)</td>
+              <td class="feature-name">Q8 (Gold Leg Table) Rate</td>
               <td>$33/hour</td>
               <td class="highlight">$28.6/hour</td>
               <td class="highlight">$24.1/hour</td>
@@ -303,7 +303,7 @@
           <div class="note-item">
             <span class="note-icon">✨</span>
             <div class="note-text">
-              <strong>Member Rates Anytime:</strong> Discounted member rates (Q7: $23.8/$19.5/$17.3, Q8: $28.6/$24.1/$21.8) apply anytime during opening hours. No time restrictions!
+              <strong>Member Rates Anytime:</strong> Discounted member rates (Q7 Silver Leg: $23.8/$19.5/$17.3, Q8 Gold Leg: $28.6/$24.1/$21.8) apply anytime during opening hours. No time restrictions!
             </div>
           </div>
           <div class="note-item">
@@ -379,7 +379,7 @@
       <h2 class="section-title">Pricing Examples</h2>
       <div class="examples-grid">
         <div class="example-card">
-          <h3>🎱 Casual Player (2h/week, Q7)</h3>
+          <h3>🎱 Casual Player (2h/week, Q7 Silver Leg)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
@@ -393,7 +393,7 @@
           </div>
         </div>
         <div class="example-card">
-          <h3>🏆 Regular Player (10h/week, Q7)</h3>
+          <h3>🏆 Regular Player (10h/week, Q7 Silver Leg)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
@@ -407,7 +407,7 @@
           </div>
         </div>
         <div class="example-card">
-          <h3>💎 Enthusiast (10h/week, Q7)</h3>
+          <h3>💎 Enthusiast (10h/week, Q7 Silver Leg)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
