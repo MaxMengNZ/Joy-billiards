@@ -91,13 +91,27 @@
             <span class="price-period">Get $210 credit (+5% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $23.8/h | Q8 (Gold Leg): $28.6/h</li>
-            <li><span class="feature-icon">🎁</span> +5% bonus = $210 credit</li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $25/h | Q8: $30/h</li>
+            <li><span class="feature-icon">🎁</span> +5% bonus = $210 credit after $200 top-up</li>
+            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $23.8/h | Q8: $28.6/h (with bonus)</em></li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.2x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 6h priority booking</li>
-            <li><span class="feature-icon">🕐</span> Use anytime (opening hours)</li>
           </ul>
+          <div class="pricing-clarification">
+            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-item">
+              <span class="clarification-label">Each session charge:</span>
+              <span class="clarification-value">$25/h (Q7) | $30/h (Q8)</span>
+            </div>
+            <div class="clarification-item">
+              <span class="clarification-label">Average cost (with bonus):</span>
+              <span class="clarification-value">$23.8/h (Q7) | $28.6/h (Q8)</span>
+            </div>
+            <div class="clarification-note">
+              You pay $25/$30 per hour, but your $200 becomes $210, so the average cost is lower!
+            </div>
+          </div>
           <div class="savings-badge">Save $408/year (2h/week) | $4.2/hour</div>
           <button class="btn btn-primary btn-lg" @click="contactUs">Upgrade Now</button>
         </div>
@@ -115,13 +129,28 @@
             <span class="price-period">Get $540 credit (+8% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $19.5/h | Q8 (Gold Leg): $24.1/h</li>
-            <li><span class="feature-icon">🎁</span> +8% bonus = $540 credit</li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
+            <li><span class="feature-icon">🎁</span> +8% bonus = $540 credit after $500 top-up</li>
+            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $19.5/h | Q8: $24.1/h (with bonus)</em></li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.4x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 12h priority booking</li>
             <li><span class="feature-icon">🎖️</span> Tournament priority</li>
           </ul>
+          <div class="pricing-clarification">
+            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-item">
+              <span class="clarification-label">Each session charge:</span>
+              <span class="clarification-value">$21/h (Q7) | $26/h (Q8)</span>
+            </div>
+            <div class="clarification-item">
+              <span class="clarification-label">Average cost (with bonus):</span>
+              <span class="clarification-value">$19.5/h (Q7) | $24.1/h (Q8)</span>
+            </div>
+            <div class="clarification-note">
+              You pay $21/$26 per hour, but your $500 becomes $540, so the average cost is lower!
+            </div>
+          </div>
           <div class="savings-badge">Save $4,080/year (10h/week) | $8.5/hour</div>
           <button class="btn btn-success btn-lg" @click="contactUs">Upgrade Now</button>
         </div>
@@ -139,13 +168,29 @@
             <span class="price-period">Get $1100 credit (+10% bonus)</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💰</span> Q7 (Silver Leg): $17.3/h | Q8 (Gold Leg): $21.8/h</li>
-            <li><span class="feature-icon">🎁</span> +10% bonus = $1100 credit</li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
+            <li><span class="feature-icon">🎁</span> +10% bonus = $1100 credit after $1000 top-up</li>
+            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $17.3/h | Q8: $21.8/h (with bonus)</em></li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.6x fastest</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 24h VIP priority booking</li>
             <li><span class="feature-icon">🎂</span> Birthday gift (exclusive)</li>
           </ul>
+          <div class="pricing-clarification pricing-clarification-vip">
+            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-item">
+              <span class="clarification-label">Each session charge:</span>
+              <span class="clarification-value"><strong>$19/h (Q7) | $24/h (Q8)</strong></span>
+            </div>
+            <div class="clarification-item">
+              <span class="clarification-label">Average cost (with bonus):</span>
+              <span class="clarification-value">$17.3/h (Q7) | $21.8/h (Q8)</span>
+            </div>
+            <div class="clarification-note clarification-note-vip">
+              <strong>⚠️ Important:</strong> You pay <strong>$19/$24 per hour</strong> when you play. 
+              Your $1000 top-up becomes $1100, which lowers your average cost to $17.3/$21.8 per hour!
+            </div>
+          </div>
           <div class="savings-badge premium">Save $5,136/year (10h/week) | ⚠️ Limited Slots</div>
           <button class="btn btn-warning btn-lg" @click="contactUs">Apply for VIP</button>
         </div>
@@ -948,6 +993,81 @@ export default {
   font-weight: 600;
   position: relative;
   z-index: 2;
+}
+
+/* Pricing Clarification Box */
+.pricing-clarification {
+  background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.pricing-clarification-vip {
+  background: linear-gradient(135deg, #fff0f5 0%, #ffe4f0 100%);
+  border: 2px solid #ec4899;
+}
+
+.clarification-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #d97706;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.pricing-clarification-vip .clarification-title {
+  color: #c026d3;
+}
+
+.clarification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.clarification-item:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0.5rem;
+}
+
+.clarification-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.clarification-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.clarification-note {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  line-height: 1.5;
+}
+
+.clarification-note-vip {
+  color: #be123c;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.clarification-note strong {
+  color: #dc2626;
+  text-decoration: underline;
+  font-weight: 700;
 }
 
 .tier-card .btn {
