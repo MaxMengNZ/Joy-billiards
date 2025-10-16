@@ -85,7 +85,8 @@
                 <li>💠 Loyalty Points: 1.0x (1 NZD = 1 Point)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'plus'">
-                <li>💰 Member rates: Q7 $23.8/h, Q8 $28.6/h (with 5% bonus)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $25/h | Q8: $30/h</li>
+                <li>💰 <em>Average cost: Q7: $23.8/h | Q8: $28.6/h (with 5% bonus)</em></li>
                 <li>🎁 +5% recharge bonus (e.g., $200 → $210 credit)</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 6h advance priority booking</li>
@@ -93,7 +94,8 @@
                 <li>⏰ 12 month validity (rolling from last recharge)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'pro'">
-                <li>💰 Pro rates: Q7 $19.5/h, Q8 $24.1/h (with 8% bonus)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
+                <li>💰 <em>Average cost: Q7: $19.5/h | Q8: $24.1/h (with 8% bonus)</em></li>
                 <li>🎁 +8% recharge bonus (e.g., $500 → $540 credit)</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 12h advance priority booking (1h pre-authorization)</li>
@@ -102,7 +104,8 @@
                 <li>⏰ 12 month validity (rolling from last recharge)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'pro_max'">
-                <li>💰 VIP rates: Q7 $17.3/h, Q8 $21.8/h (with 10% bonus)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
+                <li>💰 <em>Average cost: Q7: $17.3/h | Q8: $21.8/h (with 10% bonus)</em></li>
                 <li>🎁 +10% recharge bonus (e.g., $1000 → $1100 credit)</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 24h VIP priority booking (1h pre-authorization)</li>
