@@ -818,11 +818,9 @@ export default {
           statsStore.fetchStats()
         ])
 
-        // Load users with fresh data
+        // Load users with fresh data using secure RPC function
         const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false })
+          .rpc('get_all_users')
 
         if (error) throw error
 

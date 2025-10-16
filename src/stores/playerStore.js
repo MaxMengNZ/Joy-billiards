@@ -27,8 +27,9 @@ export const usePlayerStore = defineStore('player', {
       this.loading = true
       this.error = null
       try {
+        // Use public_users view for public player information
         const { data, error } = await supabase
-          .from('users')
+          .from('public_users')
           .select('*')
           .order('wins', { ascending: false })
         
