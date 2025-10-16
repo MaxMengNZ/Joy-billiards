@@ -34,13 +34,13 @@ export const useStatsStore = defineStore('stats', {
         const [playersResult, tournamentsResult, usersDataResult] = await Promise.all([
           supabase.from('public_users').select('id', { count: 'exact', head: true }),
           supabase.from('tournaments').select('id', { count: 'exact', head: true }),
-          supabase.from('public_users').select('wins, losses')
+          supabase.from('public_users').select('wins, losses, break_and_run_count')
         ])
 
         // Calculate total Break and Run count from all players
-        // Note: break_and_run_count is not in public_users view
-        // Set to 0 for now, or implement a separate tracking system
-        const totalBreakAndRun = 0
+        const totalBreakAndRun = usersDataResult.data?.reduce((sum, user) => {
+          return sum + (user.break_and_run_count || 0)
+        }, 0) || 0
 
         // Calculate total Matches Played (all players' wins + losses)
         const totalMatchesPlayed = usersDataResult.data?.reduce((sum, user) => {
