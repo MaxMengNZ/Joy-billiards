@@ -127,14 +127,14 @@
           <div v-else class="participants-grid">
             <div v-for="registration in registrations" :key="registration.id" class="participant-card">
               <div class="participant-info">
-                <strong>{{ registration.user.name }}</strong>
-                <span class="rank-badge badge-sm" :class="`rank-${registration.user.ranking_level}`">
-                  {{ formatRankBadge(registration.user.ranking_level) }}
+                <strong>{{ registration.user?.name || 'Unknown Player' }}</strong>
+                <span class="rank-badge badge-sm" :class="`rank-${registration.user?.ranking_level || 'beginner'}`">
+                  {{ formatRankBadge(registration.user?.ranking_level || 'beginner') }}
                 </span>
               </div>
               <div class="participant-stats">
-                <span>Rank Level: {{ formatRankBadge(registration.user.ranking_level) }}</span>
-                <span>W/L: {{ registration.user.wins }}/{{ registration.user.losses }}</span>
+                <span>Rank Level: {{ formatRankBadge(registration.user?.ranking_level || 'beginner') }}</span>
+                <span>W/L: {{ registration.user?.wins || 0 }}/{{ registration.user?.losses || 0 }}</span>
               </div>
               <div class="participant-date">
                 <small>Registered: {{ formatDate(registration.registered_at) }}</small>
@@ -428,10 +428,10 @@ export default {
     const allPlayersForBracket = computed(() => {
       // Combine registered players for bracket display
       const players = registrations.value.map(reg => ({
-        id: reg.user.id,
-        name: reg.user.name,
-        ranking_level: reg.user.ranking_level
-      }))
+        id: reg.user?.id,
+        name: reg.user?.name || 'Unknown Player',
+        ranking_level: reg.user?.ranking_level || 'beginner'
+      })).filter(player => player.id) // Filter out null users
       return players
     })
 
@@ -445,7 +445,7 @@ export default {
           .from('tournament_registrations')
           .select(`
             *,
-            user:users(id, name, email, skill_level, ranking_level)
+            user:public_users(id, name, skill_level, ranking_level)
           `)
           .eq('tournament_id', route.params.id)
           .eq('status', 'registered')
