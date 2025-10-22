@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async signUp({ email, password, fullName, role = 'player' }) {
+    async signUp({ email, password, fullName, phoneNumber, birthday, role = 'player' }) {
       this.loading = true
       this.error = null
 
@@ -106,6 +106,8 @@ export const useAuthStore = defineStore('auth', {
           options: {
             data: {
               full_name: fullName,
+              phone: phoneNumber,
+              birthday: birthday,
               role: role
             }
           }

@@ -176,6 +176,18 @@
                 </div>
 
                 <div class="form-group">
+                  <label class="form-label">Date of Birth</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="editForm.birthday"
+                    :disabled="!isEditing"
+                    placeholder="DD/MM/YYYY"
+                  >
+                  <small class="form-text">Format: DD/MM/YYYY (e.g., 15/03/2000)</small>
+                </div>
+
+                <div class="form-group">
                   <label class="form-label">Address</label>
                   <textarea
                     class="form-control"
@@ -431,6 +443,7 @@ export default {
       name: '',
       email: '',
       phone: '',
+      birthday: '',
       address: '',
       id_card: ''
     })
@@ -470,10 +483,21 @@ export default {
 
         if (data) {
           profile.value = data
+          // Format birthday from YYYY-MM-DD to DD/MM/YYYY
+          let formattedBirthday = ''
+          if (data.birthday) {
+            const date = new Date(data.birthday)
+            const day = String(date.getDate()).padStart(2, '0')
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const year = date.getFullYear()
+            formattedBirthday = `${day}/${month}/${year}`
+          }
+          
           editForm.value = {
             name: data.name,
             email: data.email,
             phone: data.phone || '',
+            birthday: formattedBirthday,
             address: data.address || '',
             id_card: data.id_card || ''
           }
@@ -545,11 +569,24 @@ export default {
 
     const saveProfile = async () => {
       try {
+        // Convert DD/MM/YYYY to YYYY-MM-DD for database
+        let birthdayISO = null
+        if (editForm.value.birthday) {
+          const parts = editForm.value.birthday.split('/')
+          if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0')
+            const month = parts[1].padStart(2, '0')
+            const year = parts[2]
+            birthdayISO = `${year}-${month}-${day}`
+          }
+        }
+        
         const { data, error } = await supabase
           .from('users')
           .update({
             name: editForm.value.name,
             phone: editForm.value.phone,
+            birthday: birthdayISO,
             address: editForm.value.address,
             id_card: editForm.value.id_card
           })

@@ -180,7 +180,7 @@
                     </span>
                     <span class="stat-item">
                       <span class="stat-label">Matches:</span>
-                      <span class="stat-value">N/A</span>
+                      <span class="stat-value">{{ player.wins + player.losses }}</span>
                     </span>
                   </div>
                 </div>
@@ -368,9 +368,9 @@ export default {
         const currentYear = nzDate.getFullYear()
         const currentMonth = nzDate.getMonth() + 1 // JavaScript months are 0-indexed
         
-        // Get all users
+        // Get all users (using public_users view for public access)
         const { data: usersData, error: usersError } = await supabase
-          .from('users')
+          .from('public_users')
           .select('*')
         
         if (usersError) throw usersError

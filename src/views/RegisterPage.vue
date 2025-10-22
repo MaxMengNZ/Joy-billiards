@@ -36,6 +36,20 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label">Date of Birth *</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model="birthday"
+                placeholder="DD/MM/YYYY (e.g., 15/03/2000)"
+                required
+                :disabled="authStore.loading"
+                @input="formatBirthdayInput"
+              >
+              <small class="form-text">Format: DD/MM/YYYY (You must be at least 13 years old)</small>
+            </div>
+
+            <div class="form-group">
               <label class="form-label">Email *</label>
               <input
                 type="email"
@@ -71,6 +85,19 @@
                 required
                 :disabled="authStore.loading"
               >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input
+                type="tel"
+                class="form-control"
+                v-model="phoneNumber"
+                placeholder="022 123 4567"
+                required
+                :disabled="authStore.loading"
+              >
+              <small class="form-text">Please enter your phone number</small>
             </div>
 
             <!-- Role is hidden, all public registrations are Players -->
@@ -123,14 +150,85 @@ export default {
     const email = ref('')
     const password = ref('')
     const confirmPassword = ref('')
+    const phoneNumber = ref('')
+    const birthday = ref('')
     const role = ref('player')
     const registrationSuccess = ref(false)
     const registrationError = ref('')
+
+    // Get today's date for age validation
+    const today = new Date()
+
+    // Format birthday input as user types (DD/MM/YYYY)
+    const formatBirthdayInput = (event) => {
+      let value = event.target.value.replace(/\D/g, '') // Remove non-digits
+      
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2)
+      }
+      if (value.length >= 5) {
+        value = value.slice(0, 5) + '/' + value.slice(5, 9)
+      }
+      
+      birthday.value = value
+    }
+
+    // Parse DD/MM/YYYY to Date object
+    const parseBirthday = (dateString) => {
+      const parts = dateString.split('/')
+      if (parts.length !== 3) return null
+      
+      const day = parseInt(parts[0], 10)
+      const month = parseInt(parts[1], 10) - 1 // Month is 0-indexed
+      const year = parseInt(parts[2], 10)
+      
+      const date = new Date(year, month, day)
+      
+      // Validate the date is real
+      if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
+        return null
+      }
+      
+      return date
+    }
+
+    // Convert DD/MM/YYYY to YYYY-MM-DD for database
+    const convertToISODate = (ddmmyyyy) => {
+      const parts = ddmmyyyy.split('/')
+      if (parts.length !== 3) return null
+      
+      const day = parts[0].padStart(2, '0')
+      const month = parts[1].padStart(2, '0')
+      const year = parts[2]
+      
+      return `${year}-${month}-${day}`
+    }
 
     const handleSignUp = async () => {
       // Clear previous errors
       registrationError.value = ''
       
+      // Validate all required fields
+      if (!fullName.value.trim()) {
+        registrationError.value = 'Please enter your full name'
+        return
+      }
+
+      if (!email.value.trim()) {
+        registrationError.value = 'Please enter your email address'
+        return
+      }
+
+      if (!password.value) {
+        registrationError.value = 'Please enter a password'
+        return
+      }
+
+      if (!confirmPassword.value) {
+        registrationError.value = 'Please confirm your password'
+        return
+      }
+
       if (password.value !== confirmPassword.value) {
         registrationError.value = 'Passwords do not match'
         return
@@ -141,10 +239,55 @@ export default {
         return
       }
 
+      if (!phoneNumber.value.trim()) {
+        registrationError.value = 'Please enter your phone number'
+        return
+      }
+
+      if (!birthday.value) {
+        registrationError.value = 'Please enter your date of birth'
+        return
+      }
+
+      // Validate birthday format (DD/MM/YYYY)
+      const birthdayRegex = /^\d{2}\/\d{2}\/\d{4}$/
+      if (!birthdayRegex.test(birthday.value)) {
+        registrationError.value = 'Please enter date of birth in DD/MM/YYYY format (e.g., 15/03/2000)'
+        return
+      }
+
+      // Parse and validate the date
+      const birthDate = parseBirthday(birthday.value)
+      if (!birthDate) {
+        registrationError.value = 'Please enter a valid date of birth (e.g., 15/03/2000)'
+        return
+      }
+
+      // Check if date is not in the future
+      if (birthDate > today) {
+        registrationError.value = 'Date of birth cannot be in the future'
+        return
+      }
+
+      // Validate age (must be at least 13 years old)
+      const age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age
+
+      if (actualAge < 13) {
+        registrationError.value = 'You must be at least 13 years old to register'
+        return
+      }
+
+      // Convert to ISO format for database (YYYY-MM-DD)
+      const isoDate = convertToISODate(birthday.value)
+
       const result = await authStore.signUp({
         email: email.value,
         password: password.value,
         fullName: fullName.value,
+        phoneNumber: phoneNumber.value,
+        birthday: isoDate,
         role: role.value
       })
 
@@ -165,10 +308,13 @@ export default {
       email,
       password,
       confirmPassword,
+      phoneNumber,
+      birthday,
       role,
       registrationSuccess,
       registrationError,
-      handleSignUp
+      handleSignUp,
+      formatBirthdayInput
     }
   }
 }

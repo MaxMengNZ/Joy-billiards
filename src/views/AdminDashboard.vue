@@ -431,6 +431,11 @@
                 <input type="tel" class="form-control" v-model="userForm.phone">
               </div>
               <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+                <input type="text" class="form-control" v-model="userForm.birthday" placeholder="DD/MM/YYYY">
+                <small class="form-text">Format: DD/MM/YYYY (e.g., 15/03/2000)</small>
+              </div>
+              <div class="form-group">
                 <label class="form-label">Address</label>
                 <textarea 
                   class="form-control" 
@@ -728,6 +733,7 @@ export default {
       name: '',
       email: '',
       phone: '',
+      birthday: '',
       address: '',
       id_card: '',
       membership_card_number: '',
@@ -933,10 +939,21 @@ export default {
 
     const viewUserDetails = (user) => {
       selectedUser.value = user
+      // Format birthday from YYYY-MM-DD to DD/MM/YYYY
+      let formattedBirthday = ''
+      if (user.birthday) {
+        const date = new Date(user.birthday)
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = date.getFullYear()
+        formattedBirthday = `${day}/${month}/${year}`
+      }
+      
       userForm.value = {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
+        birthday: formattedBirthday,
         address: user.address || '',
         id_card: user.id_card || '',
         membership_card_number: user.membership_card_number || '',
@@ -955,12 +972,25 @@ export default {
       if (!selectedUser.value) return
 
       try {
+        // Convert DD/MM/YYYY to YYYY-MM-DD for database
+        let birthdayISO = null
+        if (userForm.value.birthday) {
+          const parts = userForm.value.birthday.split('/')
+          if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0')
+            const month = parts[1].padStart(2, '0')
+            const year = parts[2]
+            birthdayISO = `${year}-${month}-${day}`
+          }
+        }
+        
         const { error } = await supabase
           .from('users')
           .update({
             name: userForm.value.name,
             email: userForm.value.email,
             phone: userForm.value.phone,
+            birthday: birthdayISO,
             address: userForm.value.address,
             id_card: userForm.value.id_card,
             membership_expires_at: userForm.value.membership_expires_at || null

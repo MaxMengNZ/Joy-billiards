@@ -71,6 +71,12 @@ const routes = [
     meta: { title: 'Membership Benefits' }
   },
   {
+    path: '/wechat',
+    name: 'WeChat',
+    component: () => import('../views/WeChatQRPage.vue'),
+    meta: { title: 'Follow Us on WeChat' }
+  },
+  {
     path: '/error/:type?',
     name: 'Error',
     component: () => import('../views/ErrorPage.vue'),
