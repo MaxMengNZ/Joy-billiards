@@ -19,7 +19,7 @@
 
 | 术语 | 英文 | 定义 |
 |------|------|------|
-| **非高峰时段** | Off-Peak Hours | Monday - Friday 9:00 AM - 5:00 PM（周一至周五 上午9点至下午5点）。不包括晚上、周末及公共假期。 |
+| **非高峰时段** | Off-Peak Hours | Monday - Friday 10:00 AM - 5:00 PM（周一至周五 上午10点至下午5点）。不包括晚上、周末及公共假期。 |
 | **高峰时段** | Peak Hours | Friday 6:00 PM - 营业结束、Saturday & Sunday 全天、公共假期、赛事日。会员折扣价格仍可使用，但 Free Hours 不可用。 |
 | **会员折扣价格** | Member Rates | Plus/Pro/Pro Max 会员享受的优惠桌价，营业时间内任何时段都可使用（含 GST）。 |
 | **实际有效价** | Effective Rate | 包含充值赠送后的实际小时成本。计算公式：标准桌价 ÷ (1 + 赠送比例)。所有价格含 GST。 |
@@ -375,7 +375,7 @@ Loyalty Points（会员积分）是 Joy Billiards 的消费奖励积分系统。
 - 💡 **建议：** 定期使用积分，避免过期浪费
 
 ### 🕐 积分兑换 Free Hours 时段限制
-- ✅ **可使用时段：** Monday - Friday 9:00 AM - 5:00 PM（周一至周五 上午9点至下午5点）
+- ✅ **可使用时段：** Monday - Friday 10:00 AM - 5:00 PM（周一至周五 上午10点至下午5点）
 - ❌ **不可使用：** 晚上、周末及公共假期
 - 💡 **说明：** 使用 Loyalty Points 兑换的免费打球券仅限非高峰时段使用
 - 💰 **积分兑换其他商品**（饮品、小食、配件）：无时段限制
@@ -702,7 +702,7 @@ Ranking Points（排名积分）是 Joy Billiards 的竞技积分系统，用于
 
 ### Q15: 哪些优惠有时段限制？
 **A:** 
-- ⚠️ **仅以下项目限制在 Monday - Friday 9:00 AM - 5:00 PM（周一至周五 上午9点至下午5点）使用：**
+- ⚠️ **仅以下项目限制在 Monday - Friday 10:00 AM - 5:00 PM（周一至周五 上午10点至下午5点）使用：**
   - 🎁 赠送的 Free Hours（如生日券、月度免费时长等）
   - 🎱 Loyalty Points 兑换的 Free Hours（免费打球券）
 
@@ -790,8 +790,8 @@ Ranking Points（排名积分）是 Joy Billiards 的竞技积分系统，用于
 - 📧 **电子邮箱：** info@joybilliards.co.nz
 - 🌐 **网站：** Joy Billiards NZ
 - ⏰ **营业时间：**
-  - **Monday - Thursday:** 9:00 AM - 1:00 AM
-  - **Friday - Saturday:** 9:00 AM - 2:00 AM
+  - **Monday - Thursday:** 10:00 AM - 1:00 AM
+  - **Friday - Saturday:** 10:00 AM - 2:00 AM
   - **Sunday:** 10:00 AM - 1:00 AM
 
 ---
@@ -817,7 +817,7 @@ Ranking Points（排名积分）是 Joy Billiards 的竞技积分系统，用于
 - 💡 **建议：** 根据实际打球频率合理充值
 
 ### 🕐 优惠使用时段限制
-- ⚠️ **以下优惠仅限 Monday - Friday 9:00 AM - 5:00 PM（周一至周五 上午9点至下午5点）使用：**
+- ⚠️ **以下优惠仅限 Monday - Friday 10:00 AM - 5:00 PM（周一至周五 上午10点至下午5点）使用：**
   - 🎁 赠送的 Free Hours（如生日券、月度免费时长等）
   - 🎱 Loyalty Points 兑换的 Free Hours（免费打球券）
 - ❌ **不适用于：** 晚上时段、周末（Saturday-Sunday）及公共假期
@@ -963,7 +963,7 @@ Ranking Points（排名积分）是 Joy Billiards 的竞技积分系统，用于
 4. **会员卡余额不可退款、不可转让，请合理充值**
 5. **账号仅限本人使用，严禁共享或转让（系统会监测异常登录）**
 6. **会员折扣价格在营业时间内任何时段都可使用（含晚上和周末）**
-7. **Free Hours（赠送或积分兑换）仅限非高峰时段（Mon-Fri 9AM-5PM）**
+7. **Free Hours（赠送或积分兑换）仅限非高峰时段（Mon-Fri 10AM-5PM）**
 8. **积分有效期 12 个月，积分券每月最多兑换4次，最小1小时起兑**
 9. **会员有效期仅与充值挂钩，日常消费不刷新有效期（防刷时长）**
 10. **续费金额决定会员等级（低于门槛自动降级）**
@@ -1023,7 +1023,7 @@ Ranking Points（排名积分）是 Joy Billiards 的竞技积分系统，用于
 - 💰 **价格：** 根据时长和人数定制，请联系咨询（不含 GST）
 
 ### 🕐 适用时段与定金规则
-- ✅ **标准时段：** Monday - Thursday 9:00 AM - 6:00 PM（非高峰时段）
+- ✅ **标准时段：** Monday - Thursday 10:00 AM - 6:00 PM（非高峰时段）
 - ⚠️ **周末/晚间：** Friday 6PM 后、Saturday & Sunday 全天需定制报价（价格上浮 20-30%）
 - 💳 **预订定金：** 需支付 **30%** 定金确认预订
 - ❌ **取消政策：**

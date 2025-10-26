@@ -1,5 +1,16 @@
 <template>
   <div class="home-page">
+    <!-- Trial Opening Announcement Banner -->
+    <div class="trial-banner">
+      <div class="trial-banner-content">
+        <div class="trial-banner-icon">🎉</div>
+        <div class="trial-banner-text">
+          <strong>Trial Opening Now!</strong> Welcome to Joy Billiards NZ - New Zealand's first professional Heyball venue!
+        </div>
+        <div class="trial-banner-close" @click="hideTrialBanner" v-if="showTrialBanner">×</div>
+      </div>
+    </div>
+
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-background">
@@ -9,7 +20,7 @@
       <div class="hero-content">
         <div class="hero-badge">
           <span class="badge-icon">🎱</span>
-          <span class="badge-text">New Zealand's Premier Heyball Venue</span>
+          <span class="badge-text">Now Open - Trial Operation</span>
         </div>
         <h1 class="hero-title">
           Experience the Future of<br>
@@ -20,7 +31,7 @@
           <strong>exclusive official distributor of JOY Billiards</strong> in New Zealand.
         </p>
         <p class="hero-tagline">
-          Premium, tournament-grade tables. Pro-level atmosphere. Open soon in Hamilton.
+          Premium, tournament-grade tables. Pro-level atmosphere. <strong>Now Open in Hamilton!</strong>
         </p>
         <div class="hero-actions">
           <router-link to="/tournaments" class="btn btn-primary btn-lg hero-btn-primary">
@@ -278,7 +289,7 @@
             Visit <span class="title-highlight">Joy Billiards</span> NZ
           </h2>
           <p class="contact-main-subtitle">
-            Experience world-class Heyball in the heart of Hamilton
+            Experience world-class Heyball in the heart of Hamilton - <strong>Now Open for Trial Operation!</strong>
           </p>
         </div>
         
@@ -330,11 +341,11 @@
               <div class="hours-list">
                 <div class="hours-item">
                   <span class="hours-day">Mon - Thu</span>
-                  <span class="hours-time">9:00 AM - 1:00 AM</span>
+                  <span class="hours-time">10:00 AM - 1:00 AM</span>
                 </div>
                 <div class="hours-item">
                   <span class="hours-day">Fri - Sat</span>
-                  <span class="hours-time">9:00 AM - 2:00 AM</span>
+                  <span class="hours-time">10:00 AM - 2:00 AM</span>
                 </div>
                 <div class="hours-item hours-item-highlight">
                   <span class="hours-day">Sunday</span>
@@ -363,6 +374,7 @@ export default {
     const statsStore = useStatsStore()
     const lastRefreshTime = ref(new Date())
     const isRefreshing = ref(false)
+    const showTrialBanner = ref(true)
 
     // Use computed properties to get reactive stats
     const stats = computed(() => ({
@@ -408,13 +420,19 @@ export default {
       return `${Math.floor(diff / 60)}m ago`
     }
 
+    const hideTrialBanner = () => {
+      showTrialBanner.value = false
+    }
+
     return {
       stats,
       openMaps,
       isRefreshing,
       lastRefreshTime,
       manualRefresh,
-      formatLastRefresh
+      formatLastRefresh,
+      showTrialBanner,
+      hideTrialBanner
     }
   }
 }
@@ -423,6 +441,93 @@ export default {
 <style scoped>
 .home-page {
   max-width: 100%;
+}
+
+/* Trial Opening Banner */
+.trial-banner {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #1a1a2e;
+  padding: 1rem 2rem;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  animation: banner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes banner-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+
+.trial-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.trial-banner-icon {
+  font-size: 1.5rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.trial-banner-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.trial-banner-text strong {
+  color: #1a1a2e;
+  font-weight: 800;
+}
+
+.trial-banner-close {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  background: rgba(26, 26, 46, 0.1);
+}
+
+.trial-banner-close:hover {
+  background: rgba(26, 26, 46, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .trial-banner {
+    padding: 0.75rem 1rem;
+  }
+  
+  .trial-banner-content {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .trial-banner-text {
+    font-size: 1rem;
+  }
+  
+  .trial-banner-close {
+    position: static;
+    transform: none;
+    margin-top: 0.5rem;
+  }
 }
 
 /* Hero Section */
