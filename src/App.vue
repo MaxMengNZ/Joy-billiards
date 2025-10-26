@@ -133,6 +133,9 @@
 
       <!-- Mobile Bottom Navigation -->
       <MobileBottomNav v-if="!isAuthPage" />
+      
+      <!-- Floating Social Media Button (Mobile Only) -->
+      <TestFloatingButton v-if="!isAuthPage" />
     </div>
   </ErrorBoundary>
 </template>
@@ -144,6 +147,7 @@ import { testConnection } from './config/supabase'
 import { useAuthStore } from './stores/authStore'
 import ErrorBoundary from './components/ErrorBoundary.vue'
 import MobileBottomNav from './components/MobileBottomNav.vue'
+import TestFloatingButton from './components/TestFloatingButton.vue'
 import { setupGlobalErrorHandler } from './utils/errorHandler'
 import { ConnectionMonitor } from './utils/supabaseWithRetry'
 
@@ -151,7 +155,8 @@ export default {
   name: 'App',
   components: {
     ErrorBoundary,
-    MobileBottomNav
+    MobileBottomNav,
+    TestFloatingButton
   },
   setup() {
     const route = useRoute()

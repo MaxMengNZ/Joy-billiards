@@ -1,13 +1,13 @@
 <template>
   <div class="home-page">
     <!-- Trial Opening Announcement Banner -->
-    <div class="trial-banner">
+    <div class="trial-banner" v-if="showTrialBanner">
       <div class="trial-banner-content">
         <div class="trial-banner-icon">🎉</div>
         <div class="trial-banner-text">
           <strong>Trial Opening Now!</strong> Welcome to Joy Billiards NZ - New Zealand's first professional Heyball venue!
         </div>
-        <div class="trial-banner-close" @click="hideTrialBanner" v-if="showTrialBanner">×</div>
+        <div class="trial-banner-close" @click="hideTrialBanner">×</div>
       </div>
     </div>
 
