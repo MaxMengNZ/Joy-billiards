@@ -191,11 +191,26 @@ export default {
     const checkEmailExists = async (email) => {
       try {
         console.log('Checking email:', email) // 调试日志
-        const { data, error } = await supabase
-          .rpc('check_email_exists', { email })
         
-        console.log('RPC result:', { data, error }) // 调试日志
-        return { exists: data, error }
+        // 直接测试 RPC 调用
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/check_email_exists`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ email })
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        console.log('RPC result:', data) // 调试日志
+        
+        return { exists: data, error: null }
       } catch (err) {
         console.error('RPC error:', err) // 调试日志
         return { exists: false, error: err }
