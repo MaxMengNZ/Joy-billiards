@@ -128,6 +128,24 @@
               <div class="action-arrow">→</div>
             </router-link>
 
+            <router-link to="/monitoring" class="action-card action-monitoring">
+              <div class="action-icon">📊</div>
+              <div class="action-content">
+                <h3 class="action-title">Registration Monitoring</h3>
+                <p class="action-description">Monitor duplicates and suspicious registrations</p>
+              </div>
+              <div class="action-arrow">→</div>
+            </router-link>
+
+            <router-link to="/unverified-users" class="action-card action-unverified">
+              <div class="action-icon">📧</div>
+              <div class="action-content">
+                <h3 class="action-title">Unverified Users</h3>
+                <p class="action-description">Manage users with unverified email addresses</p>
+              </div>
+              <div class="action-arrow">→</div>
+            </router-link>
+
             <button @click="showErrorLog = true" class="action-card action-view-errors">
               <div class="action-icon">🐛</div>
               <div class="action-content">
@@ -1889,6 +1907,32 @@ export default {
 
 .action-manage-players:hover .action-arrow {
   color: #17a2b8;
+}
+
+.action-monitoring {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #6c757d;
+}
+
+.action-monitoring:hover {
+  border-color: #6c757d;
+}
+
+.action-monitoring:hover .action-arrow {
+  color: #6c757d;
+}
+
+.action-unverified {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border: 2px solid #ff9800;
+}
+
+.action-unverified:hover {
+  border-color: #ff9800;
+}
+
+.action-unverified:hover .action-arrow {
+  color: #ff9800;
 }
 
 .action-view-rankings:hover {

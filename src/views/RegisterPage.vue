@@ -54,11 +54,23 @@
               <input
                 type="email"
                 class="form-control"
+                :class="{ 'is-invalid': emailError }"
                 v-model="email"
                 placeholder="your.email@example.com"
                 required
                 :disabled="authStore.loading"
+                @blur="validateEmail"
+                @input="clearEmailError"
               >
+              <div v-if="emailError" class="invalid-feedback">
+                {{ emailError }}
+              </div>
+              <div v-if="emailChecking" class="form-text text-info">
+                <i class="fas fa-spinner fa-spin"></i> Checking email availability...
+              </div>
+              <div v-if="emailValid && !emailChecking" class="form-text text-success">
+                <i class="fas fa-check"></i> Email is available
+              </div>
             </div>
 
             <div class="form-group">
@@ -107,7 +119,7 @@
               <button
                 type="submit"
                 class="btn btn-primary btn-lg"
-                :disabled="authStore.loading || password !== confirmPassword"
+                :disabled="authStore.loading || password !== confirmPassword || !emailValid || emailChecking"
               >
                 {{ authStore.loading ? 'Creating Account...' : 'Sign Up' }}
               </button>
@@ -139,6 +151,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { createClient } from '@supabase/supabase-js'
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default {
   name: 'RegisterPage',
@@ -155,9 +173,89 @@ export default {
     const role = ref('player')
     const registrationSuccess = ref(false)
     const registrationError = ref('')
+    
+    // Email validation states
+    const emailError = ref('')
+    const emailValid = ref(false)
+    const emailChecking = ref(false)
 
     // Get today's date for age validation
     const today = new Date()
+
+    // Email validation functions
+    const validateEmailFormat = (email) => {
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+      return emailRegex.test(email)
+    }
+
+    const checkEmailExists = async (email) => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('email')
+          .eq('email', email)
+          .single()
+        
+        return { exists: !!data, error }
+      } catch (err) {
+        return { exists: false, error: err }
+      }
+    }
+
+    const validateEmail = async () => {
+      if (!email.value.trim()) {
+        emailError.value = ''
+        emailValid.value = false
+        return
+      }
+
+      // Check email format first
+      if (!validateEmailFormat(email.value)) {
+        emailError.value = 'Please enter a valid email address'
+        emailValid.value = false
+        return
+      }
+
+      // Check for common invalid domains
+      const invalidDomains = ['example.com', 'test.com', 'fake.com', 'temp.com']
+      const domain = email.value.split('@')[1]?.toLowerCase()
+      if (invalidDomains.includes(domain)) {
+        emailError.value = 'Please use a real email address'
+        emailValid.value = false
+        return
+      }
+
+      // Check if email already exists
+      emailChecking.value = true
+      emailError.value = ''
+      
+      try {
+        const { exists, error } = await checkEmailExists(email.value)
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          emailError.value = 'Error checking email availability'
+          emailValid.value = false
+        } else if (exists) {
+          emailError.value = 'This email is already registered'
+          emailValid.value = false
+        } else {
+          emailError.value = ''
+          emailValid.value = true
+        }
+      } catch (err) {
+        emailError.value = 'Error checking email availability'
+        emailValid.value = false
+      } finally {
+        emailChecking.value = false
+      }
+    }
+
+    const clearEmailError = () => {
+      if (emailError.value) {
+        emailError.value = ''
+        emailValid.value = false
+      }
+    }
 
     // Format birthday input as user types (DD/MM/YYYY)
     const formatBirthdayInput = (event) => {
@@ -216,6 +314,12 @@ export default {
 
       if (!email.value.trim()) {
         registrationError.value = 'Please enter your email address'
+        return
+      }
+
+      // Check email validation
+      if (emailError.value || !emailValid.value) {
+        registrationError.value = 'Please fix the email validation errors'
         return
       }
 
@@ -313,8 +417,13 @@ export default {
       role,
       registrationSuccess,
       registrationError,
+      emailError,
+      emailValid,
+      emailChecking,
       handleSignUp,
-      formatBirthdayInput
+      formatBirthdayInput,
+      validateEmail,
+      clearEmailError
     }
   }
 }
@@ -516,6 +625,36 @@ export default {
   .venue-info p {
     margin: 0.5rem 0;
   }
+}
+
+/* Email validation styles */
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #dc3545;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
 

@@ -28,6 +28,12 @@ const routes = [
     meta: { title: 'Email Confirmation' }
   },
   {
+    path: '/verify-email',
+    name: 'EmailVerification',
+    component: () => import('../views/EmailVerificationPage.vue'),
+    meta: { title: 'Email Verification' }
+  },
+  {
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('../views/AdminDashboard.vue'),
@@ -38,6 +44,18 @@ const routes = [
     name: 'Players',
     component: () => import('../views/PlayersPage.vue'),
     meta: { title: 'Players Management', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/monitoring',
+    name: 'RegistrationMonitoring',
+    component: () => import('../views/RegistrationMonitoringPage.vue'),
+    meta: { title: 'Registration Monitoring', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/unverified-users',
+    name: 'UnverifiedUsers',
+    component: () => import('../views/UnverifiedUsersPage.vue'),
+    meta: { title: 'Unverified Users Management', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/tournaments',

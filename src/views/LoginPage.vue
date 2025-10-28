@@ -18,6 +18,14 @@
             {{ authStore.error }}
           </div>
 
+          <div v-if="verificationSent" class="alert alert-success">
+            ✅ 验证邮件已重新发送！请检查您的邮箱。
+          </div>
+
+          <div v-if="verificationError" class="alert alert-danger">
+            {{ verificationError }}
+          </div>
+
           <form @submit.prevent="handleSignIn">
             <div class="form-group">
               <label class="form-label">Email</label>
@@ -58,6 +66,11 @@
             <p>
               Don't have an account?
               <router-link to="/register" class="link">Sign Up</router-link>
+            </p>
+            <p>
+              <a href="#" @click.prevent="resendVerification" class="link">
+                📧 重新发送验证邮件
+              </a>
             </p>
             <p>
               <a href="#" @click.prevent="showForgotPassword" class="link">
@@ -115,6 +128,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { createClient } from '@supabase/supabase-js'
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default {
   name: 'LoginPage',
@@ -128,6 +147,8 @@ export default {
     const resetEmail = ref('')
     const resetSuccess = ref(false)
     const passwordChangedMessage = ref(false)
+    const verificationSent = ref(false)
+    const verificationError = ref('')
 
     onMounted(() => {
       // Check if password was just changed
@@ -203,6 +224,40 @@ export default {
       }
     }
 
+    const resendVerification = async () => {
+      if (!email.value) {
+        verificationError.value = '请先输入您的邮箱地址'
+        return
+      }
+
+      try {
+        // 调用 Edge Function 发送验证邮件
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-verification-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ email: email.value })
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || '发送失败')
+        }
+
+        verificationSent.value = true
+        verificationError.value = ''
+        setTimeout(() => {
+          verificationSent.value = false
+        }, 5000)
+      } catch (err) {
+        console.error('Error resending verification:', err)
+        verificationError.value = err.message || '发送失败，请稍后重试'
+      }
+    }
+
     return {
       authStore,
       email,
@@ -211,9 +266,12 @@ export default {
       resetEmail,
       resetSuccess,
       passwordChangedMessage,
+      verificationSent,
+      verificationError,
       handleSignIn,
       showForgotPassword,
-      handleResetPassword
+      handleResetPassword,
+      resendVerification
     }
   }
 }
