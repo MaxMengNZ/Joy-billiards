@@ -19,7 +19,7 @@
           </div>
 
           <div v-if="verificationSent" class="alert alert-success">
-            ✅ 验证邮件已重新发送！请检查您的邮箱。
+            ✅ Verification email resent! Please check your inbox.
           </div>
 
           <div v-if="verificationError" class="alert alert-danger">
@@ -69,7 +69,7 @@
             </p>
             <p>
               <a href="#" @click.prevent="resendVerification" class="link">
-                📧 重新发送验证邮件
+                📧 Resend verification email
               </a>
             </p>
             <p>
@@ -226,7 +226,7 @@ export default {
 
     const resendVerification = async () => {
       if (!email.value) {
-        verificationError.value = '请先输入您的邮箱地址'
+        verificationError.value = 'Please enter your email address first'
         return
       }
 
@@ -244,7 +244,7 @@ export default {
         const result = await response.json()
 
         if (!response.ok) {
-          throw new Error(result.error || '发送失败')
+          throw new Error(result.error || 'Failed to send')
         }
 
         verificationSent.value = true
@@ -254,7 +254,7 @@ export default {
         }, 5000)
       } catch (err) {
         console.error('Error resending verification:', err)
-        verificationError.value = err.message || '发送失败，请稍后重试'
+        verificationError.value = err.message || 'Failed to send. Please try again later.'
       }
     }
 
