@@ -190,11 +190,14 @@ export default {
 
     const checkEmailExists = async (email) => {
       try {
+        console.log('Checking email:', email) // 调试日志
         const { data, error } = await supabase
           .rpc('check_email_exists', { email })
         
+        console.log('RPC result:', { data, error }) // 调试日志
         return { exists: data, error }
       } catch (err) {
+        console.error('RPC error:', err) // 调试日志
         return { exists: false, error: err }
       }
     }
@@ -227,7 +230,15 @@ export default {
       emailError.value = ''
       
       try {
-        const { exists, error } = await checkEmailExists(email.value)
+        // 添加超时机制
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        )
+        
+        const { exists, error } = await Promise.race([
+          checkEmailExists(email.value),
+          timeoutPromise
+        ])
         
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
           emailError.value = 'Error checking email availability'
@@ -240,6 +251,7 @@ export default {
           emailValid.value = true
         }
       } catch (err) {
+        console.error('Email validation error:', err)
         emailError.value = 'Error checking email availability'
         emailValid.value = false
       } finally {
