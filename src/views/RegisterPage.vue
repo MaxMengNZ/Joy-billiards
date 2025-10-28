@@ -191,12 +191,9 @@ export default {
     const checkEmailExists = async (email) => {
       try {
         const { data, error } = await supabase
-          .from('users')
-          .select('email')
-          .eq('email', email)
-          .single()
+          .rpc('check_email_exists', { email })
         
-        return { exists: !!data, error }
+        return { exists: data, error }
       } catch (err) {
         return { exists: false, error: err }
       }
