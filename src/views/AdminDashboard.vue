@@ -844,7 +844,7 @@ export default {
 
         // Load users with fresh data using secure RPC function
         const { data, error } = await supabase
-          .rpc('get_all_users')
+          .rpc('admin_get_all_users')
 
         if (error) throw error
 
@@ -1157,7 +1157,7 @@ export default {
       try {
         if (loyaltyForm.value.type === 'add') {
           // Record consumption and add loyalty points
-          const { data, error } = await supabase.rpc('record_loyalty_points', {
+          const { data, error } = await supabase.rpc('admin_record_loyalty_points', {
             p_user_id: selectedUser.value.id,
             p_amount_nzd: loyaltyForm.value.amountNZD,
             p_description: loyaltyForm.value.description || 'Consumption',
@@ -1169,7 +1169,7 @@ export default {
           alert(`✅ Successfully added ${data.points_earned.toFixed(2)} Loyalty Points!\nNew balance: ${data.new_balance.toFixed(2)} Loyalty Points`)
         } else {
           // Deduct loyalty points
-          const { data, error } = await supabase.rpc('deduct_loyalty_points', {
+          const { data, error } = await supabase.rpc('admin_deduct_loyalty_points', {
             p_user_id: selectedUser.value.id,
             p_points_to_deduct: loyaltyForm.value.pointsToDeduct,
             p_description: loyaltyForm.value.description || 'Loyalty Points redemption',

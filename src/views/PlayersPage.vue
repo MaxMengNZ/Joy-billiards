@@ -595,7 +595,7 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         
         // Call the database function to add points with NZ timezone
-        const { data, error } = await supabase.rpc('add_player_points', {
+        const { data, error } = await supabase.rpc('admin_add_player_points', {
           p_user_id: selectedPlayer.value.id,
           p_points_change: pointsChange.value,
           p_reason: pointsReason.value || 'No reason provided',

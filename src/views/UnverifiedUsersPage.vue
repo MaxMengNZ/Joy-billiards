@@ -187,7 +187,7 @@ export default {
     const loadUnverifiedUsers = async () => {
       loading.value = true
       try {
-        const { data, error } = await supabase.rpc('get_unverified_users')
+        const { data, error } = await supabase.rpc('admin_get_unverified_users')
         if (error) throw error
         unverifiedUsers.value = data || []
       } catch (err) {
