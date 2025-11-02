@@ -330,16 +330,20 @@ export default {
     ]
 
     const rankedPlayers = computed(() => {
-      // Filter out players with 0 points for the current view
+      // ⚠️ 关键修复：只显示有 RANKING points 的玩家
       const playersWithPoints = players.value.filter(player => {
-        const points = getDisplayPoints(player)
-        return points > 0
+        const displayPoints = getDisplayPoints(player)
+        // 只显示当前视图有积分的玩家（段位积分 > 0）
+        // ❌ 不使用 loyalty_points
+        // ✅ 只使用 ranking_points 相关的数据
+        return displayPoints > 0
       })
       
       const sorted = playersWithPoints.sort((a, b) => {
         const aPoints = getDisplayPoints(a)
         const bPoints = getDisplayPoints(b)
         if (bPoints !== aPoints) return bPoints - aPoints
+        // 如果积分相同，按胜场数排序
         return b.wins - a.wins
       })
       return sorted
@@ -350,12 +354,14 @@ export default {
     })
 
     const getDisplayPoints = (player) => {
+      // ⚠️ 重要：只返回 ranking_points（段位积分），不返回 loyalty_points
       switch (activeTab.value) {
         case 'monthly':
           return player.current_month_points || 0
         case 'annual':
           return player.selected_year_points || 0
         default:
+          // Current Season - 返回今年累计的段位积分
           return player.current_year_points || 0
       }
     }
@@ -375,14 +381,14 @@ export default {
         
         if (usersError) throw usersError
         
-        // Get all point history
+        // Get RANKING point history (NOT loyalty points!)
         const { data: pointHistory, error: pointError } = await supabase
-          .from('point_history')
+          .from('ranking_point_history')  // 改为 ranking_point_history
           .select('*')
         
         if (pointError) throw pointError
         
-        // Calculate points for each user
+        // Calculate RANKING points for each user (段位积分，影响排名)
         const playersWithPoints = usersData.map(user => {
           // Calculate current year total (for Current Season)
           const yearPoints = pointHistory
@@ -399,11 +405,26 @@ export default {
             .filter(p => p.user_id === user.id && p.year === selectedYear.value)
             .reduce((sum, p) => sum + (p.points_change || 0), 0)
           
+          // 🔍 调试：打印数据看看
+          if (user.name && user.name.includes('Sayed')) {
+            console.log('🔍 Sayed 的数据:', {
+              name: user.name,
+              ranking_points: user.ranking_points,
+              loyalty_points: user.loyalty_points,
+              yearPoints,
+              monthPoints,
+              currentYear,
+              pointHistoryCount: pointHistory.filter(p => p.user_id === user.id).length
+            })
+          }
+          
           return {
             ...user,
             current_year_points: yearPoints,
             current_month_points: monthPoints,
-            selected_year_points: selectedYearPoints
+            selected_year_points: selectedYearPoints,
+            // ✅ 强制使用数据库的 ranking_points，不使用 loyalty_points
+            ranking_points: user.ranking_points || 0
           }
         })
         

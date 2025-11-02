@@ -240,97 +240,103 @@
         <template v-else>
           <!-- Desktop Table View -->
           <div class="table-container admin-table-container">
-            <table class="table">
+            <table class="table admin-users-table">
               <thead>
                 <tr>
-                  <th>Card #</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Membership</th>
-                  <th>Rank</th>
-                  <th>Loyalty Points</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th class="col-name">Name</th>
+                  <th class="col-contact">Contact</th>
+                  <th class="col-membership">Membership</th>
+                  <th class="col-rank">Rank</th>
+                  <th class="col-loyalty">Loyalty Pts</th>
+                  <th class="col-role">Role</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="user in filteredUsers" :key="user.id">
-                  <td>
-                    <span class="badge badge-info">{{ user.membership_card_number || 'N/A' }}</span>
+                  <td class="col-name">
+                    <div class="user-name-cell">
+                      <strong>{{ user.name || 'N/A' }}</strong>
+                      <span class="card-number-small">{{ user.membership_card_number || 'No Card' }}</span>
+                    </div>
                   </td>
-                  <td><strong>{{ user.name || 'N/A' }}</strong></td>
-                  <td>{{ user.email }}</td>
-                  <td>{{ user.phone || 'N/A' }}</td>
-                  <td>
+                  <td class="col-contact">
+                    <div class="contact-cell">
+                      <div class="contact-item">📧 {{ user.email }}</div>
+                      <div class="contact-item" v-if="user.phone">📱 {{ user.phone }}</div>
+                    </div>
+                  </td>
+                  <td class="col-membership">
                     <span class="membership-badge" :class="`membership-${user.membership_level}`">
-                      {{ formatMembershipLevel(user.membership_level) }}
                       <span v-if="user.membership_level === 'pro_max'">🌟</span>
                       <span v-else-if="user.membership_level === 'pro'">💎</span>
                       <span v-else-if="user.membership_level === 'plus'">⭐</span>
                       <span v-else>🎱</span>
+                      {{ formatMembershipLevel(user.membership_level) }}
                     </span>
                   </td>
-                  <td>
+                  <td class="col-rank">
                     <span class="rank-badge-small" :class="`rank-${user.ranking_level}`">
                       {{ formatRankLevel(user.ranking_level) }}
                     </span>
                   </td>
-                  <td>
-                    <strong class="points-display loyalty-points-value">
-                      {{ user.loyalty_points?.toFixed(2) || '0.00' }}
+                  <td class="col-loyalty">
+                    <strong class="loyalty-points-value">
+                      {{ user.loyalty_points?.toFixed(0) || '0' }}
                     </strong>
                   </td>
-                  <td>
+                  <td class="col-role">
                     <span class="badge" :class="user.role === 'admin' ? 'badge-warning' : 'badge-info'">
-                      {{ user.role === 'admin' ? '👑 Admin' : '🎯 Player' }}
+                      {{ user.role === 'admin' ? '👑' : '🎯' }}
                     </span>
                   </td>
-                  <td>
+                  <td class="col-status">
                     <span class="badge" :class="user.is_active ? 'badge-success' : 'badge-danger'">
-                      {{ user.is_active ? 'Active' : 'Inactive' }}
+                      {{ user.is_active ? '✅' : '⛔' }}
                     </span>
                   </td>
-                  <td>
-                    <div class="action-buttons">
+                  <td class="col-actions">
+                    <div class="action-buttons-compact">
                       <button 
-                        class="btn btn-sm btn-primary" 
+                        class="btn-icon btn-icon-primary" 
                         @click="viewUserDetails(user)"
                         title="View/Edit Details"
                       >
-                        📝 Edit
+                        📝
                       </button>
                       <button 
-                        class="btn btn-sm btn-warning" 
+                        class="btn-icon btn-icon-warning" 
                         @click="openMembershipModal(user)"
                         title="Manage Membership"
                         :disabled="isCurrentUser(user)"
                       >
-                        💳 Card
+                        💳
                       </button>
                       <button 
-                        class="btn btn-sm btn-success" 
+                        class="btn-icon btn-icon-success" 
                         @click="openLoyaltyPointsModal(user)"
                         title="Manage Loyalty Points"
                       >
-                        💰 Loyalty
+                        💰
                       </button>
                       <button 
-                        class="btn btn-sm" 
-                        :class="user.role === 'admin' ? 'btn-secondary' : 'btn-info'"
+                        class="btn-icon" 
+                        :class="user.role === 'admin' ? 'btn-icon-secondary' : 'btn-icon-info'"
                         @click="toggleRole(user)"
                         :disabled="isCurrentUser(user)"
+                        :title="user.role === 'admin' ? 'Make Player' : 'Make Admin'"
                       >
-                        {{ user.role === 'admin' ? 'Make Player' : 'Make Admin' }}
+                        {{ user.role === 'admin' ? '👑' : '🎯' }}
                       </button>
                       <button 
-                        class="btn btn-sm" 
-                        :class="user.is_active ? 'btn-danger' : 'btn-success'"
+                        class="btn-icon" 
+                        :class="user.is_active ? 'btn-icon-danger' : 'btn-icon-success'"
                         @click="toggleStatus(user)"
                         :disabled="isCurrentUser(user)"
+                        :title="user.is_active ? 'Deactivate' : 'Activate'"
                       >
-                        {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                        {{ user.is_active ? '⛔' : '✅' }}
                       </button>
                     </div>
                   </td>
@@ -700,14 +706,15 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeLoyaltyPointsModal">Cancel</button>
+          <button class="btn btn-secondary" @click="closeLoyaltyPointsModal" :disabled="loading">Cancel</button>
           <button 
             class="btn" 
             :class="loyaltyForm.type === 'add' ? 'btn-success' : 'btn-warning'"
             @click="recordLoyaltyPoints"
-            :disabled="!isLoyaltyFormValid"
+            :disabled="!isLoyaltyFormValid || loading"
           >
-            {{ loyaltyForm.type === 'add' ? '💰 Add Loyalty Points' : '🎁 Deduct Loyalty Points' }}
+            <span v-if="loading">⏳ Processing...</span>
+            <span v-else>{{ loyaltyForm.type === 'add' ? '💰 Add Loyalty Points' : '🎁 Deduct Loyalty Points' }}</span>
           </button>
         </div>
       </div>
@@ -851,9 +858,9 @@ export default {
         users.value = data || []
         console.log('Loaded users:', users.value.length)
 
-        // Load point history for ranking points calculation
+        // Load ranking point history for ranking points calculation
         const { data: historyData, error: historyError } = await supabase
-          .from('point_history')
+          .from('ranking_point_history')  // 改为新表名
           .select('*')
 
         if (historyError) throw historyError
@@ -1154,6 +1161,14 @@ export default {
     const recordLoyaltyPoints = async () => {
       if (!selectedUser.value) return
 
+      // 添加 loading 状态，防止重复点击
+      if (loading.value) {
+        console.log('Already processing, please wait...')
+        return
+      }
+
+      loading.value = true
+
       try {
         if (loyaltyForm.value.type === 'add') {
           // Record consumption and add loyalty points
@@ -1186,6 +1201,9 @@ export default {
       } catch (err) {
         console.error('Error recording loyalty points:', err)
         alert('Error: ' + err.message)
+      } finally {
+        // 确保 loading 状态被重置
+        loading.value = false
       }
     }
 
@@ -2415,9 +2433,138 @@ export default {
     padding-right: 48px !important;
   }
 
-  /* 用户表格：隐藏，改用卡片 */
+  /* 用户表格：响应式优化 */
   .admin-table-container {
-    display: none !important;
+    overflow-x: auto;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+  
+  /* 表格列宽优化 */
+  .admin-users-table {
+    width: 100%;
+    table-layout: fixed;  /* 固定布局，防止过宽 */
+  }
+  
+  .admin-users-table th,
+  .admin-users-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* 各列宽度控制（百分比分配） */
+  .col-name { width: 15%; }
+  .col-contact { width: 20%; }
+  .col-membership { width: 10%; text-align: center; }
+  .col-rank { width: 10%; text-align: center; }
+  .col-loyalty { width: 8%; text-align: center; }
+  .col-role { width: 7%; text-align: center; }
+  .col-status { width: 7%; text-align: center; }
+  .col-actions { width: 23%; }  /* Actions 列最重要，保证可见 */
+  
+  /* Contact 列内容可以换行 */
+  .col-contact {
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  /* Name 列内容 */
+  .col-name {
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  /* 用户名单元格 */
+  .user-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .card-number-small {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: normal;
+  }
+  
+  /* 联系信息单元格 */
+  .contact-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.875rem;
+  }
+  
+  .contact-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+  }
+  
+  /* 操作按钮紧凑布局 */
+  .action-buttons-compact {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  
+  /* 图标按钮样式 */
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .btn-icon:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .btn-icon:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  .btn-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .btn-icon-primary { background: #007bff; color: white; }
+  .btn-icon-primary:hover:not(:disabled) { background: #0056b3; }
+  
+  .btn-icon-success { background: #28a745; color: white; }
+  .btn-icon-success:hover:not(:disabled) { background: #218838; }
+  
+  .btn-icon-warning { background: #ffc107; color: #000; }
+  .btn-icon-warning:hover:not(:disabled) { background: #e0a800; }
+  
+  .btn-icon-danger { background: #dc3545; color: white; }
+  .btn-icon-danger:hover:not(:disabled) { background: #c82333; }
+  
+  .btn-icon-secondary { background: #6c757d; color: white; }
+  .btn-icon-secondary:hover:not(:disabled) { background: #545b62; }
+  
+  .btn-icon-info { background: #17a2b8; color: white; }
+  .btn-icon-info:hover:not(:disabled) { background: #117a8b; }
+  
+  /* 移动端隐藏表格，显示卡片 */
+  @media (max-width: 1200px) {
+    .admin-table-container {
+      display: none !important;
+    }
   }
 
   /* 用户卡片布局（仅移动端） */

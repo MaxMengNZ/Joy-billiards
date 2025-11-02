@@ -245,6 +245,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { useAuthStore } from '../stores/authStore'
+import { formatNZDate, formatNZDateTimeFull, toNZDateTimeLocalValue, fromNZDateTimeLocalValue } from '../utils/timezone'
 import { supabase } from '../config/supabase'
 
 export default {
@@ -307,8 +308,8 @@ export default {
     }
 
     const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-NZ', {
+      // 使用新西兰时区统一显示时间
+      return formatNZDate(dateString, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -323,8 +324,9 @@ export default {
         name: tournament.name,
         description: tournament.description || '',
         tournament_type: tournament.tournament_type,
-        start_date: tournament.start_date ? new Date(tournament.start_date).toISOString().slice(0, 16) : '',
-        end_date: tournament.end_date ? new Date(tournament.end_date).toISOString().slice(0, 16) : '',
+        // 使用新西兰时区转换，避免时区偏移
+        start_date: tournament.start_date ? toNZDateTimeLocalValue(tournament.start_date) : '',
+        end_date: tournament.end_date ? toNZDateTimeLocalValue(tournament.end_date) : '',
         max_players: tournament.max_players,
         entry_fee: tournament.entry_fee,
         prize_pool: tournament.prize_pool,
@@ -356,6 +358,9 @@ export default {
 
       const data = {
         ...tournamentForm.value,
+        // 将新西兰时区的输入转换为UTC存储（Supabase格式）
+        start_date: fromNZDateTimeLocalValue(tournamentForm.value.start_date),
+        end_date: tournamentForm.value.end_date ? fromNZDateTimeLocalValue(tournamentForm.value.end_date) : null,
         entry_fee: parseFloat(tournamentForm.value.entry_fee) || 0,
         prize_pool: parseFloat(tournamentForm.value.prize_pool) || 0,
         max_players: tournamentForm.value.max_players ? parseInt(tournamentForm.value.max_players) : null

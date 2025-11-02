@@ -40,6 +40,9 @@ coverage/
 .parcel-cache/
 .vercel
 
+# Nested duplicate folder (should be removed)
+Joy-billiards/
+
 # Cleanup scripts with sensitive keys (if configured)
 # Uncomment the line below after adding your Service Role Key to the script
 # cleanup_auth_users.py

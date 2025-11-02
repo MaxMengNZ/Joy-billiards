@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cache Test - v2.0</title>
+  <style>
+    body { font-family: Arial; padding: 40px; background: #f0f0f0; }
+    .box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    .success { border-left: 4px solid green; }
+    .error { border-left: 4px solid red; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 缓存和连接测试</h1>
+  
+  <div class="box success">
+    <h2>✅ 页面加载成功</h2>
+    <p><strong>时间戳：</strong> <span id="timestamp"></span></p>
+    <p><strong>随机数：</strong> <span id="random"></span></p>
+    <p>如果时间戳和随机数每次刷新都变化，说明没有缓存问题。</p>
+  </div>
+  
+  <div class="box">
+    <h2>📊 测试结果</h2>
+    <div id="results">
+      <p>点击下面按钮开始测试...</p>
+    </div>
+  </div>
+
+  <script>
+    // 显示时间戳
+    document.getElementById('timestamp').textContent = new Date().toLocaleString()
+    document.getElementById('random').textContent = Math.random().toFixed(6)
+    
+    async function testTable(tableName) {
+      const url = 'https://qnwtqgdbgyqwpsdqvxfl.supabase.co'
+      const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFud3RxZ2RiZ3lxd3BzZHF2eGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1NDQsImV4cCI6MjA3NTUzOTU0NH0.3sujc8r9taASBUTdXUbCR-oJQcjKgXrLAafYc7k0SU4'
+      
+      const results = document.getElementById('results')
+      results.innerHTML = '<p>⏳ 测试中...</p>'
+      
+      try {
+        const response = await fetch(`${url}/rest/v1/${tableName}?limit=1`, {
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          results.innerHTML = `
+            <div class="box success">
+              <h3>✅ ${tableName} 表存在</h3>
+              <p>状态：${response.status}</p>
+              <p>数据：<pre>${JSON.stringify(data, null, 2)}</pre></p>
+            </div>`
+        } else {
+          const error = await response.text()
+          results.innerHTML = `
+            <div class="box error">
+              <h3>❌ ${tableName} 表不存在或无权限</h3>
+              <p>状态：${response.status}</p>
+              <p>错误：<pre>${error}</pre></p>
+            </div>`
+        }
+      } catch (err) {
+        results.innerHTML = `
+          <div class="box error">
+            <h3>❌ 请求失败</h3>
+            <p><pre>${err.message}</pre></p>
+          </div>`
+      }
+    }
+  </script>
+  
+  <button onclick="testTable('point_history')">测试 point_history</button>
+  <button onclick="testTable('ranking_point_history')">测试 ranking_point_history</button>
+  <button onclick="testTable('users')">测试 users</button>
+</body>
+</html>

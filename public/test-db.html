@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .result {
+      background: white;
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid #28a745;
+    }
+    .error {
+      border-left-color: #dc3545;
+      background: #fff5f5;
+    }
+    pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Database Table Test</h1>
+  <p>测试哪个表名可以访问</p>
+  
+  <div>
+    <button onclick="testOldTable()">测试旧表 (point_history)</button>
+    <button onclick="testNewTable()">测试新表 (ranking_point_history)</button>
+    <button onclick="testAllTables()">列出所有表</button>
+  </div>
+  
+  <div id="results"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+    const supabaseUrl = 'https://qnwtqgdbgyqwpsdqvxfl.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFud3RxZ2RiZ3lxd3BzZHF2eGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1NDQsImV4cCI6MjA3NTUzOTU0NH0.3sujc8r9taASBUTdXUbCR-oJQcjKgXrLAafYc7k0SU4'
+    
+    window.supabase = createClient(supabaseUrl, supabaseKey)
+    
+    window.testOldTable = async function() {
+      const resultsDiv = document.getElementById('results')
+      try {
+        const { data, error } = await window.supabase
+          .from('point_history')
+          .select('*')
+          .limit(1)
+        
+        if (error) {
+          resultsDiv.innerHTML += `<div class="result error">
+            <h3>❌ 旧表 (point_history)</h3>
+            <p><strong>错误：</strong> ${error.message}</p>
+            <pre>${JSON.stringify(error, null, 2)}</pre>
+          </div>`
+        } else {
+          resultsDiv.innerHTML += `<div class="result">
+            <h3>✅ 旧表 (point_history) 存在</h3>
+            <p>找到 ${data.length} 条记录</p>
+          </div>`
+        }
+      } catch (err) {
+        resultsDiv.innerHTML += `<div class="result error">
+          <h3>❌ 异常</h3>
+          <pre>${err.message}</pre>
+        </div>`
+      }
+    }
+    
+    window.testNewTable = async function() {
+      const resultsDiv = document.getElementById('results')
+      try {
+        const { data, error } = await window.supabase
+          .from('ranking_point_history')
+          .select('*')
+          .limit(5)
+        
+        if (error) {
+          resultsDiv.innerHTML += `<div class="result error">
+            <h3>❌ 新表 (ranking_point_history)</h3>
+            <p><strong>错误：</strong> ${error.message}</p>
+            <pre>${JSON.stringify(error, null, 2)}</pre>
+          </div>`
+        } else {
+          resultsDiv.innerHTML += `<div class="result">
+            <h3>✅ 新表 (ranking_point_history) 正常</h3>
+            <p>找到 ${data.length} 条记录</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          </div>`
+        }
+      } catch (err) {
+        resultsDiv.innerHTML += `<div class="result error">
+          <h3>❌ 异常</h3>
+          <pre>${err.message}</pre>
+        </div>`
+      }
+    }
+    
+    window.testAllTables = async function() {
+      const resultsDiv = document.getElementById('results')
+      
+      const tables = [
+        'users',
+        'tournaments',
+        'matches',
+        'ranking_point_history',
+        'loyalty_point_history',
+        'point_history'
+      ]
+      
+      resultsDiv.innerHTML = '<h3>🔍 测试所有表...</h3>'
+      
+      for (const table of tables) {
+        try {
+          const { data, error, count } = await window.supabase
+            .from(table)
+            .select('*', { count: 'exact', head: true })
+          
+          if (error) {
+            resultsDiv.innerHTML += `<div class="result error">
+              <strong>❌ ${table}:</strong> ${error.message}
+            </div>`
+          } else {
+            resultsDiv.innerHTML += `<div class="result">
+              <strong>✅ ${table}:</strong> 表存在 (${count || 0} 条记录)
+            </div>`
+          }
+        } catch (err) {
+          resultsDiv.innerHTML += `<div class="result error">
+            <strong>❌ ${table}:</strong> ${err.message}
+          </div>`
+        }
+      }
+    }
+  </script>
+</body>
+</html>
+

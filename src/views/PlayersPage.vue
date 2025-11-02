@@ -608,8 +608,8 @@ export default {
         closePointsModal()
         await playerStore.fetchPlayers()
         
-        // Reload point history
-        const { data: historyData } = await supabase.from('point_history').select('*')
+        // Reload ranking point history
+        const { data: historyData } = await supabase.from('ranking_point_history').select('*')
         if (historyData) pointHistory.value = historyData
       } catch (err) {
         console.error('Error updating points:', err)
@@ -674,7 +674,7 @@ export default {
       // Load point history for ranking points calculation
       try {
         const { data, error } = await supabase
-          .from('point_history')
+          .from('ranking_point_history')
           .select('*')
         
         if (error) throw error

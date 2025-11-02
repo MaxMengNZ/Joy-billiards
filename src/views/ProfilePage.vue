@@ -505,9 +505,9 @@ export default {
           // Load user's tournament registrations
           await loadMyRegistrations(data.id)
           
-          // Load point history for ranking points calculation
+          // Load ranking point history for ranking points calculation
           const { data: historyData, error: historyError } = await supabase
-            .from('point_history')
+            .from('ranking_point_history')
             .select('*')
             .eq('user_id', data.id)
           
