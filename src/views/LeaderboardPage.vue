@@ -165,9 +165,7 @@
                 <div class="player-name-section">
                   <div class="player-name">
                     {{ player.name }}
-                    <span v-if="player.membership_level === 'pro_max'" class="member-badge pro-max">🌟</span>
-                    <span v-else-if="player.membership_level === 'pro'" class="member-badge pro">💎</span>
-                    <span v-else-if="player.membership_level === 'plus'" class="member-badge plus">⭐</span>
+                    <!-- 移除会员等级显示以保护隐私 -->
                   </div>
                   <div class="player-stats-mini">
                     <span class="stat-item">
