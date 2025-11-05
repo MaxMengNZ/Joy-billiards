@@ -297,46 +297,46 @@
                     </span>
                   </td>
                   <td class="col-actions">
-                    <div class="action-buttons-compact">
+                    <div class="action-buttons">
                       <button 
-                        class="btn-icon btn-icon-primary" 
+                        class="btn btn-sm btn-primary" 
                         @click="viewUserDetails(user)"
                         title="View/Edit Details"
                       >
-                        📝
+                        📝 Edit
                       </button>
                       <button 
-                        class="btn-icon btn-icon-warning" 
+                        class="btn btn-sm btn-warning" 
                         @click="openMembershipModal(user)"
                         title="Manage Membership"
                         :disabled="isCurrentUser(user)"
                       >
-                        💳
+                        💳 Card
                       </button>
                       <button 
-                        class="btn-icon btn-icon-success" 
+                        class="btn btn-sm btn-success" 
                         @click="openLoyaltyPointsModal(user)"
                         title="Manage Loyalty Points"
                       >
-                        💰
+                        💰 Loyalty
                       </button>
                       <button 
-                        class="btn-icon" 
-                        :class="user.role === 'admin' ? 'btn-icon-secondary' : 'btn-icon-info'"
+                        class="btn btn-sm" 
+                        :class="user.role === 'admin' ? 'btn-secondary' : 'btn-info'"
                         @click="toggleRole(user)"
                         :disabled="isCurrentUser(user)"
                         :title="user.role === 'admin' ? 'Make Player' : 'Make Admin'"
                       >
-                        {{ user.role === 'admin' ? '👑' : '🎯' }}
+                        {{ user.role === 'admin' ? '👑 Admin' : '🎯 Player' }}
                       </button>
                       <button 
-                        class="btn-icon" 
-                        :class="user.is_active ? 'btn-icon-danger' : 'btn-icon-success'"
+                        class="btn btn-sm" 
+                        :class="user.is_active ? 'btn-danger' : 'btn-secondary'"
                         @click="toggleStatus(user)"
                         :disabled="isCurrentUser(user)"
                         :title="user.is_active ? 'Deactivate' : 'Activate'"
                       >
-                        {{ user.is_active ? '⛔' : '✅' }}
+                        {{ user.is_active ? '⛔ Deactivate' : '✅ Activate' }}
                       </button>
                     </div>
                   </td>
@@ -2503,62 +2503,20 @@ export default {
   }
   
   /* 操作按钮紧凑布局 */
-  .action-buttons-compact {
+  /* Actions 列按钮样式 - 使用带文字按钮（像 Players 页面） */
+  .col-actions .action-buttons {
     display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
   
-  /* 图标按钮样式 */
-  .btn-icon {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  .col-actions .btn-sm {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    white-space: nowrap;
+    min-width: auto;
   }
-  
-  .btn-icon:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
-  
-  .btn-icon:active:not(:disabled) {
-    transform: translateY(0);
-  }
-  
-  .btn-icon:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .btn-icon-primary { background: #007bff; color: white; }
-  .btn-icon-primary:hover:not(:disabled) { background: #0056b3; }
-  
-  .btn-icon-success { background: #28a745; color: white; }
-  .btn-icon-success:hover:not(:disabled) { background: #218838; }
-  
-  .btn-icon-warning { background: #ffc107; color: #000; }
-  .btn-icon-warning:hover:not(:disabled) { background: #e0a800; }
-  
-  .btn-icon-danger { background: #dc3545; color: white; }
-  .btn-icon-danger:hover:not(:disabled) { background: #c82333; }
-  
-  .btn-icon-secondary { background: #6c757d; color: white; }
-  .btn-icon-secondary:hover:not(:disabled) { background: #545b62; }
-  
-  .btn-icon-info { background: #17a2b8; color: white; }
-  .btn-icon-info:hover:not(:disabled) { background: #117a8b; }
   
   /* 移动端隐藏表格，显示卡片 */
   @media (max-width: 1200px) {

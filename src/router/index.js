@@ -95,6 +95,12 @@ const routes = [
     meta: { title: 'Follow Us on WeChat' }
   },
   {
+    path: '/debug-leaderboard',
+    name: 'DebugLeaderboard',
+    component: () => import('../views/DebugLeaderboard.vue'),
+    meta: { title: '🔍 Debug Leaderboard' }
+  },
+  {
     path: '/error/:type?',
     name: 'Error',
     component: () => import('../views/ErrorPage.vue'),

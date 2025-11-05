@@ -228,9 +228,109 @@
             <p>Break and Run: <strong>🎯 {{ selectedPlayer?.break_and_run_count || 0 }}</strong></p>
           </div>
           
-          <div class="stats-form">
+          <!-- 修改模式选择 -->
+          <div class="form-group mode-selector">
+            <label class="form-label">📝 Modification Mode</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  v-model="statsMode" 
+                  value="increment"
+                  name="statsMode"
+                >
+                <span class="radio-label">
+                  <strong>➕ Increment Mode (Recommended)</strong>
+                  <small>Add results from today's matches</small>
+                </span>
+              </label>
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  v-model="statsMode" 
+                  value="absolute"
+                  name="statsMode"
+                >
+                <span class="radio-label">
+                  <strong>🔢 Absolute Mode</strong>
+                  <small>Set total stats directly (for corrections)</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 增量模式表单 -->
+          <div v-if="statsMode === 'increment'" class="stats-form">
+            <div class="increment-hint">
+              <p>💡 Enter the results from today's matches:</p>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label class="form-label">➕ Wins to Add</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  v-model.number="incrementForm.wins"
+                  min="0"
+                  placeholder="0"
+                >
+              </div>
+              
+              <div class="form-group col-6">
+                <label class="form-label">➕ Losses to Add</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  v-model.number="incrementForm.losses"
+                  min="0"
+                  placeholder="0"
+                >
+              </div>
+            </div>
+            
             <div class="form-group">
-              <label class="form-label">Wins</label>
+              <label class="form-label">🎯 Break and Run to Add</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                v-model.number="incrementForm.break_and_run_count"
+                min="0"
+                placeholder="0"
+              >
+              <small class="form-text text-muted">Perfect clears from today's matches</small>
+            </div>
+
+            <!-- 增量模式预览 -->
+            <div v-if="incrementChanged" class="stats-preview increment-preview">
+              <p><strong>📊 Preview New Stats:</strong></p>
+              <div class="preview-row">
+                <span class="preview-label">Wins:</span>
+                <span class="preview-calc">{{ selectedPlayer?.wins || 0 }} + {{ incrementForm.wins }} = <strong class="text-success">{{ getNewWins() }}</strong></span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-label">Losses:</span>
+                <span class="preview-calc">{{ selectedPlayer?.losses || 0 }} + {{ incrementForm.losses }} = <strong class="text-danger">{{ getNewLosses() }}</strong></span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-label">Matches Played:</span>
+                <span class="preview-calc">{{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }} → <strong>{{ getNewWins() + getNewLosses() }}</strong></span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-label">Break and Run:</span>
+                <span class="preview-calc">{{ selectedPlayer?.break_and_run_count || 0 }} + {{ incrementForm.break_and_run_count }} = <strong>🎯 {{ getNewBreakAndRun() }}</strong></span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-label">Win Rate:</span>
+                <span class="preview-calc">{{ calculateWinRate(selectedPlayer) }}% → <strong>{{ calculateIncrementWinRate() }}%</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 绝对值模式表单 -->
+          <div v-else class="stats-form">
+            <div class="form-group">
+              <label class="form-label">Total Wins</label>
               <input 
                 type="number" 
                 class="form-control" 
@@ -241,7 +341,7 @@
             </div>
             
             <div class="form-group">
-              <label class="form-label">Losses</label>
+              <label class="form-label">Total Losses</label>
               <input 
                 type="number" 
                 class="form-control" 
@@ -252,7 +352,7 @@
             </div>
             
             <div class="form-group">
-              <label class="form-label">🎯 Break and Run Count</label>
+              <label class="form-label">🎯 Total Break and Run Count</label>
               <input 
                 type="number" 
                 class="form-control" 
@@ -262,15 +362,16 @@
               >
               <small class="form-text text-muted">Perfect clears - Opening break followed by running the table</small>
             </div>
-          </div>
-          
-          <div v-if="statsChanged" class="points-preview">
-            <p><strong>Preview Changes:</strong></p>
-            <p>Wins: {{ selectedPlayer?.wins || 0 }} → {{ statsForm.wins }}</p>
-            <p>Losses: {{ selectedPlayer?.losses || 0 }} → {{ statsForm.losses }}</p>
-            <p>Matches Played: {{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }} → {{ statsForm.wins + statsForm.losses }}</p>
-            <p>Break and Run: 🎯 {{ selectedPlayer?.break_and_run_count || 0 }} → {{ statsForm.break_and_run_count }}</p>
-            <p>Win Rate: {{ calculateWinRate(selectedPlayer) }}% → {{ calculateNewWinRate() }}%</p>
+
+            <!-- 绝对值模式预览 -->
+            <div v-if="statsChanged" class="stats-preview">
+              <p><strong>📊 Preview Changes:</strong></p>
+              <p>Wins: {{ selectedPlayer?.wins || 0 }} → {{ statsForm.wins }}</p>
+              <p>Losses: {{ selectedPlayer?.losses || 0 }} → {{ statsForm.losses }}</p>
+              <p>Matches Played: {{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }} → {{ statsForm.wins + statsForm.losses }}</p>
+              <p>Break and Run: 🎯 {{ selectedPlayer?.break_and_run_count || 0 }} → {{ statsForm.break_and_run_count }}</p>
+              <p>Win Rate: {{ calculateWinRate(selectedPlayer) }}% → {{ calculateNewWinRate() }}%</p>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -278,6 +379,7 @@
           <button 
             class="btn btn-success" 
             @click="updateStats"
+            :disabled="statsMode === 'increment' && !incrementChanged"
           >
             Update Statistics
           </button>
@@ -390,7 +492,13 @@ export default {
     
     // Stats Modal
     const showStatsModal = ref(false)
+    const statsMode = ref('increment') // 'increment' or 'absolute'
     const statsForm = ref({
+      wins: 0,
+      losses: 0,
+      break_and_run_count: 0
+    })
+    const incrementForm = ref({
       wins: 0,
       losses: 0,
       break_and_run_count: 0
@@ -510,12 +618,44 @@ export default {
              statsForm.value.break_and_run_count !== (selectedPlayer.value.break_and_run_count || 0)
     })
 
+    const incrementChanged = computed(() => {
+      return incrementForm.value.wins > 0 || 
+             incrementForm.value.losses > 0 || 
+             incrementForm.value.break_and_run_count > 0
+    })
+
+    const getNewWins = () => {
+      return (selectedPlayer.value?.wins || 0) + incrementForm.value.wins
+    }
+
+    const getNewLosses = () => {
+      return (selectedPlayer.value?.losses || 0) + incrementForm.value.losses
+    }
+
+    const getNewBreakAndRun = () => {
+      return (selectedPlayer.value?.break_and_run_count || 0) + incrementForm.value.break_and_run_count
+    }
+
+    const calculateIncrementWinRate = () => {
+      const newWins = getNewWins()
+      const newLosses = getNewLosses()
+      const total = newWins + newLosses
+      if (total === 0) return 0
+      return ((newWins / total) * 100).toFixed(2)
+    }
+
     const openStatsModal = (player) => {
       selectedPlayer.value = player
+      statsMode.value = 'increment' // 默认使用增量模式
       statsForm.value = {
         wins: player.wins || 0,
         losses: player.losses || 0,
         break_and_run_count: player.break_and_run_count || 0
+      }
+      incrementForm.value = {
+        wins: 0,
+        losses: 0,
+        break_and_run_count: 0
       }
       showStatsModal.value = true
     }
@@ -523,7 +663,13 @@ export default {
     const closeStatsModal = () => {
       showStatsModal.value = false
       selectedPlayer.value = null
+      statsMode.value = 'increment'
       statsForm.value = {
+        wins: 0,
+        losses: 0,
+        break_and_run_count: 0
+      }
+      incrementForm.value = {
         wins: 0,
         losses: 0,
         break_and_run_count: 0
@@ -536,12 +682,39 @@ export default {
         return
       }
 
-      if (statsForm.value.wins < 0 || statsForm.value.losses < 0 || statsForm.value.break_and_run_count < 0) {
-        alert('Statistics cannot be negative')
-        return
-      }
+      let newWins, newLosses, newBreakAndRun, confirmMsg
 
-      const confirmMsg = `Update ${selectedPlayer.value.name}'s statistics?\n\nWins: ${selectedPlayer.value.wins || 0} → ${statsForm.value.wins}\nLosses: ${selectedPlayer.value.losses || 0} → ${statsForm.value.losses}\nBreak and Run: ${selectedPlayer.value.break_and_run_count || 0} → ${statsForm.value.break_and_run_count}`
+      if (statsMode.value === 'increment') {
+        // 增量模式：计算新的总数
+        if (!incrementChanged.value) {
+          alert('Please enter at least one change')
+          return
+        }
+
+        newWins = getNewWins()
+        newLosses = getNewLosses()
+        newBreakAndRun = getNewBreakAndRun()
+
+        confirmMsg = `Update ${selectedPlayer.value.name}'s statistics?\n\n` +
+          `Wins: ${selectedPlayer.value.wins || 0} + ${incrementForm.value.wins} = ${newWins}\n` +
+          `Losses: ${selectedPlayer.value.losses || 0} + ${incrementForm.value.losses} = ${newLosses}\n` +
+          `Break and Run: ${selectedPlayer.value.break_and_run_count || 0} + ${incrementForm.value.break_and_run_count} = ${newBreakAndRun}`
+      } else {
+        // 绝对值模式：直接使用输入的值
+        if (statsForm.value.wins < 0 || statsForm.value.losses < 0 || statsForm.value.break_and_run_count < 0) {
+          alert('Statistics cannot be negative')
+          return
+        }
+
+        newWins = statsForm.value.wins
+        newLosses = statsForm.value.losses
+        newBreakAndRun = statsForm.value.break_and_run_count
+
+        confirmMsg = `Update ${selectedPlayer.value.name}'s statistics?\n\n` +
+          `Wins: ${selectedPlayer.value.wins || 0} → ${newWins}\n` +
+          `Losses: ${selectedPlayer.value.losses || 0} → ${newLosses}\n` +
+          `Break and Run: ${selectedPlayer.value.break_and_run_count || 0} → ${newBreakAndRun}`
+      }
       
       if (!confirm(confirmMsg)) return
 
@@ -549,15 +722,16 @@ export default {
         const { error } = await supabase
           .from('users')
           .update({
-            wins: statsForm.value.wins,
-            losses: statsForm.value.losses,
-            break_and_run_count: statsForm.value.break_and_run_count
+            wins: newWins,
+            losses: newLosses,
+            break_and_run_count: newBreakAndRun
           })
           .eq('id', selectedPlayer.value.id)
 
         if (error) throw error
 
-        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s statistics!`)
+        const mode = statsMode.value === 'increment' ? 'incrementally' : 'directly'
+        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s statistics ${mode}!`)
         closeStatsModal()
         await playerStore.fetchPlayers()
       } catch (err) {
@@ -704,7 +878,14 @@ export default {
       currentYear,
       statsChanged,
       showStatsModal,
+      statsMode,
       statsForm,
+      incrementForm,
+      incrementChanged,
+      getNewWins,
+      getNewLosses,
+      getNewBreakAndRun,
+      calculateIncrementWinRate,
       openStatsModal,
       closeStatsModal,
       updateStats,
@@ -773,6 +954,142 @@ export default {
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* 模式选择器样式 */
+.mode-selector {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-option:hover {
+  border-color: #0d6efd;
+  background: #f8f9ff;
+}
+
+.radio-option input[type="radio"] {
+  margin-top: 0.25rem;
+  margin-right: 0.75rem;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+  color: #0d6efd;
+}
+
+.radio-option:has(input:checked) {
+  border-color: #0d6efd;
+  background: #e7f1ff;
+}
+
+.radio-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.radio-label strong {
+  font-size: 1rem;
+  color: #1a1a2e;
+}
+
+.radio-label small {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* 增量模式提示 */
+.increment-hint {
+  background: #e7f3ff;
+  border-left: 4px solid #0d6efd;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.increment-hint p {
+  margin: 0;
+  color: #0a58ca;
+  font-weight: 500;
+}
+
+/* 表单行布局 */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.col-6 {
+  flex: 0 0 calc(50% - 0.5rem);
+}
+
+/* 增量预览样式 */
+.increment-preview {
+  background: #f0f9ff;
+  border: 2px solid #0d6efd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.increment-preview p {
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #0a58ca;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #cfe2ff;
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.preview-label {
+  font-weight: 500;
+  color: #495057;
+  min-width: 120px;
+}
+
+.preview-calc {
+  font-family: 'Courier New', monospace;
+  color: #212529;
+  font-size: 0.95rem;
+}
+
+.preview-calc strong {
+  font-size: 1.1rem;
+  margin-left: 0.5rem;
 }
 
 .player-info-box p {
