@@ -1,11 +1,11 @@
 <template>
   <div class="home-page">
-    <!-- Trial Opening Announcement Banner -->
+    <!-- Grand Opening Announcement Banner -->
     <div class="trial-banner" v-if="showTrialBanner">
       <div class="trial-banner-content">
         <div class="trial-banner-icon">🎉</div>
         <div class="trial-banner-text">
-          <strong>Trial Opening Now!</strong> Welcome to Joy Billiards NZ - New Zealand's first professional Heyball venue!
+          <strong>Grand Opening Celebration!</strong> Joy Billiards NZ is officially open with fresh pricing, new tournaments, and premium Heyball experiences.
         </div>
         <div class="trial-banner-close" @click="hideTrialBanner">×</div>
       </div>
@@ -19,19 +19,19 @@
       </div>
       <div class="hero-content">
         <div class="hero-badge">
-          <span class="badge-icon">🎱</span>
-          <span class="badge-text">Now Open - Trial Operation</span>
+          <span class="badge-icon">🎉</span>
+          <span class="badge-text">Grand Opening Special</span>
         </div>
         <h1 class="hero-title">
-          Experience the Future of<br>
-          <span class="hero-title-highlight">Heyball</span> in New Zealand
+          Grand Opening of<br>
+          <span class="hero-title-highlight">Joy Billiards NZ</span>
         </h1>
         <p class="hero-subtitle">
           Joy Billiards NZ is the <strong>first and only professional Heyball venue</strong> and the 
           <strong>exclusive official distributor of JOY Billiards</strong> in New Zealand.
         </p>
         <p class="hero-tagline">
-          Premium, tournament-grade tables. Pro-level atmosphere. <strong>Now Open in Hamilton!</strong>
+          Premium, tournament-grade tables. Pro-level atmosphere. <strong>Now officially open in Hamilton!</strong>
         </p>
         <div class="hero-actions">
           <router-link to="/tournaments" class="btn btn-primary btn-lg hero-btn-primary">
@@ -57,6 +57,55 @@
             <span class="feature-check">✓</span>
             <span>Professional Environment</span>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Announcement Banner -->
+    <section class="pricing-banner">
+      <div class="pricing-container">
+        <div class="pricing-badge">Grand Opening · New Pricing</div>
+        <h2 class="pricing-title">All top-ups = your playing credit. No membership fees. Transparent hourly rates.</h2>
+        <p class="pricing-description">
+          Choose your tier, top up once, and enjoy JOY Q7 / Q8 tables at the best rates in Hamilton. Works for both Pro and Student tournaments.
+        </p>
+        <div class="pricing-grid">
+          <div class="pricing-card lite">
+            <div class="tier-name">Lite</div>
+            <div class="tier-rows">
+              <div class="tier-row"><strong>$23</strong><span>Q7 / hour</span></div>
+              <div class="tier-row"><strong>$28</strong><span>Q8 / hour</span></div>
+            </div>
+            <p class="tier-note">Great for casual play — no minimum top-up.</p>
+          </div>
+          <div class="pricing-card plus">
+            <div class="tier-name">Plus · Top up $200+</div>
+            <div class="tier-rows">
+              <div class="tier-row"><strong>$21</strong><span>Q7 / hour</span></div>
+              <div class="tier-row"><strong>$26</strong><span>Q8 / hour</span></div>
+            </div>
+            <p class="tier-note">Includes cue rental + 6h priority booking.</p>
+          </div>
+          <div class="pricing-card pro">
+            <div class="tier-name">Pro · Top up $500+</div>
+            <div class="tier-rows">
+              <div class="tier-row"><strong>$19</strong><span>Q7 / hour</span></div>
+              <div class="tier-row"><strong>$24</strong><span>Q8 / hour</span></div>
+            </div>
+            <p class="tier-note">Priority entry to invitation events.</p>
+          </div>
+          <div class="pricing-card pro-max">
+            <div class="tier-name">Pro Max · Top up $1000+</div>
+            <div class="tier-rows">
+              <div class="tier-row"><strong>$17</strong><span>Q7 / hour</span></div>
+              <div class="tier-row"><strong>$22</strong><span>Q8 / hour</span></div>
+            </div>
+            <p class="tier-note">VIP experiences, gifts, and the lowest rates guaranteed.</p>
+          </div>
+        </div>
+        <div class="pricing-actions">
+          <router-link to="/membership" class="btn btn-primary btn-lg">Explore Memberships</router-link>
+          <a href="tel:0221660688" class="btn btn-outline btn-lg">Reserve a Table</a>
         </div>
       </div>
     </section>
@@ -177,7 +226,7 @@
           <p class="tier-price">≥ $500 NZD</p>
           <div class="tier-highlights">
             <p>💰 Pro rates</p>
-            <p>🎟️ Monthly voucher</p>
+            <p>⚡ Reserved slots for headline tournaments</p>
           </div>
           <div class="tier-arrow">→</div>
         </router-link>
@@ -528,6 +577,18 @@ export default {
     transform: none;
     margin-top: 0.5rem;
   }
+
+  .grand-opening-section {
+    padding: 3rem 1.25rem;
+  }
+
+  .grand-opening-title {
+    font-size: 2rem;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Hero Section */
@@ -772,6 +833,334 @@ export default {
   font-weight: 700;
   color: #1a1a2e;
   box-shadow: 0 2px 8px rgba(78, 205, 196, 0.5);
+}
+
+.pricing-banner {
+  position: relative;
+  padding: 3.5rem 2rem;
+  background: linear-gradient(135deg, #fff7eb 0%, #ebf8ff 100%);
+  margin-bottom: 3rem;
+}
+
+.pricing-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pricing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #b45309;
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.pricing-title {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  color: #0f172a;
+}
+
+.pricing-description {
+  color: #475569;
+  max-width: 760px;
+  margin: 0 auto 2rem auto;
+  font-size: 1.05rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.pricing-card {
+  background: white;
+  border-radius: 18px;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  text-align: left;
+}
+
+.pricing-card .tier-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+}
+
+.pricing-card.lite .tier-name { color: #f97316; }
+.pricing-card.plus .tier-name { color: #0ea5e9; }
+.pricing-card.pro .tier-name { color: #6366f1; }
+.pricing-card.pro-max .tier-name { color: #9333ea; }
+
+.tier-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tier-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.tier-row strong {
+  font-size: 1.75rem;
+  color: #0f172a;
+}
+
+.tier-row span {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.tier-note {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 0.3rem;
+}
+
+.pricing-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pricing-actions .btn {
+  min-width: 220px;
+}
+
+.pricing-actions .btn-outline {
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+}
+
+.pricing-actions .btn-outline:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+/* Grand Opening Section */
+.grand-opening-section {
+  position: relative;
+  padding: 4rem 2rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fff7eb 0%, #ebf8ff 100%);
+  margin-bottom: 3rem;
+}
+
+.grand-opening-background,
+.grand-opening-pattern,
+.grand-opening-light {
+  position: absolute;
+  inset: 0;
+}
+
+.grand-opening-pattern {
+  background-image: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.6) 0%, transparent 45%),
+                    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.5) 0%, transparent 50%),
+                    linear-gradient(120deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+                    linear-gradient(60deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+  background-size: 180px 180px, 200px 200px, 50px 50px, 50px 50px;
+  opacity: 0.5;
+}
+
+.grand-opening-light {
+  width: 320px;
+  height: 320px;
+  filter: blur(120px);
+  opacity: 0.8;
+}
+
+.grand-opening-light-left {
+  top: 10%;
+  left: 5%;
+  background: rgba(255, 196, 30, 0.35);
+}
+
+.grand-opening-light-right {
+  bottom: 5%;
+  right: 8%;
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.grand-opening-content {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  color: #1f2937;
+}
+
+.grand-opening-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 1.1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 196, 30, 0.3);
+  margin-bottom: 1.25rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.grand-opening-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.grand-opening-subtitle {
+  color: #4b5563;
+  max-width: 720px;
+  margin: 0 auto 2.5rem auto;
+  font-size: 1.05rem;
+}
+
+.grand-pricing-panel {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.grand-pricing-left,
+.grand-pricing-right {
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.grand-pricing-left::before,
+.grand-pricing-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 65%);
+  pointer-events: none;
+}
+
+.grand-pricing-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #78350f;
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 25px rgba(251, 191, 36, 0.35);
+}
+
+.grand-pricing-desc {
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+.grand-pricing-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.grand-pricing-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tier-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tier-label.lite { color: #f59e0b; }
+.tier-label.plus { color: #059669; }
+.tier-label.pro { color: #2563eb; }
+.tier-label.pro-max { color: #9333ea; }
+
+.tier-prices {
+  display: flex;
+  gap: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.tier-prices span {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.grand-pricing-right h4 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.grand-pricing-right p {
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.grand-pricing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  margin-bottom: 1rem;
+}
+
+.grand-highlight-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.grand-opening-cta {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .grand-pricing-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Stats Section - Hero Style */

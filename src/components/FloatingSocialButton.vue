@@ -73,7 +73,7 @@ import { ref } from 'vue'
 export default {
   name: 'FloatingSocialButton',
   setup() {
-    const isExpanded = ref(false)
+    const isExpanded = ref(false) // 默认收起，必须点击才能展开
     
     const toggleExpanded = () => {
       console.log('FloatingSocialButton clicked!', isExpanded.value)
@@ -176,12 +176,14 @@ export default {
   opacity: 0;
   transform: scale(0);
   pointer-events: none;
+  visibility: hidden; /* 完全隐藏，阻止点击 */
 }
 
 .social-buttons-group.expanded .social-button {
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
+  visibility: visible; /* 展开时才可见可点击 */
 }
 
 .social-button:hover {

@@ -78,25 +78,23 @@
             <ul class="benefits-list">
               <template v-if="profile?.membership_level === 'lite'">
                 <li>✅ Free registration - permanent</li>
-                <li>💰 Standard rates: Q7 $28/h, Q8 $33/h</li>
+                <li>💰 Standard rates: Q7 $23/h, Q8 $28/h</li>
                 <li>🎯 Basic cue sticks</li>
                 <li>📊 Basic statistics tracking</li>
                 <li>📅 Same-day booking (2h advance)</li>
                 <li>💠 Loyalty Points: 1.0x (1 NZD = 1 Point)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'plus'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $25/h | Q8: $30/h</li>
-                <li>💰 <em>Average cost: Q7: $23.8/h | Q8: $28.6/h (with 5% bonus)</em></li>
-                <li>🎁 +5% recharge bonus (e.g., $200 → $210 credit)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
+                <li>✨ Simple & transparent pricing - no calculations needed</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 6h advance priority booking</li>
                 <li>💠 Loyalty Points: 1.2x (1 NZD = 1.2 Points) ⬆️ 20% faster</li>
                 <li>⏰ 12 month validity (rolling from last recharge)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'pro'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
-                <li>💰 <em>Average cost: Q7: $19.5/h | Q8: $24.1/h (with 8% bonus)</em></li>
-                <li>🎁 +8% recharge bonus (e.g., $500 → $540 credit)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
+                <li>✨ Simple & transparent pricing - no calculations needed</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 12h advance priority booking (1h pre-authorization)</li>
                 <li>🎖️ Tournament priority access</li>
@@ -104,9 +102,8 @@
                 <li>⏰ 12 month validity (rolling from last recharge)</li>
               </template>
               <template v-else-if="profile?.membership_level === 'pro_max'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
-                <li>💰 <em>Average cost: Q7: $17.3/h | Q8: $21.8/h (with 10% bonus)</em></li>
-                <li>🎁 +10% recharge bonus (e.g., $1000 → $1100 credit)</li>
+                <li>💳 <strong>Member Rates:</strong> Q7: $17/h | Q8: $22/h</li>
+                <li>✨ Simple & transparent pricing - lowest rates guaranteed</li>
                 <li>🎯 Premium cue sticks (free rental)</li>
                 <li>📅 24h VIP priority booking (1h pre-authorization)</li>
                 <li>👑 Highest priority - exclusive VIP status</li>
@@ -267,6 +264,60 @@
                   <div class="stat-content">
                     <div class="stat-value">{{ currentYearPoints }}</div>
                     <div class="stat-label">Ranking Points ({{ currentYear }})</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="division-stats-grid">
+                <div class="division-card pro">
+                  <div class="division-header">👔 Pro Division</div>
+                  <div class="division-body">
+                    <div class="division-row">
+                      <span>Wins</span>
+                      <strong>{{ proStats.wins }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Losses</span>
+                      <strong>{{ proStats.losses }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Matches</span>
+                      <strong>{{ proStats.matches }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Win Rate</span>
+                      <strong>{{ proStats.winRate }}%</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Break & Run</span>
+                      <strong>{{ proStats.breakAndRun }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="division-card student">
+                  <div class="division-header">🎓 Student Division</div>
+                  <div class="division-body">
+                    <div class="division-row">
+                      <span>Wins</span>
+                      <strong>{{ studentStats.wins }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Losses</span>
+                      <strong>{{ studentStats.losses }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Matches</span>
+                      <strong>{{ studentStats.matches }}</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Win Rate</span>
+                      <strong>{{ studentStats.winRate }}%</strong>
+                    </div>
+                    <div class="division-row">
+                      <span>Break & Run</span>
+                      <strong>{{ studentStats.breakAndRun }}</strong>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -447,6 +498,44 @@ export default {
       address: '',
       id_card: ''
     })
+
+    const getDivisionStatKey = (division, field) => {
+      const prefix = division === 'student' ? 'student' : 'pro'
+      if (field === 'break_and_run_count') {
+        return `${prefix}_break_and_run_count`
+      }
+      return `${prefix}_${field}`
+    }
+
+    const getDivisionValue = (division, field) => {
+      if (!profile.value) return 0
+      const key = getDivisionStatKey(division, field)
+      return profile.value[key] ?? 0
+    }
+
+    const proStats = computed(() => ({
+      wins: getDivisionValue('pro', 'wins'),
+      losses: getDivisionValue('pro', 'losses'),
+      matches: getDivisionValue('pro', 'wins') + getDivisionValue('pro', 'losses'),
+      breakAndRun: getDivisionValue('pro', 'break_and_run_count'),
+      winRate: (() => {
+        const matches = getDivisionValue('pro', 'wins') + getDivisionValue('pro', 'losses')
+        if (matches === 0) return '0.0'
+        return ((getDivisionValue('pro', 'wins') / matches) * 100).toFixed(1)
+      })()
+    }))
+
+    const studentStats = computed(() => ({
+      wins: getDivisionValue('student', 'wins'),
+      losses: getDivisionValue('student', 'losses'),
+      matches: getDivisionValue('student', 'wins') + getDivisionValue('student', 'losses'),
+      breakAndRun: getDivisionValue('student', 'break_and_run_count'),
+      winRate: (() => {
+        const matches = getDivisionValue('student', 'wins') + getDivisionValue('student', 'losses')
+        if (matches === 0) return '0.0'
+        return ((getDivisionValue('student', 'wins') / matches) * 100).toFixed(1)
+      })()
+    }))
 
     const calculateWinRate = computed(() => {
       if (!profile.value) return 0
@@ -824,6 +913,8 @@ export default {
       pointHistory,
       currentYear,
       currentYearPoints,
+      proStats,
+      studentStats,
       isEditing,
       editForm,
       showChangePassword,
@@ -1200,6 +1291,60 @@ export default {
   gap: 1rem;
 }
 
+.division-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.division-card {
+  background: #f8f9ff;
+  border: 1px solid #dfe3f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.division-card:hover {
+  transform: translateY(-2px);
+}
+
+.division-card .division-header {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1a1a2e;
+  margin-bottom: 0.75rem;
+}
+
+.division-card.pro {
+  border-left: 4px solid #4f46e5;
+}
+
+.division-card.student {
+  border-left: 4px solid #16a34a;
+  background: #f3fff5;
+}
+
+.division-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.division-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.division-row strong {
+  color: #111827;
+  font-weight: 600;
+}
+
 .stat-item {
   display: flex;
   align-items: center;
@@ -1269,6 +1414,10 @@ export default {
   }
 
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .division-stats-grid {
     grid-template-columns: 1fr;
   }
 

@@ -27,6 +27,24 @@
 
       <div class="leaderboard-content">
 
+    <!-- Division Tabs: Pro / Student -->
+    <div class="category-tabs">
+      <button 
+        class="category-tab"
+        :class="{ active: divisionFilter === 'pro' }"
+        @click="divisionFilter = 'pro'"
+      >
+        👔 Pro Division
+      </button>
+      <button 
+        class="category-tab"
+        :class="{ active: divisionFilter === 'student' }"
+        @click="divisionFilter = 'student'"
+      >
+        🎓 Student Division
+      </button>
+    </div>
+
     <!-- Tabs for Monthly and Annual -->
     <div class="tabs">
       <button 
@@ -170,7 +188,7 @@
                   <div class="player-stats-mini">
                     <span class="stat-item">
                       <span class="stat-label">W/L:</span>
-                      <span class="stat-value">{{ player.wins }}/{{ player.losses }}</span>
+                      <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'wins') }}/{{ getDivisionValue(player, divisionFilter, 'losses') }}</span>
                     </span>
                     <span class="stat-item">
                       <span class="stat-label">Win Rate:</span>
@@ -178,7 +196,7 @@
                     </span>
                     <span class="stat-item">
                       <span class="stat-label">Matches:</span>
-                      <span class="stat-value">{{ player.wins + player.losses }}</span>
+                      <span class="stat-value">{{ getDivisionMatches(player, divisionFilter) }}</span>
                     </span>
                   </div>
                 </div>
@@ -303,6 +321,7 @@ export default {
     const loading = ref(true)
     const players = ref([])
     const activeTab = ref('current')
+    const divisionFilter = ref('pro') // 默认显示 Pro 组
     
     // Get NZ timezone date
     const nzDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Pacific/Auckland" }))
@@ -314,6 +333,24 @@ export default {
     // For Annual Rankings - show current year and last year only
     const selectedYear = ref(currentYear)
     const availableYears = [currentYear, currentYear - 1]
+
+    const getDivisionStatKey = (division, field) => {
+      const prefix = division === 'student' ? 'student' : 'pro'
+      if (field === 'break_and_run_count') {
+        return `${prefix}_break_and_run_count`
+      }
+      return `${prefix}_${field}`
+    }
+
+    const getDivisionValue = (player, division, field) => {
+      if (!player) return 0
+      const key = getDivisionStatKey(division, field)
+      return player[key] ?? 0
+    }
+
+    const getDivisionMatches = (player, division) => {
+      return getDivisionValue(player, division, 'wins') + getDivisionValue(player, division, 'losses')
+    }
 
     const rankingLevels = [
       { level: 'hall_of_fame', name: 'Hall of Fame', badge: '👑', points: '550+' },
@@ -328,21 +365,26 @@ export default {
     ]
 
     const rankedPlayers = computed(() => {
-      // ⚠️ 关键修复：只显示有 RANKING points 的玩家
+      // 🎯 根据组别获取对应的积分
       const playersWithPoints = players.value.filter(player => {
-        const displayPoints = getDisplayPoints(player)
-        // 只显示当前视图有积分的玩家（段位积分 > 0）
-        // ❌ 不使用 loyalty_points
-        // ✅ 只使用 ranking_points 相关的数据
-        return displayPoints > 0
+        const divisionPoints = divisionFilter.value === 'pro' 
+          ? (player.pro_ranking_points || 0)
+          : (player.student_ranking_points || 0)
+        
+        return divisionPoints > 0
       })
       
       const sorted = playersWithPoints.sort((a, b) => {
-        const aPoints = getDisplayPoints(a)
-        const bPoints = getDisplayPoints(b)
+        const aPoints = divisionFilter.value === 'pro' 
+          ? (a.pro_ranking_points || 0)
+          : (a.student_ranking_points || 0)
+        const bPoints = divisionFilter.value === 'pro' 
+          ? (b.pro_ranking_points || 0)
+          : (b.student_ranking_points || 0)
+        
         if (bPoints !== aPoints) return bPoints - aPoints
-        // 如果积分相同，按胜场数排序
-        return b.wins - a.wins
+        // 如果积分相同，按组别胜场数排序
+        return getDivisionValue(b, divisionFilter.value, 'wins') - getDivisionValue(a, divisionFilter.value, 'wins')
       })
       return sorted
     })
@@ -352,15 +394,11 @@ export default {
     })
 
     const getDisplayPoints = (player) => {
-      // ⚠️ 重要：只返回 ranking_points（段位积分），不返回 loyalty_points
-      switch (activeTab.value) {
-        case 'monthly':
-          return player.current_month_points || 0
-        case 'annual':
-          return player.selected_year_points || 0
-        default:
-          // Current Season - 返回今年累计的段位积分
-          return player.current_year_points || 0
+      // 🎯 根据组别返回对应的积分
+      if (divisionFilter.value === 'pro') {
+        return player.pro_ranking_points || 0
+      } else {
+        return player.student_ranking_points || 0
       }
     }
 
@@ -456,10 +494,12 @@ export default {
       return ''
     }
 
-    const calculateWinRate = (player) => {
-      const total = player.wins + player.losses
+    const calculateWinRate = (player, division = divisionFilter.value) => {
+      const wins = getDivisionValue(player, division, 'wins')
+      const losses = getDivisionValue(player, division, 'losses')
+      const total = wins + losses
       if (total === 0) return '0.0'
-      return ((player.wins / total) * 100).toFixed(1)
+      return ((wins / total) * 100).toFixed(1)
     }
 
     const formatDate = (dateString) => {
@@ -518,6 +558,7 @@ export default {
       loading,
       players,
       activeTab,
+      divisionFilter, // 🎯 新增：组别过滤
       currentYear,
       currentMonthName,
       selectedYear,
@@ -526,6 +567,8 @@ export default {
       rankedPlayers,
       topThree,
       getDisplayPoints,
+      getDivisionValue,
+      getDivisionMatches,
       formatRankBadge,
       formatRankName,
       getRankClass,
@@ -764,6 +807,50 @@ export default {
 
 /* Tabs */
 /* Tabs - Enhanced */
+/* Category Tabs (Adult/Student/All) */
+.category-tabs {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.category-tab {
+  padding: 0.75rem 2rem;
+  border: 2px solid transparent;
+  background: white;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6c757d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.category-tab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  color: #495057;
+}
+
+.category-tab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  transform: scale(1.05);
+}
+
+/* Time Period Tabs */
 .tabs {
   display: flex;
   gap: 1rem;

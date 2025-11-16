@@ -59,15 +59,26 @@
                 <div class="stat-info">
                   <h3 class="stat-title">Tournaments Held</h3>
                   <div class="stat-mode">
-                    <span class="badge badge-success">
-                      🔄 Auto-Count
+                    <span 
+                      class="badge" 
+                      :class="statsStore?.isTournamentsManual ? 'badge-warning' : 'badge-success'"
+                    >
+                      {{ statsStore?.isTournamentsManual ? '✏️ Manual Override' : '🔄 Auto-Count' }}
                     </span>
                   </div>
                 </div>
               </div>
               <div class="stat-value-display">
                 <div class="current-value">{{ statsStore?.totalTournaments || 0 }}</div>
-                <div class="stat-note">Auto-calculated from database</div>
+                <div class="stat-note">
+                  {{ statsStore?.isTournamentsManual ? 'Includes offline events set by admin' : 'Auto-calculated from tournaments table' }}
+                </div>
+                <button 
+                  class="btn btn-outline-primary btn-sm mt-2" 
+                  @click="openStatModal('total_tournaments')"
+                >
+                  {{ statsStore?.isTournamentsManual ? 'Edit Manual Value' : 'Add Offline Count' }}
+                </button>
               </div>
             </div>
 
@@ -94,12 +105,61 @@
           <div class="stats-management-info mt-3">
             <div class="info-box">
               <strong>💡 How it works:</strong>
-              <p>All statistics are automatically calculated from the database in real-time. Values update automatically when data changes.</p>
+              <p>All statistics are automatically calculated from the database in real-time. Use the “Add Offline Count” button to include tournaments that were hosted offline and not published on the website.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Stat Override Modal -->
+    <div v-if="showStatModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Adjust {{ statModal.title }}</h2>
+          <button class="btn btn-secondary btn-sm" @click="closeStatModal">Close</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted">{{ statModal.description }}</p>
+          <div class="form-group">
+            <label class="form-label">Manual Value</label>
+            <input 
+              type="number" 
+              class="form-control"
+              min="0"
+              v-model.number="statModal.manualValue"
+              placeholder="Enter total count"
+            >
+            <small class="form-text text-muted">
+              Current auto-count: {{ statModal.autoValue }} {{ statModal.autoValue === 1 ? 'event' : 'events' }}
+            </small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <textarea 
+              class="form-control" 
+              rows="2" 
+              v-model="statModal.notes"
+              placeholder="e.g., Added 4 offline university tournaments"
+            ></textarea>
+          </div>
+          <div class="info-box">
+            <p class="mb-0">
+              Leave the field empty and click <strong>Reset to Auto</strong> to use the automatic count from website tournaments only.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeStatModal" :disabled="savingStat">Cancel</button>
+          <button class="btn btn-warning" @click="resetStatOverride" :disabled="savingStat">
+            Reset to Auto
+          </button>
+          <button class="btn btn-success" @click="saveStatOverride" :disabled="savingStat">
+            {{ savingStat ? 'Saving...' : 'Save Manual Value' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Quick Actions Section -->
     <section class="section-quick-actions">
@@ -247,6 +307,7 @@
                   <th class="col-contact">Contact</th>
                   <th class="col-membership">Membership</th>
                   <th class="col-rank">Rank</th>
+                  <th class="col-points">Pro/Stu Pts</th>
                   <th class="col-loyalty">Loyalty Pts</th>
                   <th class="col-role">Role</th>
                   <th class="col-status">Status</th>
@@ -280,6 +341,18 @@
                     <span class="rank-badge-small" :class="`rank-${user.ranking_level}`">
                       {{ formatRankLevel(user.ranking_level) }}
                     </span>
+                  </td>
+                  <td class="col-points">
+                    <div class="dual-points-cell">
+                      <div class="points-row">
+                        <span class="points-label-mini">👔</span>
+                        <span class="points-value-mini">{{ user.pro_ranking_points || 0 }}</span>
+                      </div>
+                      <div class="points-row">
+                        <span class="points-label-mini">🎓</span>
+                        <span class="points-value-mini">{{ user.student_ranking_points || 0 }}</span>
+                      </div>
+                    </div>
                   </td>
                   <td class="col-loyalty">
                     <strong class="loyalty-points-value">
@@ -512,16 +585,9 @@
                   <div class="stat-label">Ranking Points ({{ currentYear }})</div>
                 </div>
                 <div class="stat-box">
-                  <div class="stat-value">{{ selectedUser?.wins || 0 }}</div>
-                  <div class="stat-label">Wins</div>
-                </div>
-                <div class="stat-box">
-                  <div class="stat-value">{{ selectedUser?.losses || 0 }}</div>
-                  <div class="stat-label">Losses</div>
-                </div>
-                <div class="stat-box">
-                  <div class="stat-value">{{ (selectedUser?.wins || 0) + (selectedUser?.losses || 0) }}</div>
-                  <div class="stat-label">Matches Played</div>
+                  <div class="stat-label">Overall W/L</div>
+                  <div class="stat-value">{{ selectedUser?.wins || 0 }}W / {{ selectedUser?.losses || 0 }}L</div>
+                  <div class="stat-subtext">Matches: {{ (selectedUser?.wins || 0) + (selectedUser?.losses || 0) }}</div>
                 </div>
                 <div class="stat-box">
                   <div class="stat-value">
@@ -534,6 +600,20 @@
                 <div class="stat-box">
                   <div class="stat-value">{{ selectedUser?.break_and_run_count || 0 }}</div>
                   <div class="stat-label">🎯 Break & Run</div>
+                </div>
+                <div class="stat-box stat-box-division pro">
+                  <div class="stat-label">👔 Pro Division</div>
+                  <div class="stat-value-small">{{ getDivisionValue(selectedUser, 'pro', 'wins') }}W / {{ getDivisionValue(selectedUser, 'pro', 'losses') }}L</div>
+                  <div class="stat-subtext">Win Rate: {{ calculateDivisionWinRate(selectedUser, 'pro') }}%</div>
+                  <div class="stat-subtext">Matches: {{ getDivisionMatches(selectedUser, 'pro') }}</div>
+                  <div class="stat-subtext">Break & Run: {{ getDivisionValue(selectedUser, 'pro', 'break_and_run_count') }}</div>
+                </div>
+                <div class="stat-box stat-box-division student">
+                  <div class="stat-label">🎓 Student Division</div>
+                  <div class="stat-value-small">{{ getDivisionValue(selectedUser, 'student', 'wins') }}W / {{ getDivisionValue(selectedUser, 'student', 'losses') }}L</div>
+                  <div class="stat-subtext">Win Rate: {{ calculateDivisionWinRate(selectedUser, 'student') }}%</div>
+                  <div class="stat-subtext">Matches: {{ getDivisionMatches(selectedUser, 'student') }}</div>
+                  <div class="stat-subtext">Break & Run: {{ getDivisionValue(selectedUser, 'student', 'break_and_run_count') }}</div>
                 </div>
               </div>
             </div>
@@ -782,6 +862,25 @@ export default {
       description: ''
     })
 
+    const showStatModal = ref(false)
+    const statModal = ref({
+      metric: '',
+      title: '',
+      description: '',
+      manualValue: 0,
+      notes: '',
+      autoValue: 0,
+      isManual: false
+    })
+    const savingStat = ref(false)
+
+    const statMeta = {
+      total_tournaments: {
+        title: 'Tournaments Held',
+        description: 'Include offline tournaments that were not published on the website.'
+      }
+    }
+
     // Search and Filter
     const searchQuery = ref('')
     const filterMembership = ref('')
@@ -836,6 +935,120 @@ export default {
       filterMembership.value = ''
       filterRole.value = ''
       filterStatus.value = ''
+    }
+
+    const getStatState = (metric) => {
+      return statsStore?.stats?.[metric] || { value: 0, notes: '', autoValue: 0, isManual: false }
+    }
+
+    const openStatModal = (metric) => {
+      const meta = statMeta[metric]
+      if (!meta) return
+      const statState = getStatState(metric)
+      statModal.value = {
+        metric,
+        title: meta.title,
+        description: meta.description,
+        manualValue: statState.value ?? 0,
+        notes: statState.notes || '',
+        autoValue: statState.autoValue ?? statState.value ?? 0,
+        isManual: statState.isManual || false
+      }
+      showStatModal.value = true
+    }
+
+    const closeStatModal = () => {
+      showStatModal.value = false
+      statModal.value = {
+        metric: '',
+        title: '',
+        description: '',
+        manualValue: 0,
+        notes: '',
+        autoValue: 0,
+        isManual: false
+      }
+    }
+
+    const saveStatOverride = async () => {
+      if (!statModal.value.metric) return
+      if (statModal.value.manualValue === '' || statModal.value.manualValue === null) {
+        alert('Please enter a manual value')
+        return
+      }
+      const manualValue = Number(statModal.value.manualValue)
+      if (Number.isNaN(manualValue) || manualValue < 0) {
+        alert('Manual value must be a number greater than or equal to 0')
+        return
+      }
+
+      savingStat.value = true
+      try {
+        const { error } = await supabase.rpc('admin_set_stat_override', {
+          p_metric: statModal.value.metric,
+          p_manual_value: Math.round(manualValue),
+          p_notes: statModal.value.notes || null
+        })
+
+        if (error) throw error
+        await statsStore.fetchStats()
+        closeStatModal()
+        alert('✅ Manual value saved!')
+      } catch (err) {
+        console.error('Error saving stat override:', err)
+        alert('Error saving manual value: ' + err.message)
+      } finally {
+        savingStat.value = false
+      }
+    }
+
+    const resetStatOverride = async () => {
+      if (!statModal.value.metric) return
+      if (!confirm('Reset this statistic to the automatic count?')) return
+
+      savingStat.value = true
+      try {
+        const { error } = await supabase.rpc('admin_set_stat_override', {
+          p_metric: statModal.value.metric,
+          p_manual_value: null,
+          p_notes: null
+        })
+        if (error) throw error
+        await statsStore.fetchStats()
+        closeStatModal()
+        alert('✅ Statistic reset to auto-count')
+      } catch (err) {
+        console.error('Error resetting stat override:', err)
+        alert('Error resetting statistic: ' + err.message)
+      } finally {
+        savingStat.value = false
+      }
+    }
+
+    const getDivisionStatKey = (division, field) => {
+      const prefix = division === 'student' ? 'student' : 'pro'
+      if (field === 'break_and_run_count') {
+        return `${prefix}_break_and_run_count`
+      }
+      return `${prefix}_${field}`
+    }
+
+    const getDivisionValue = (user, division, field) => {
+      if (!user) return 0
+      const key = getDivisionStatKey(division, field)
+      return user[key] ?? 0
+    }
+
+    const getDivisionMatches = (user, division) => {
+      return getDivisionValue(user, division, 'wins') + getDivisionValue(user, division, 'losses')
+    }
+
+    const calculateDivisionWinRate = (user, division) => {
+      const wins = getDivisionValue(user, division, 'wins')
+      const losses = getDivisionValue(user, division, 'losses')
+      const total = wins + losses
+      if (total === 0) return '0.0'
+      return ((wins / total) * 100).toFixed(1)
     }
 
     const loadData = async () => {
@@ -1227,7 +1440,10 @@ export default {
       currentYear,
       getUserCurrentYearPoints,
       calculateWinRate,
+      calculateDivisionWinRate,
       getWinRateClass,
+      getDivisionValue,
+      getDivisionMatches,
       isCurrentUser,
       toggleRole,
       toggleStatus,
@@ -1262,7 +1478,14 @@ export default {
       filterStatus,
       filteredUsers,
       clearSearch,
-      clearAllFilters
+      clearAllFilters,
+      showStatModal,
+      statModal,
+      openStatModal,
+      closeStatModal,
+      saveStatOverride,
+      resetStatOverride,
+      savingStat
     }
   }
 }
@@ -1379,6 +1602,30 @@ export default {
 
 .membership-badge.membership-lite {
   background: linear-gradient(135deg, #a8edea, #fed6e3);
+  color: #1a1a2e;
+}
+
+/* Dual Points Cell */
+.dual-points-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.points-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.points-label-mini {
+  font-size: 0.75rem;
+}
+
+.points-value-mini {
+  font-weight: 600;
   color: #1a1a2e;
 }
 
@@ -1506,6 +1753,40 @@ export default {
   font-size: 1.75rem;
   font-weight: 700;
   color: #667eea;
+}
+
+.stat-value-small {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.stat-subtext {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.stat-box-division {
+  text-align: left;
+  border: 2px solid #dfe7ff;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.12));
+}
+
+.stat-box-division.pro {
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
+.stat-box-division.student {
+  border-color: rgba(76, 175, 80, 0.4);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.08), rgba(102, 187, 106, 0.12));
+}
+
+.stat-box-division .stat-label {
+  text-align: left;
+  font-size: 0.85rem;
+  color: #1a1a2e;
+  margin-bottom: 0.25rem;
 }
 
 /* Win Rate Color Classes */
@@ -2455,12 +2736,13 @@ export default {
   /* 各列宽度控制（百分比分配） */
   .col-name { width: 15%; }
   .col-contact { width: 20%; }
-  .col-membership { width: 10%; text-align: center; }
-  .col-rank { width: 10%; text-align: center; }
-  .col-loyalty { width: 8%; text-align: center; }
+  .col-membership { width: 9%; text-align: center; }
+  .col-rank { width: 8%; text-align: center; }
+  .col-points { width: 9%; text-align: center; }
+  .col-loyalty { width: 7%; text-align: center; }
   .col-role { width: 7%; text-align: center; }
   .col-status { width: 7%; text-align: center; }
-  .col-actions { width: 23%; }  /* Actions 列最重要，保证可见 */
+  .col-actions { width: 24%; }  /* Actions 列 */
   
   /* Contact 列内容可以换行 */
   .col-contact {

@@ -68,18 +68,6 @@
         </div>
       </header>
 
-      <!-- Announcement Bar (Below Header) -->
-      <div class="announcement-bar" v-if="!isAuthPage">
-        <div class="announcement-content">
-          <span class="announcement-icon">🎱</span>
-          <span class="announcement-text">
-            <strong>COMING SOON</strong> — Late October 2025 | Hamilton Central
-          </span>
-          <span class="announcement-divider">·</span>
-          <span class="announcement-cta">Join our community for updates</span>
-        </div>
-      </div>
-
       <main class="app-main">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">

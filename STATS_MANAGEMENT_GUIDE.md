@@ -5,7 +5,13 @@
 我们为主页添加了两个重要功能：
 
 1. **✅ 实时自动刷新** - 统计数据每30秒自动更新
-2. **✅ 管理员手动修改** - 管理员可以手动修正统计数据（以防万一）
+2. **✅ 管理员手动修改** - 管理员可以手动修正「Tournaments Held」统计（线下比赛也能被统计进来）
+
+> ℹ️ **2025-11-12 更新**
+>
+> - 目前支持的手动覆盖对象：`Tournaments Held`
+> - 覆盖值存储在 `site_stats_overrides` 表，访客只能读取，只有管理员可以通过 `admin_set_stat_override` RPC 修改
+> - 点击 Admin Dashboard → System Statistics Management → “Add Offline Count” 即可填写线下比赛数量或恢复自动统计
 
 ---
 
@@ -51,10 +57,11 @@
 - **徽章** - 显示当前模式
   - 🔄 **Auto-Count** - 自动计算（绿色）
   - ✏️ **Manual Override** - 手动覆盖（黄色）
-- **Actual DB Count** - 数据库实际计数（仅在手动模式下显示差异）
 - **操作按钮**
-  - ✏️ **Edit** - 编辑数值
+  - 🟦 **Add Offline Count** - 仅在「Tournaments Held」上可见，用于输入线下赛事
   - 🔄 **Reset to Auto** - 恢复自动计算
+
+> 📌 目前只有「Tournaments Held」开放手动覆盖入口，其它统计项仍保持全自动计算。
 
 ---
 

@@ -24,7 +24,7 @@
             <div class="hero-stat-label">Membership Tiers</div>
           </div>
           <div class="hero-stat-item">
-            <div class="hero-stat-number">$10.7</div>
+            <div class="hero-stat-number">$6</div>
             <div class="hero-stat-label">Max Savings/Hour</div>
           </div>
           <div class="hero-stat-item">
@@ -36,6 +36,33 @@
     </section>
 
     <div class="membership-content">
+
+    <!-- Price Drop Announcement Banner -->
+    <div class="price-drop-banner">
+      <div class="banner-flash">🎉</div>
+      <div class="banner-content">
+        <div class="banner-tag">GRAND OPENING SPECIAL</div>
+        <h2 class="banner-title">🔥 PRICES REDUCED - NOW OPEN! 🔥</h2>
+        <div class="price-comparison">
+          <div class="price-old">
+            <span class="old-label">Was:</span>
+            <span class="old-price">Q7 $28/h | Q8 $33/h</span>
+          </div>
+          <div class="price-arrow">→</div>
+          <div class="price-new">
+            <span class="new-label">NOW:</span>
+            <span class="new-price">Q7 $23/h | Q8 $28/h</span>
+          </div>
+          <div class="price-save">
+            <span class="save-badge">SAVE $5/HOUR!</span>
+          </div>
+        </div>
+        <p class="banner-subtitle">
+          💰 <strong>No Membership Fees!</strong> Your top-up IS your playing money. 
+          Top up $200+ for even better rates: Plus $21/h | Pro $19/h | Pro Max $17/h
+        </p>
+      </div>
+    </div>
 
     <!-- Membership Tiers -->
     <section class="tiers-section">
@@ -69,7 +96,7 @@
           </div>
           <ul class="tier-features">
             <li><span class="feature-icon">✅</span> Free registration</li>
-            <li><span class="feature-icon">🎱</span> Q7 (Silver Leg): $28/h | Q8 (Gold Leg): $33/h</li>
+            <li><span class="feature-icon">🎱</span> Q7 (Silver Leg): $23/h | Q8 (Gold Leg): $28/h</li>
             <li><span class="feature-icon">🎯</span> Basic cue sticks</li>
             <li><span class="feature-icon">📊</span> Basic statistics</li>
             <li><span class="feature-icon">📅</span> Same-day booking (2h advance)</li>
@@ -87,32 +114,31 @@
             <p class="tier-tagline">Great Value for Regular Players</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">$200+</span>
-            <span class="price-period">Get $210 credit (+5% bonus)</span>
+            <span class="price-amount">Top-up $200+</span>
+            <span class="price-period">Pre-pay for playing - not a membership fee</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $25/h | Q8: $30/h</li>
-            <li><span class="feature-icon">🎁</span> +5% bonus = $210 credit after $200 top-up</li>
-            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $23.8/h | Q8: $28.6/h (with bonus)</em></li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
+            <li><span class="feature-icon">💰</span> Your $200 = $200 playing credit (no extra fees)</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.2x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 6h priority booking</li>
           </ul>
           <div class="pricing-clarification">
-            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-title">💡 How It Works</div>
             <div class="clarification-item">
-              <span class="clarification-label">Each session charge:</span>
-              <span class="clarification-value">$25/h (Q7) | $30/h (Q8)</span>
+              <span class="clarification-label">1. Top up $200:</span>
+              <span class="clarification-value">Get $200 playing credit</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">Average cost (with bonus):</span>
-              <span class="clarification-value">$23.8/h (Q7) | $28.6/h (Q8)</span>
+              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-value">$21/h (Q7) | $26/h (Q8)</span>
             </div>
             <div class="clarification-note">
-              You pay $25/$30 per hour, but your $200 becomes $210, so the average cost is lower!
+              <strong>No membership fee!</strong> Your $200 top-up IS your playing money. You just get better rates!
             </div>
           </div>
-          <div class="savings-badge">Save $408/year (2h/week) | $4.2/hour</div>
+          <div class="savings-badge">Save $208/year (2h/week) | $2/hour on Q7</div>
           <button class="btn btn-primary btn-lg" @click="contactUs">Upgrade Now</button>
         </div>
 
@@ -125,33 +151,32 @@
             <p class="tier-tagline">Best for Serious Players</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">$500+</span>
-            <span class="price-period">Get $540 credit (+8% bonus)</span>
+            <span class="price-amount">Top-up $500+</span>
+            <span class="price-period">Pre-pay for playing - not a membership fee</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
-            <li><span class="feature-icon">🎁</span> +8% bonus = $540 credit after $500 top-up</li>
-            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $19.5/h | Q8: $24.1/h (with bonus)</em></li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
+            <li><span class="feature-icon">💰</span> Your $500 = $500 playing credit (no extra fees)</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.4x faster</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 12h priority booking</li>
             <li><span class="feature-icon">🎖️</span> Tournament priority</li>
           </ul>
           <div class="pricing-clarification">
-            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-title">💡 How It Works</div>
             <div class="clarification-item">
-              <span class="clarification-label">Each session charge:</span>
-              <span class="clarification-value">$21/h (Q7) | $26/h (Q8)</span>
+              <span class="clarification-label">1. Top up $500:</span>
+              <span class="clarification-value">Get $500 playing credit</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">Average cost (with bonus):</span>
-              <span class="clarification-value">$19.5/h (Q7) | $24.1/h (Q8)</span>
+              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-value">$19/h (Q7) | $24/h (Q8)</span>
             </div>
             <div class="clarification-note">
-              You pay $21/$26 per hour, but your $500 becomes $540, so the average cost is lower!
+              <strong>No membership fee!</strong> Your $500 top-up IS your playing money. You just get better rates!
             </div>
           </div>
-          <div class="savings-badge">Save $4,080/year (10h/week) | $8.5/hour</div>
+          <div class="savings-badge">Save $416/year (2h/week) | $4/hour on Q7</div>
           <button class="btn btn-success btn-lg" @click="contactUs">Upgrade Now</button>
         </div>
 
@@ -164,34 +189,32 @@
             <p class="tier-tagline">Ultimate VIP Experience</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">$1000+</span>
-            <span class="price-period">Get $1100 credit (+10% bonus)</span>
+            <span class="price-amount">Top-up $1000+</span>
+            <span class="price-period">Pre-pay for playing - not a membership fee</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
-            <li><span class="feature-icon">🎁</span> +10% bonus = $1100 credit after $1000 top-up</li>
-            <li><span class="feature-icon">💰</span> <em>Average cost: Q7: $17.3/h | Q8: $21.8/h (with bonus)</em></li>
+            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $17/h | Q8: $22/h</li>
+            <li><span class="feature-icon">💰</span> Your $1000 = $1000 playing credit (no extra fees)</li>
             <li><span class="feature-icon">⭐</span> Loyalty Points: 1.6x fastest</li>
             <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
             <li><span class="feature-icon">📅</span> 24h VIP priority booking</li>
             <li><span class="feature-icon">🎂</span> Birthday gift (exclusive)</li>
           </ul>
           <div class="pricing-clarification pricing-clarification-vip">
-            <div class="clarification-title">💡 Pricing Explained</div>
+            <div class="clarification-title">💡 How VIP Works</div>
             <div class="clarification-item">
-              <span class="clarification-label">Each session charge:</span>
-              <span class="clarification-value"><strong>$19/h (Q7) | $24/h (Q8)</strong></span>
+              <span class="clarification-label">1. Top up $1000:</span>
+              <span class="clarification-value">Get $1000 playing credit</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">Average cost (with bonus):</span>
-              <span class="clarification-value">$17.3/h (Q7) | $21.8/h (Q8)</span>
+              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-value"><strong>$17/h (Q7) | $22/h (Q8)</strong></span>
             </div>
             <div class="clarification-note clarification-note-vip">
-              <strong>⚠️ Important:</strong> You pay <strong>$19/$24 per hour</strong> when you play. 
-              Your $1000 top-up becomes $1100, which lowers your average cost to $17.3/$21.8 per hour!
+              <strong>No membership fee!</strong> Your $1000 top-up IS your playing money - you get the lowest rates guaranteed!
             </div>
           </div>
-          <div class="savings-badge premium">Save $5,136/year (10h/week) | ⚠️ Limited Slots</div>
+          <div class="savings-badge premium">Save $624/year (2h/week) | ⚠️ Limited Slots</div>
           <button class="btn btn-warning btn-lg" @click="contactUs">Apply for VIP</button>
         </div>
       </div>
@@ -220,25 +243,25 @@
               <td class="best">≥ $1000</td>
             </tr>
             <tr>
-              <td class="feature-name">Credit After Bonus</td>
+              <td class="feature-name">Credit After Top-up</td>
               <td>-</td>
-              <td>$210</td>
-              <td>$540</td>
-              <td class="best">$1100</td>
+              <td>$200</td>
+              <td>$500</td>
+              <td class="best">$1000</td>
             </tr>
             <tr>
               <td class="feature-name">Q7 (Silver Leg Table) Rate</td>
-              <td>$28/hour</td>
-              <td class="highlight">$23.8/hour</td>
-              <td class="highlight">$19.5/hour</td>
-              <td class="highlight best">$17.3/hour</td>
+              <td>$23/hour</td>
+              <td class="highlight">$21/hour</td>
+              <td class="highlight">$19/hour</td>
+              <td class="highlight best">$17/hour</td>
             </tr>
             <tr>
               <td class="feature-name">Q8 (Gold Leg Table) Rate</td>
-              <td>$33/hour</td>
-              <td class="highlight">$28.6/hour</td>
-              <td class="highlight">$24.1/hour</td>
-              <td class="highlight best">$21.8/hour</td>
+              <td>$28/hour</td>
+              <td class="highlight">$26/hour</td>
+              <td class="highlight">$24/hour</td>
+              <td class="highlight best">$22/hour</td>
             </tr>
             <tr>
               <td class="feature-name">Priority Booking</td>
@@ -325,12 +348,12 @@
         <div class="benefit-card">
           <div class="benefit-icon">💰</div>
           <h3>Save Big Anytime</h3>
-          <p>Save up to $10.7/hour! Pro Max members save $5,136 per year (10h/week). Member rates apply anytime during opening hours - evenings and weekends included!</p>
+          <p>Save up to $6/hour on Q7! Pro Max members save $3,120 per year (10h/week). Member rates apply anytime during opening hours - evenings and weekends included!</p>
         </div>
         <div class="benefit-card">
-          <div class="benefit-icon">🎁</div>
-          <h3>Instant Bonus Credit</h3>
-          <p>Get free credit instantly! Recharge $1000 → Get $1100 (+10%). Your bonus credit works just like cash - use it anytime!</p>
+          <div class="benefit-icon">💰</div>
+          <h3>Simple Transparent Pricing</h3>
+          <p>No complicated calculations! Top up and enjoy your member discount immediately. What you pay is what you get - clear and fair!</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">📅</div>
@@ -363,7 +386,7 @@
           <div class="note-item">
             <span class="note-icon">✨</span>
             <div class="note-text">
-              <strong>Member Rates Anytime:</strong> Discounted member rates (Q7 Silver Leg: $23.8/$19.5/$17.3, Q8 Gold Leg: $28.6/$24.1/$21.8) apply anytime during opening hours. No time restrictions!
+              <strong>Member Rates Anytime:</strong> Discounted member rates (Q7: $21/$19/$17, Q8: $26/$24/$22) apply anytime during opening hours. No time restrictions!
             </div>
           </div>
           <div class="note-item">
@@ -439,45 +462,45 @@
       <h2 class="section-title">Pricing Examples</h2>
       <div class="examples-grid">
         <div class="example-card">
-          <h3>🎱 Casual Player (2h/week, Q7 Silver Leg)</h3>
+          <h3>🎱 Casual Player (2h/week, Q7)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
-              <span class="price">$28 × 2h × 4 = <strong>$224/month</strong></span>
+              <span class="price">$23 × 2h × 4 = <strong>$184/month</strong></span>
             </div>
             <div class="calc-row highlight">
               <span>Plus Member:</span>
-              <span class="price">$23.8 × 2h × 4 = <strong>$190/month</strong></span>
+              <span class="price">$21 × 2h × 4 = <strong>$168/month</strong></span>
             </div>
-            <div class="savings">💰 Save $34/month = $408/year</div>
+            <div class="savings">💰 Save $16/month = $192/year</div>
           </div>
         </div>
         <div class="example-card">
-          <h3>🏆 Regular Player (10h/week, Q7 Silver Leg)</h3>
+          <h3>🏆 Regular Player (10h/week, Q7)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
-              <span class="price">$28 × 10h × 4 = <strong>$1,120/month</strong></span>
+              <span class="price">$23 × 10h × 4 = <strong>$920/month</strong></span>
             </div>
             <div class="calc-row highlight">
               <span>Pro Member:</span>
-              <span class="price">$19.5 × 10h × 4 = <strong>$780/month</strong></span>
+              <span class="price">$19 × 10h × 4 = <strong>$760/month</strong></span>
             </div>
-            <div class="savings">💰 Save $340/month = $4,080/year</div>
+            <div class="savings">💰 Save $160/month = $1,920/year</div>
           </div>
         </div>
         <div class="example-card">
-          <h3>💎 Enthusiast (10h/week, Q7 Silver Leg)</h3>
+          <h3>💎 Enthusiast (10h/week, Q7)</h3>
           <div class="example-calc">
             <div class="calc-row">
               <span>Lite Member:</span>
-              <span class="price">$28 × 10h × 4 = <strong>$1,120/month</strong></span>
+              <span class="price">$23 × 10h × 4 = <strong>$920/month</strong></span>
             </div>
             <div class="calc-row highlight best">
               <span>Pro Max Member:</span>
-              <span class="price">$17.3 × 10h × 4 = <strong>$692/month</strong></span>
+              <span class="price">$17 × 10h × 4 = <strong>$680/month</strong></span>
             </div>
-            <div class="savings premium">💎 Save $428/month = $5,136/year + VIP Perks</div>
+            <div class="savings premium">💎 Save $240/month = $2,880/year + VIP Perks</div>
           </div>
         </div>
       </div>
@@ -754,6 +777,277 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem 3rem;
+}
+
+/* Price Drop Banner */
+.price-drop-banner {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+  border: 4px solid #991b1b;
+  border-radius: 20px;
+  padding: 2.5rem;
+  margin: 2rem auto 3rem;
+  max-width: 1200px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(220, 38, 38, 0.4);
+  animation: banner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes banner-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 12px 40px rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 16px 48px rgba(220, 38, 38, 0.6);
+  }
+}
+
+.price-drop-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.banner-flash {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 3rem;
+  animation: flash-rotate 1.5s ease-in-out infinite;
+}
+
+@keyframes flash-rotate {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-15deg) scale(1.2);
+  }
+  75% {
+    transform: rotate(15deg) scale(1.2);
+  }
+}
+
+.banner-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.banner-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.95);
+  color: #dc2626;
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+  animation: tag-bounce 1s ease-in-out infinite;
+}
+
+@keyframes tag-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.banner-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 0 1.5rem 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.price-comparison {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.price-old {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.old-label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-decoration: line-through;
+}
+
+.old-price {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.price-arrow {
+  font-size: 2.5rem;
+  color: white;
+  font-weight: 900;
+  animation: arrow-pulse 1s ease-in-out infinite;
+}
+
+@keyframes arrow-pulse {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+.price-new {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.new-label {
+  display: block;
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.new-price {
+  display: block;
+  color: #991b1b;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.price-save {
+  background: #fbbf24;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  animation: save-pulse 1s ease-in-out infinite;
+}
+
+@keyframes save-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.save-badge {
+  color: #78350f;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.banner-subtitle {
+  color: white;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 1.5rem 0 0 0;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.banner-subtitle strong {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .price-drop-banner {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+    border-radius: 16px;
+  }
+  
+  .banner-flash {
+    font-size: 2.5rem;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  .banner-tag {
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem;
+    letter-spacing: 1px;
+  }
+  
+  .banner-title {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+  }
+  
+  .price-comparison {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .price-old,
+  .price-new {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+  
+  .old-price,
+  .new-price {
+    font-size: 1.2rem;
+  }
+  
+  .price-arrow {
+    transform: rotate(90deg);
+    font-size: 2rem;
+    margin: 0;
+  }
+  
+  .price-save {
+    width: 100%;
+    padding: 0.6rem 1rem;
+  }
+  
+  .save-badge {
+    font-size: 1rem;
+  }
+  
+  .banner-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
 }
 
 /* Section Title */

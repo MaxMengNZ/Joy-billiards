@@ -221,11 +221,59 @@
         </div>
         <div class="modal-body">
           <div class="player-info-box">
-            <p><strong>Current Stats:</strong></p>
+            <p><strong>Overall Totals:</strong></p>
             <p>Wins: <span class="text-success">{{ selectedPlayer?.wins || 0 }}</span></p>
             <p>Losses: <span class="text-danger">{{ selectedPlayer?.losses || 0 }}</span></p>
             <p>Matches Played: <strong>{{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }}</strong></p>
             <p>Break and Run: <strong>🎯 {{ selectedPlayer?.break_and_run_count || 0 }}</strong></p>
+
+            <div class="dual-stats-display">
+              <div class="stats-item">
+                <div class="stats-title">👔 Pro Division</div>
+                <div class="stats-row"><span>Wins:</span><strong>{{ getDivisionValue(selectedPlayer, 'pro', 'wins') }}</strong></div>
+                <div class="stats-row"><span>Losses:</span><strong>{{ getDivisionValue(selectedPlayer, 'pro', 'losses') }}</strong></div>
+                <div class="stats-row"><span>Matches:</span><strong>{{ getDivisionMatches(selectedPlayer, 'pro') }}</strong></div>
+                <div class="stats-row"><span>Win Rate:</span><strong>{{ calculateDivisionWinRate(selectedPlayer, 'pro') }}%</strong></div>
+              </div>
+              <div class="stats-item">
+                <div class="stats-title">🎓 Student Division</div>
+                <div class="stats-row"><span>Wins:</span><strong>{{ getDivisionValue(selectedPlayer, 'student', 'wins') }}</strong></div>
+                <div class="stats-row"><span>Losses:</span><strong>{{ getDivisionValue(selectedPlayer, 'student', 'losses') }}</strong></div>
+                <div class="stats-row"><span>Matches:</span><strong>{{ getDivisionMatches(selectedPlayer, 'student') }}</strong></div>
+                <div class="stats-row"><span>Win Rate:</span><strong>{{ calculateDivisionWinRate(selectedPlayer, 'student') }}%</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🎯 组别选择 -->
+          <div class="form-group division-selector">
+            <label class="form-label">🎯 Select Division</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  v-model="statsDivision" 
+                  value="pro" 
+                  name="statsDivision"
+                >
+                <span class="radio-label">
+                  <strong>👔 Pro Division</strong>
+                  <small>Weekly / Open tournaments</small>
+                </span>
+              </label>
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  v-model="statsDivision" 
+                  value="student" 
+                  name="statsDivision"
+                >
+                <span class="radio-label">
+                  <strong>🎓 Student Division</strong>
+                  <small>Student-only events</small>
+                </span>
+              </label>
+            </div>
           </div>
           
           <!-- 修改模式选择 -->
@@ -262,7 +310,7 @@
           <!-- 增量模式表单 -->
           <div v-if="statsMode === 'increment'" class="stats-form">
             <div class="increment-hint">
-              <p>💡 Enter the results from today's matches:</p>
+              <p>💡 Enter the results from today's {{ statsDivision === 'student' ? 'student' : 'pro' }} matches:</p>
             </div>
             
             <div class="form-row">
@@ -306,23 +354,30 @@
               <p><strong>📊 Preview New Stats:</strong></p>
               <div class="preview-row">
                 <span class="preview-label">Wins:</span>
-                <span class="preview-calc">{{ selectedPlayer?.wins || 0 }} + {{ incrementForm.wins }} = <strong class="text-success">{{ getNewWins() }}</strong></span>
+                <span class="preview-calc">{{ getDivisionValue(selectedPlayer, statsDivision, 'wins') }} + {{ incrementForm.wins }} = <strong class="text-success">{{ getNewWins() }}</strong></span>
               </div>
               <div class="preview-row">
                 <span class="preview-label">Losses:</span>
-                <span class="preview-calc">{{ selectedPlayer?.losses || 0 }} + {{ incrementForm.losses }} = <strong class="text-danger">{{ getNewLosses() }}</strong></span>
+                <span class="preview-calc">{{ getDivisionValue(selectedPlayer, statsDivision, 'losses') }} + {{ incrementForm.losses }} = <strong class="text-danger">{{ getNewLosses() }}</strong></span>
               </div>
               <div class="preview-row">
                 <span class="preview-label">Matches Played:</span>
-                <span class="preview-calc">{{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }} → <strong>{{ getNewWins() + getNewLosses() }}</strong></span>
+                <span class="preview-calc">{{ getDivisionMatches(selectedPlayer, statsDivision) }} → <strong>{{ getNewWins() + getNewLosses() }}</strong></span>
               </div>
               <div class="preview-row">
                 <span class="preview-label">Break and Run:</span>
-                <span class="preview-calc">{{ selectedPlayer?.break_and_run_count || 0 }} + {{ incrementForm.break_and_run_count }} = <strong>🎯 {{ getNewBreakAndRun() }}</strong></span>
+                <span class="preview-calc">{{ getDivisionValue(selectedPlayer, statsDivision, 'break_and_run_count') }} + {{ incrementForm.break_and_run_count }} = <strong>🎯 {{ getNewBreakAndRun() }}</strong></span>
               </div>
               <div class="preview-row">
                 <span class="preview-label">Win Rate:</span>
-                <span class="preview-calc">{{ calculateWinRate(selectedPlayer) }}% → <strong>{{ calculateIncrementWinRate() }}%</strong></span>
+                <span class="preview-calc">{{ calculateDivisionWinRate(selectedPlayer, statsDivision) }}% → <strong>{{ calculateIncrementWinRate() }}%</strong></span>
+              </div>
+              <div class="preview-row overall-row">
+                <span class="preview-label">Overall Totals:</span>
+                <span class="preview-calc">
+                  {{ selectedPlayer?.wins || 0 }}W/{{ selectedPlayer?.losses || 0 }}L → 
+                  <strong>{{ getProjectedOverallStat('wins') }}W/{{ getProjectedOverallStat('losses') }}L</strong>
+                </span>
               </div>
             </div>
           </div>
@@ -366,12 +421,26 @@
             <!-- 绝对值模式预览 -->
             <div v-if="statsChanged" class="stats-preview">
               <p><strong>📊 Preview Changes:</strong></p>
-              <p>Wins: {{ selectedPlayer?.wins || 0 }} → {{ statsForm.wins }}</p>
-              <p>Losses: {{ selectedPlayer?.losses || 0 }} → {{ statsForm.losses }}</p>
-              <p>Matches Played: {{ (selectedPlayer?.wins || 0) + (selectedPlayer?.losses || 0) }} → {{ statsForm.wins + statsForm.losses }}</p>
-              <p>Break and Run: 🎯 {{ selectedPlayer?.break_and_run_count || 0 }} → {{ statsForm.break_and_run_count }}</p>
-              <p>Win Rate: {{ calculateWinRate(selectedPlayer) }}% → {{ calculateNewWinRate() }}%</p>
+              <p>Wins: {{ getDivisionValue(selectedPlayer, statsDivision, 'wins') }} → {{ statsForm.wins }}</p>
+              <p>Losses: {{ getDivisionValue(selectedPlayer, statsDivision, 'losses') }} → {{ statsForm.losses }}</p>
+              <p>Matches Played: {{ getDivisionMatches(selectedPlayer, statsDivision) }} → {{ statsForm.wins + statsForm.losses }}</p>
+              <p>Break and Run: 🎯 {{ getDivisionValue(selectedPlayer, statsDivision, 'break_and_run_count') }} → {{ statsForm.break_and_run_count }}</p>
+              <p>Win Rate: {{ calculateDivisionWinRate(selectedPlayer, statsDivision) }}% → {{ calculateNewWinRate() }}%</p>
+              <p class="overall-summary">
+                Overall Totals: {{ selectedPlayer?.wins || 0 }}W/{{ selectedPlayer?.losses || 0 }}L → 
+                {{ getProjectedOverallStat('wins') }}W/{{ getProjectedOverallStat('losses') }}L
+              </p>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reason (Optional)</label>
+            <input 
+              type="text"
+              class="form-control"
+              v-model="statsReason"
+              placeholder="e.g., Weekly tournament results"
+            >
           </div>
         </div>
         <div class="modal-footer">
@@ -379,7 +448,7 @@
           <button 
             class="btn btn-success" 
             @click="updateStats"
-            :disabled="statsMode === 'increment' && !incrementChanged"
+            :disabled="statsMode === 'increment' ? !incrementChanged : !statsChanged"
           >
             Update Statistics
           </button>
@@ -397,7 +466,37 @@
         <div class="modal-body">
           <div class="player-info-box">
             <p><strong>Current Rank:</strong> <span class="badge" :class="getRankBadgeClass(selectedPlayer?.ranking_level)">{{ formatRankLevel(selectedPlayer?.ranking_level) }}</span></p>
-            <p><strong>Current Points ({{ currentYear }}):</strong> <span class="current-points">{{ getCurrentYearPoints(selectedPlayer) }}</span></p>
+            <div class="dual-points-display">
+              <div class="points-item">
+                <span class="points-label">👔 Pro Points:</span>
+                <span class="points-value">{{ selectedPlayer?.pro_ranking_points || 0 }}</span>
+              </div>
+              <div class="points-item">
+                <span class="points-label">🎓 Student Points:</span>
+                <span class="points-value">{{ selectedPlayer?.student_ranking_points || 0 }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 🎯 组别选择（新增） -->
+          <div class="form-group division-selector">
+            <label class="form-label">🎯 Select Division</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" v-model="pointsDivision" value="pro" name="pointsDivision">
+                <span class="radio-label">
+                  <strong>👔 Pro Division</strong>
+                  <small>For Pro tournaments (Weekly, China Masters, etc.)</small>
+                </span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" v-model="pointsDivision" value="student" name="pointsDivision">
+                <span class="radio-label">
+                  <strong>🎓 Student Division</strong>
+                  <small>For Student tournaments (Student Challenge, etc.)</small>
+                </span>
+              </label>
+            </div>
           </div>
           
           <div class="form-group">
@@ -417,7 +516,7 @@
               type="text" 
               class="form-control" 
               v-model="pointsReason"
-              placeholder="e.g., Won tournament"
+              placeholder="e.g., Won Pro Weekly Tournament"
             >
           </div>
           
@@ -473,7 +572,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePlayerStore } from '../stores/playerStore'
 import { supabase } from '../config/supabase'
 
@@ -493,6 +592,7 @@ export default {
     // Stats Modal
     const showStatsModal = ref(false)
     const statsMode = ref('increment') // 'increment' or 'absolute'
+    const statsDivision = ref('pro') // 'pro' or 'student'
     const statsForm = ref({
       wins: 0,
       losses: 0,
@@ -503,18 +603,34 @@ export default {
       losses: 0,
       break_and_run_count: 0
     })
+    const statsReason = ref('')
     
     // Points Modal
     const showPointsModal = ref(false)
     const selectedPlayer = ref(null)
     const pointsChange = ref(0)
     const pointsReason = ref('')
+    const pointsDivision = ref('pro') // 🎯 新增：组别选择（默认 Pro）
     
     const playerForm = ref({
       name: '',
       email: '',
       phone: ''
     })
+
+    const getDivisionStatKey = (division, field) => {
+      const prefix = division === 'student' ? 'student' : 'pro'
+      if (field === 'break_and_run_count') {
+        return `${prefix}_break_and_run_count`
+      }
+      return `${prefix}_${field}`
+    }
+
+    const getDivisionValue = (player, division, field) => {
+      if (!player) return 0
+      const key = getDivisionStatKey(division, field)
+      return player[key] ?? 0
+    }
 
     const filteredPlayers = computed(() => {
       let players = playerStore.sortedPlayers
@@ -575,6 +691,14 @@ export default {
       return ((player.wins / total) * 100).toFixed(1)
     }
 
+    const calculateDivisionWinRate = (player, division) => {
+      const wins = getDivisionValue(player, division, 'wins')
+      const losses = getDivisionValue(player, division, 'losses')
+      const total = wins + losses
+      if (total === 0) return 0
+      return ((wins / total) * 100).toFixed(1)
+    }
+
     const calculateNewWinRate = () => {
       const total = statsForm.value.wins + statsForm.value.losses
       if (total === 0) return 0
@@ -613,9 +737,12 @@ export default {
 
     const statsChanged = computed(() => {
       if (!selectedPlayer.value) return false
-      return statsForm.value.wins !== (selectedPlayer.value.wins || 0) ||
-             statsForm.value.losses !== (selectedPlayer.value.losses || 0) ||
-             statsForm.value.break_and_run_count !== (selectedPlayer.value.break_and_run_count || 0)
+      const baseWins = getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')
+      const baseLosses = getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')
+      const baseBreak = getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')
+      return statsForm.value.wins !== baseWins ||
+             statsForm.value.losses !== baseLosses ||
+             statsForm.value.break_and_run_count !== baseBreak
     })
 
     const incrementChanged = computed(() => {
@@ -625,15 +752,18 @@ export default {
     })
 
     const getNewWins = () => {
-      return (selectedPlayer.value?.wins || 0) + incrementForm.value.wins
+      const base = getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')
+      return base + incrementForm.value.wins
     }
 
     const getNewLosses = () => {
-      return (selectedPlayer.value?.losses || 0) + incrementForm.value.losses
+      const base = getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')
+      return base + incrementForm.value.losses
     }
 
     const getNewBreakAndRun = () => {
-      return (selectedPlayer.value?.break_and_run_count || 0) + incrementForm.value.break_and_run_count
+      const base = getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')
+      return base + incrementForm.value.break_and_run_count
     }
 
     const calculateIncrementWinRate = () => {
@@ -644,19 +774,26 @@ export default {
       return ((newWins / total) * 100).toFixed(2)
     }
 
-    const openStatsModal = (player) => {
-      selectedPlayer.value = player
-      statsMode.value = 'increment' // 默认使用增量模式
+    const resetStatsForms = () => {
+      if (!selectedPlayer.value) return
       statsForm.value = {
-        wins: player.wins || 0,
-        losses: player.losses || 0,
-        break_and_run_count: player.break_and_run_count || 0
+        wins: getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins'),
+        losses: getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses'),
+        break_and_run_count: getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')
       }
       incrementForm.value = {
         wins: 0,
         losses: 0,
         break_and_run_count: 0
       }
+    }
+
+    const openStatsModal = (player) => {
+      selectedPlayer.value = player
+      statsDivision.value = 'pro'
+      statsMode.value = 'increment' // 默认使用增量模式
+      statsReason.value = ''
+      resetStatsForms()
       showStatsModal.value = true
     }
 
@@ -664,6 +801,8 @@ export default {
       showStatsModal.value = false
       selectedPlayer.value = null
       statsMode.value = 'increment'
+      statsDivision.value = 'pro'
+      statsReason.value = ''
       statsForm.value = {
         wins: 0,
         losses: 0,
@@ -674,6 +813,36 @@ export default {
         losses: 0,
         break_and_run_count: 0
       }
+    }
+
+    watch(statsDivision, () => {
+      if (selectedPlayer.value) {
+        resetStatsForms()
+      }
+    })
+
+    const getDivisionMatches = (player, division) => {
+      return getDivisionValue(player, division, 'wins') + getDivisionValue(player, division, 'losses')
+    }
+
+    const getProjectedDivisionStat = (stat) => {
+      if (statsMode.value === 'increment') {
+        if (stat === 'wins') return getNewWins()
+        if (stat === 'losses') return getNewLosses()
+        return getNewBreakAndRun()
+      }
+      if (stat === 'break_and_run_count') {
+        return statsForm.value.break_and_run_count
+      }
+      return statsForm.value[stat]
+    }
+
+    const getProjectedOverallStat = (stat) => {
+      if (!selectedPlayer.value) return 0
+      const updatedDivisionValue = getProjectedDivisionStat(stat)
+      const otherDivision = statsDivision.value === 'pro' ? 'student' : 'pro'
+      const otherValue = getDivisionValue(selectedPlayer.value, otherDivision, stat)
+      return updatedDivisionValue + otherValue
     }
 
     const updateStats = async () => {
@@ -682,10 +851,10 @@ export default {
         return
       }
 
+      const divisionName = statsDivision.value === 'student' ? '🎓 Student Division' : '👔 Pro Division'
       let newWins, newLosses, newBreakAndRun, confirmMsg
 
       if (statsMode.value === 'increment') {
-        // 增量模式：计算新的总数
         if (!incrementChanged.value) {
           alert('Please enter at least one change')
           return
@@ -695,14 +864,18 @@ export default {
         newLosses = getNewLosses()
         newBreakAndRun = getNewBreakAndRun()
 
-        confirmMsg = `Update ${selectedPlayer.value.name}'s statistics?\n\n` +
-          `Wins: ${selectedPlayer.value.wins || 0} + ${incrementForm.value.wins} = ${newWins}\n` +
-          `Losses: ${selectedPlayer.value.losses || 0} + ${incrementForm.value.losses} = ${newLosses}\n` +
-          `Break and Run: ${selectedPlayer.value.break_and_run_count || 0} + ${incrementForm.value.break_and_run_count} = ${newBreakAndRun}`
+        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?\n\n` +
+          `Wins: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')} + ${incrementForm.value.wins} = ${newWins}\n` +
+          `Losses: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')} + ${incrementForm.value.losses} = ${newLosses}\n` +
+          `Break and Run: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')} + ${incrementForm.value.break_and_run_count} = ${newBreakAndRun}`
       } else {
-        // 绝对值模式：直接使用输入的值
         if (statsForm.value.wins < 0 || statsForm.value.losses < 0 || statsForm.value.break_and_run_count < 0) {
           alert('Statistics cannot be negative')
+          return
+        }
+
+        if (!statsChanged.value) {
+          alert('No changes detected')
           return
         }
 
@@ -710,28 +883,45 @@ export default {
         newLosses = statsForm.value.losses
         newBreakAndRun = statsForm.value.break_and_run_count
 
-        confirmMsg = `Update ${selectedPlayer.value.name}'s statistics?\n\n` +
-          `Wins: ${selectedPlayer.value.wins || 0} → ${newWins}\n` +
-          `Losses: ${selectedPlayer.value.losses || 0} → ${newLosses}\n` +
-          `Break and Run: ${selectedPlayer.value.break_and_run_count || 0} → ${newBreakAndRun}`
+        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?\n\n` +
+          `Wins: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')} → ${newWins}\n` +
+          `Losses: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')} → ${newLosses}\n` +
+          `Break and Run: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')} → ${newBreakAndRun}`
       }
       
       if (!confirm(confirmMsg)) return
 
       try {
-        const { error } = await supabase
-          .from('users')
-          .update({
-            wins: newWins,
-            losses: newLosses,
-            break_and_run_count: newBreakAndRun
-          })
-          .eq('id', selectedPlayer.value.id)
+        const payload = statsMode.value === 'increment' ? incrementForm.value : statsForm.value
+
+        const rpcPayload = {
+          p_user_id: selectedPlayer.value.id,
+          p_division: statsDivision.value,
+          p_wins: payload.wins,
+          p_losses: payload.losses,
+          p_break_and_run: payload.break_and_run_count,
+          p_mode: statsMode.value,
+          p_reason: statsReason.value || null
+        }
+
+        // 让后端函数自行解析当前管理员 ID，避免传入 auth.users UUID 触发外键错误
+        const { data, error } = await supabase.rpc('admin_update_division_stats', rpcPayload)
 
         if (error) throw error
 
-        const mode = statsMode.value === 'increment' ? 'incrementally' : 'directly'
-        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s statistics ${mode}!`)
+        const updatedDivisionStats = data?.stats?.[statsDivision.value] || {}
+        const overallStats = data?.stats?.overall || {}
+        const modeLabel = statsMode.value === 'increment' ? 'increment mode' : 'absolute mode'
+
+        alert(
+          `✅ Updated ${selectedPlayer.value.name}'s ${divisionName} stats via ${modeLabel}!\n\n` +
+          `New ${divisionName} totals:\n` +
+          `• Wins: ${updatedDivisionStats.wins ?? newWins}\n` +
+          `• Losses: ${updatedDivisionStats.losses ?? newLosses}\n` +
+          `• Break & Run: ${updatedDivisionStats.break_and_run ?? newBreakAndRun}\n\n` +
+          `Overall totals now: ${overallStats.wins ?? '-'}W / ${overallStats.losses ?? '-'}L`
+        )
+
         closeStatsModal()
         await playerStore.fetchPlayers()
       } catch (err) {
@@ -744,6 +934,7 @@ export default {
       selectedPlayer.value = player
       pointsChange.value = 0
       pointsReason.value = ''
+      pointsDivision.value = 'pro' // 默认 Pro 组
       showPointsModal.value = true
     }
 
@@ -752,6 +943,7 @@ export default {
       selectedPlayer.value = null
       pointsChange.value = 0
       pointsReason.value = ''
+      pointsDivision.value = 'pro'
     }
 
     const updatePoints = async () => {
@@ -760,25 +952,27 @@ export default {
         return
       }
 
-      const confirmMsg = `Update ${selectedPlayer.value.name}'s points by ${pointsChange.value}?\n\n${pointsReason.value ? `Reason: ${pointsReason.value}` : 'No reason provided'}`
+      const divisionName = pointsDivision.value === 'pro' ? '👔 Pro' : '🎓 Student'
+      const confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} points by ${pointsChange.value}?\n\n${pointsReason.value ? `Reason: ${pointsReason.value}` : 'No reason provided'}`
       
       if (!confirm(confirmMsg)) return
 
       try {
-        // Get current admin user
-        const { data: { user } } = await supabase.auth.getUser()
+        // 🎯 根据组别调用不同的函数
+        const functionName = pointsDivision.value === 'pro' ? 'admin_add_pro_points' : 'admin_add_student_points'
         
-        // Call the database function to add points with NZ timezone
-        const { data, error } = await supabase.rpc('admin_add_player_points', {
+        const rpcPayload = {
           p_user_id: selectedPlayer.value.id,
           p_points_change: pointsChange.value,
-          p_reason: pointsReason.value || 'No reason provided',
-          p_admin_id: user?.id || null
-        })
+          p_reason: pointsReason.value || 'No reason provided'
+        }
+
+        // 让后端函数自行解析当前管理员 ID，避免传入 auth.users UUID 触发外键错误
+        const { data, error } = await supabase.rpc(functionName, rpcPayload)
 
         if (error) throw error
 
-        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s points!\n\nPoints Change: ${pointsChange.value > 0 ? '+' : ''}${pointsChange.value}\nNew Year Total: ${data.current_year_total}\nNew Rank: ${data.new_ranking_level}\n\nRecorded for: ${data.year}-${data.month}`)
+        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s ${divisionName} points!\n\nPoints Change: ${pointsChange.value > 0 ? '+' : ''}${pointsChange.value}\nNew Total (${divisionName}): ${data.current_total}\n\nRecorded for: ${data.year}-${data.month}`)
         closePointsModal()
         await playerStore.fetchPlayers()
         
@@ -880,12 +1074,18 @@ export default {
       showStatsModal,
       statsMode,
       statsForm,
+      statsDivision,
+      statsReason,
       incrementForm,
       incrementChanged,
       getNewWins,
       getNewLosses,
       getNewBreakAndRun,
       calculateIncrementWinRate,
+      getDivisionValue,
+      getDivisionMatches,
+      calculateDivisionWinRate,
+      getProjectedOverallStat,
       openStatsModal,
       closeStatsModal,
       updateStats,
@@ -895,6 +1095,7 @@ export default {
       selectedPlayer,
       pointsChange,
       pointsReason,
+      pointsDivision, // 🎯 新增：组别选择
       updatePoints,
       editPlayer,
       closeModal,
@@ -954,6 +1155,90 @@ export default {
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* 双积分显示 */
+.dual-points-display {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.points-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.points-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.points-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* 双组别战绩显示 */
+.dual-stats-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.stats-item {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.stats-title {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.stats-row strong {
+  color: #1a1a2e;
+}
+
+.overall-row {
+  border-top: 1px dashed #cfe2ff;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.overall-summary {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #dee2e6;
+  font-weight: 500;
+  color: #0a58ca;
+}
+
+/* 组别选择器 */
+.division-selector {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e9ecef;
 }
 
 /* 模式选择器样式 */

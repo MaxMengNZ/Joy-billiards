@@ -78,7 +78,12 @@
           class="tournament-card card"
         >
           <div class="tournament-header">
-            <h3>{{ tournament.name }}</h3>
+            <div class="tournament-title-row">
+              <h3>{{ tournament.name }}</h3>
+              <span class="category-badge-small" :class="`category-${tournament.participant_category || 'adult'}`">
+                {{ tournament.participant_category === 'student' ? '🎓 Student' : '👔 Adult' }}
+              </span>
+            </div>
             <span class="badge" :class="getStatusBadgeClass(tournament.status)">
               {{ formatStatus(tournament.status) }}
             </span>
@@ -744,11 +749,41 @@ export default {
   gap: 1rem;
 }
 
+.tournament-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
 .tournament-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1a1a2e;
-  flex: 1;
+  margin: 0;
+}
+
+/* Category Badge Small */
+.category-badge-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.category-badge-small.category-adult {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.category-badge-small.category-student {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
 }
 
 .tournament-body {
