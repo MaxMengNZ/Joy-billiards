@@ -345,9 +345,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeMatchModal">Cancel</button>
-          <button class="btn btn-success" @click="saveMatch">
-            {{ editingMatch ? 'Update' : 'Create' }}
+          <button class="btn btn-secondary" @click="closeMatchModal" :disabled="isSavingMatch">Cancel</button>
+          <button class="btn btn-success" @click="saveMatch" :disabled="isSavingMatch" :aria-busy="isSavingMatch">
+            <span v-if="isSavingMatch">Saving...</span>
+            <span v-else>{{ editingMatch ? 'Update' : 'Create' }}</span>
           </button>
         </div>
       </div>
@@ -385,6 +386,7 @@ export default {
     const matches = ref([])
     const showAddParticipant = ref(false)
     const showCreateMatch = ref(false)
+    const isSavingMatch = ref(false)
     const editingMatch = ref(null)
     const selectedPlayerId = ref('')
     const raceToScore = ref(5) // Default race to 5
@@ -1063,6 +1065,7 @@ export default {
     }
 
     const saveMatch = async () => {
+      if (isSavingMatch.value) return
       if (!matchForm.value.player1_id || !matchForm.value.player2_id) {
         alert('Please select both players')
         return
@@ -1076,18 +1079,26 @@ export default {
         table_number: matchForm.value.table_number ? parseInt(matchForm.value.table_number) : null
       }
 
-      let result
-      if (editingMatch.value) {
-        result = await matchStore.updateMatch(editingMatch.value.id, data)
-      } else {
-        result = await matchStore.createMatch(data)
-      }
+      isSavingMatch.value = true
+      try {
+        let result
+        if (editingMatch.value) {
+          result = await matchStore.updateMatch(editingMatch.value.id, data)
+        } else {
+          result = await matchStore.createMatch(data)
+        }
 
-      if (result.success) {
-        await loadData()
-        closeMatchModal()
-      } else {
-        alert('Error: ' + result.error)
+        if (result.success) {
+          await loadData()
+          closeMatchModal()
+          alert('✅ Saved successfully')
+        } else {
+          alert('Error: ' + result.error)
+        }
+      } catch (e) {
+        alert('Error: ' + (e?.message || e))
+      } finally {
+        isSavingMatch.value = false
       }
     }
 
@@ -1197,6 +1208,7 @@ export default {
       allPlayersForBracket,
       showAddParticipant,
       showCreateMatch,
+      isSavingMatch,
       editingMatch,
       selectedPlayerId,
       raceToScore,

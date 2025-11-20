@@ -93,7 +93,14 @@
           <div class="player-card" :class="{ 'empty-card': !topThree[1] }">
             <template v-if="topThree[1]">
               <div class="rank-badge-large" :class="`rank-${topThree[1].ranking_level}`">
-                <span class="badge-emoji">{{ formatRankBadge(topThree[1].ranking_level) }}</span>
+                <img 
+                  v-if="!iconErrors[`${topThree[1].id}-${topThree[1].ranking_level}`]"
+                  :src="getRankIcon(topThree[1].ranking_level).src" 
+                  :alt="getRankIcon(topThree[1].ranking_level).alt"
+                  class="badge-icon"
+                  @error="iconErrors[`${topThree[1].id}-${topThree[1].ranking_level}`] = true"
+                />
+                <span v-else class="badge-emoji">{{ getRankIcon(topThree[1].ranking_level).emoji }}</span>
                 <span class="badge-name">{{ formatRankName(topThree[1].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[1].name }}</h3>
@@ -113,7 +120,14 @@
           <div class="player-card champion" :class="{ 'empty-card': !topThree[0] }">
             <template v-if="topThree[0]">
               <div class="rank-badge-large" :class="`rank-${topThree[0].ranking_level}`">
-                <span class="badge-emoji">{{ formatRankBadge(topThree[0].ranking_level) }}</span>
+                <img 
+                  v-if="!iconErrors[`${topThree[0].id}-${topThree[0].ranking_level}`]"
+                  :src="getRankIcon(topThree[0].ranking_level).src" 
+                  :alt="getRankIcon(topThree[0].ranking_level).alt"
+                  class="badge-icon"
+                  @error="iconErrors[`${topThree[0].id}-${topThree[0].ranking_level}`] = true"
+                />
+                <span v-else class="badge-emoji">{{ getRankIcon(topThree[0].ranking_level).emoji }}</span>
                 <span class="badge-name">{{ formatRankName(topThree[0].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[0].name }}</h3>
@@ -133,7 +147,14 @@
           <div class="player-card" :class="{ 'empty-card': !topThree[2] }">
             <template v-if="topThree[2]">
               <div class="rank-badge-large" :class="`rank-${topThree[2].ranking_level}`">
-                <span class="badge-emoji">{{ formatRankBadge(topThree[2].ranking_level) }}</span>
+                <img 
+                  v-if="!iconErrors[`${topThree[2].id}-${topThree[2].ranking_level}`]"
+                  :src="getRankIcon(topThree[2].ranking_level).src" 
+                  :alt="getRankIcon(topThree[2].ranking_level).alt"
+                  class="badge-icon"
+                  @error="iconErrors[`${topThree[2].id}-${topThree[2].ranking_level}`] = true"
+                />
+                <span v-else class="badge-emoji">{{ getRankIcon(topThree[2].ranking_level).emoji }}</span>
                 <span class="badge-name">{{ formatRankName(topThree[2].ranking_level) }}</span>
               </div>
               <h3>{{ topThree[2].name }}</h3>
@@ -205,7 +226,14 @@
               <!-- Rank Badge and Points -->
               <div class="player-rank-info">
                 <div class="rank-badge-large" :class="`rank-${player.ranking_level}`">
-                  <span class="badge-emoji">{{ formatRankBadge(player.ranking_level) }}</span>
+                  <img 
+                    v-if="!iconErrors[`${player.id}-${player.ranking_level}`]"
+                    :src="getRankIcon(player.ranking_level).src" 
+                    :alt="getRankIcon(player.ranking_level).alt"
+                    class="badge-icon"
+                    @error="iconErrors[`${player.id}-${player.ranking_level}`] = true"
+                  />
+                  <span v-else class="badge-emoji">{{ getRankIcon(player.ranking_level).emoji }}</span>
                   <span class="badge-name">{{ formatRankName(player.ranking_level) }}</span>
                 </div>
                 <div class="points-section">
@@ -255,7 +283,16 @@
                 :style="{ '--rank-index': index }"
               >
                 <div class="rank-card-inner">
-                  <div class="rank-badge-large">{{ rank.badge }}</div>
+                  <div class="rank-badge-large">
+                    <img 
+                      v-if="!iconErrors[`rank-${rank.level}`]"
+                      :src="getRankIcon(rank.level).src" 
+                      :alt="getRankIcon(rank.level).alt"
+                      class="badge-icon"
+                      @error="iconErrors[`rank-${rank.level}`] = true"
+                    />
+                    <span v-else class="badge-emoji">{{ getRankIcon(rank.level).emoji }}</span>
+                  </div>
                   <div class="rank-info">
                     <div class="rank-name">{{ rank.name }}</div>
                     <div class="rank-points">{{ rank.points }} pts</div>
@@ -311,6 +348,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from '../config/supabase'
 import SkeletonLeaderboard from '../components/skeleton/SkeletonLeaderboard.vue'
+import { getRankIcon } from '../utils/rankIcons'
 
 export default {
   name: 'LeaderboardPage',
@@ -322,6 +360,7 @@ export default {
     const players = ref([])
     const activeTab = ref('current')
     const divisionFilter = ref('pro') // 默认显示 Pro 组
+    const iconErrors = ref({}) // 跟踪图标加载失败
     
     // Get NZ timezone date
     const nzDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Pacific/Auckland" }))
@@ -576,7 +615,9 @@ export default {
       formatDate,
       calculateRankProgress,
       getNextRankLabel,
-      loadAnnualRankings
+      loadAnnualRankings,
+      getRankIcon,
+      iconErrors
     }
   }
 }
@@ -1564,6 +1605,21 @@ export default {
 .badge-emoji {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
+}
+
+/* Rank icon image styles */
+.rank-badge-large .badge-icon,
+.badge-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+.rank-badge-large .badge-icon {
+  width: 3rem;
+  height: 3rem;
 }
 
 .badge-name {

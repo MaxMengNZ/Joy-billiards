@@ -444,13 +444,15 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeStatsModal">Cancel</button>
+          <button class="btn btn-secondary" @click="closeStatsModal" :disabled="isUpdatingStats">Cancel</button>
           <button 
             class="btn btn-success" 
             @click="updateStats"
-            :disabled="statsMode === 'increment' ? !incrementChanged : !statsChanged"
+            :disabled="isUpdatingStats || (statsMode === 'increment' ? !incrementChanged : !statsChanged)"
+            :aria-busy="isUpdatingStats"
           >
-            Update Statistics
+            <span v-if="isUpdatingStats">Saving...</span>
+            <span v-else>Update Statistics</span>
           </button>
         </div>
       </div>
@@ -527,13 +529,15 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closePointsModal">Cancel</button>
+          <button class="btn btn-secondary" @click="closePointsModal" :disabled="isUpdatingPoints">Cancel</button>
           <button 
             class="btn btn-success" 
             @click="updatePoints"
-            :disabled="pointsChange === 0"
+            :disabled="isUpdatingPoints || pointsChange === 0"
+            :aria-busy="isUpdatingPoints"
           >
-            Update Points
+            <span v-if="isUpdatingPoints">Saving...</span>
+            <span v-else>Update Points</span>
           </button>
         </div>
       </div>
@@ -591,6 +595,7 @@ export default {
     
     // Stats Modal
     const showStatsModal = ref(false)
+    const isUpdatingStats = ref(false)
     const statsMode = ref('increment') // 'increment' or 'absolute'
     const statsDivision = ref('pro') // 'pro' or 'student'
     const statsForm = ref({
@@ -607,6 +612,7 @@ export default {
     
     // Points Modal
     const showPointsModal = ref(false)
+    const isUpdatingPoints = ref(false)
     const selectedPlayer = ref(null)
     const pointsChange = ref(0)
     const pointsReason = ref('')
@@ -793,6 +799,7 @@ export default {
       statsDivision.value = 'pro'
       statsMode.value = 'increment' // 默认使用增量模式
       statsReason.value = ''
+      isUpdatingStats.value = false
       resetStatsForms()
       showStatsModal.value = true
     }
@@ -846,6 +853,7 @@ export default {
     }
 
     const updateStats = async () => {
+      if (isUpdatingStats.value) return
       if (!selectedPlayer.value) {
         alert('No player selected')
         return
@@ -892,6 +900,7 @@ export default {
       if (!confirm(confirmMsg)) return
 
       try {
+        isUpdatingStats.value = true
         const payload = statsMode.value === 'increment' ? incrementForm.value : statsForm.value
 
         const rpcPayload = {
@@ -922,11 +931,44 @@ export default {
           `Overall totals now: ${overallStats.wins ?? '-'}W / ${overallStats.losses ?? '-'}L`
         )
 
+        // Optimistically update selected player and store
+        if (selectedPlayer.value) {
+          const prefix = statsDivision.value === 'student' ? 'student' : 'pro'
+          selectedPlayer.value[`${prefix}_wins`] = updatedDivisionStats.wins ?? newWins
+          selectedPlayer.value[`${prefix}_losses`] = updatedDivisionStats.losses ?? newLosses
+          selectedPlayer.value[`${prefix}_break_and_run_count`] = updatedDivisionStats.break_and_run ?? newBreakAndRun
+          // overall totals if provided
+          if (overallStats && typeof overallStats.wins === 'number') {
+            selectedPlayer.value.wins = overallStats.wins
+          }
+          if (overallStats && typeof overallStats.losses === 'number') {
+            selectedPlayer.value.losses = overallStats.losses
+          }
+          if (overallStats && typeof overallStats.break_and_run_count === 'number') {
+            selectedPlayer.value.break_and_run_count = overallStats.break_and_run_count
+          }
+        }
+        const idx2 = playerStore.players.findIndex(p => p.id === selectedPlayer.value?.id)
+        if (idx2 !== -1) {
+          const prefix2 = statsDivision.value === 'student' ? 'student' : 'pro'
+          playerStore.players[idx2] = {
+            ...playerStore.players[idx2],
+            [`${prefix2}_wins`]: selectedPlayer.value?.[`${prefix2}_wins`],
+            [`${prefix2}_losses`]: selectedPlayer.value?.[`${prefix2}_losses`],
+            [`${prefix2}_break_and_run_count`]: selectedPlayer.value?.[`${prefix2}_break_and_run_count`],
+            wins: selectedPlayer.value?.wins ?? playerStore.players[idx2].wins,
+            losses: selectedPlayer.value?.losses ?? playerStore.players[idx2].losses,
+            break_and_run_count: selectedPlayer.value?.break_and_run_count ?? playerStore.players[idx2].break_and_run_count
+          }
+        }
+
         closeStatsModal()
         await playerStore.fetchPlayers()
       } catch (err) {
         console.error('Error updating stats:', err)
         alert('Error updating statistics: ' + err.message)
+      } finally {
+        isUpdatingStats.value = false
       }
     }
 
@@ -935,6 +977,7 @@ export default {
       pointsChange.value = 0
       pointsReason.value = ''
       pointsDivision.value = 'pro' // 默认 Pro 组
+      isUpdatingPoints.value = false
       showPointsModal.value = true
     }
 
@@ -947,6 +990,7 @@ export default {
     }
 
     const updatePoints = async () => {
+      if (isUpdatingPoints.value) return
       if (!selectedPlayer.value || pointsChange.value === 0) {
         alert('Please enter a points value')
         return
@@ -958,6 +1002,7 @@ export default {
       if (!confirm(confirmMsg)) return
 
       try {
+        isUpdatingPoints.value = true
         // 🎯 根据组别调用不同的函数
         const functionName = pointsDivision.value === 'pro' ? 'admin_add_pro_points' : 'admin_add_student_points'
         
@@ -973,6 +1018,20 @@ export default {
         if (error) throw error
 
         alert(`✅ Successfully updated ${selectedPlayer.value.name}'s ${divisionName} points!\n\nPoints Change: ${pointsChange.value > 0 ? '+' : ''}${pointsChange.value}\nNew Total (${divisionName}): ${data.current_total}\n\nRecorded for: ${data.year}-${data.month}`)
+
+        // Optimistically update UI: selected player and store list
+        const divisionKey = pointsDivision.value === 'pro' ? 'pro_ranking_points' : 'student_ranking_points'
+        if (selectedPlayer.value) {
+          selectedPlayer.value[divisionKey] = data.current_total ?? ((selectedPlayer.value[divisionKey] || 0) + pointsChange.value)
+        }
+        const idx = playerStore.players.findIndex(p => p.id === selectedPlayer.value?.id)
+        if (idx !== -1) {
+          playerStore.players[idx] = {
+            ...playerStore.players[idx],
+            [divisionKey]: selectedPlayer.value?.[divisionKey]
+          }
+        }
+
         closePointsModal()
         await playerStore.fetchPlayers()
         
@@ -982,6 +1041,8 @@ export default {
       } catch (err) {
         console.error('Error updating points:', err)
         alert('Error updating points: ' + err.message)
+      } finally {
+        isUpdatingPoints.value = false
       }
     }
 
@@ -1072,6 +1133,7 @@ export default {
       currentYear,
       statsChanged,
       showStatsModal,
+      isUpdatingStats,
       statsMode,
       statsForm,
       statsDivision,
@@ -1092,6 +1154,7 @@ export default {
       openPointsModal,
       closePointsModal,
       showPointsModal,
+      isUpdatingPoints,
       selectedPlayer,
       pointsChange,
       pointsReason,

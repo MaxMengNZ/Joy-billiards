@@ -10,7 +10,15 @@
           </div>
           
           <!-- Mobile menu button -->
-          <button class="mobile-menu-btn" @click="toggleMobileMenu" :class="{ active: isMobileMenuOpen }">
+          <button 
+            class="mobile-menu-btn" 
+            @click="toggleMobileMenu" 
+            :class="{ active: isMobileMenuOpen }"
+            aria-label="Toggle navigation menu"
+            :aria-expanded="isMobileMenuOpen ? 'true' : 'false'"
+            aria-controls="mobile-nav"
+            title="Toggle navigation menu"
+          >
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
             <span class="hamburger-line"></span>
@@ -42,7 +50,7 @@
           </nav>
           
           <!-- Mobile Navigation -->
-          <nav class="main-nav mobile-nav" :class="{ open: isMobileMenuOpen }">
+          <nav id="mobile-nav" class="main-nav mobile-nav" :class="{ open: isMobileMenuOpen }" aria-label="Mobile navigation">
             <router-link to="/" class="nav-link" @click="closeMobileMenu">Home</router-link>
             <router-link to="/membership" class="nav-link" @click="closeMobileMenu">💳 Membership</router-link>
             <router-link to="/leaderboard" class="nav-link" @click="closeMobileMenu">🏆 Rankings</router-link>
@@ -71,7 +79,7 @@
       <main class="app-main">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <component :is="Component" :key="$route.fullPath" />
           </transition>
         </router-view>
       </main>

@@ -61,6 +61,9 @@
       class="main-floating-button" 
       @click="toggleExpanded"
       :class="{ expanded: isExpanded }"
+      aria-label="Open social links"
+      :aria-expanded="isExpanded ? 'true' : 'false'"
+      title="Open social links"
     >
       <span class="button-icon" :class="{ rotated: isExpanded }">📱</span>
     </button>
