@@ -59,6 +59,16 @@
               </select>
             </div>
           </div>
+          <div class="col col-3">
+            <div class="form-group">
+              <label class="form-label">Filter by Last Modified</label>
+              <select class="form-control" v-model="recentModifiedFilter">
+                <option value="">All Players</option>
+                <option value="24h">🕐 Modified in 24h</option>
+                <option value="today">📅 Modified Today</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -76,12 +86,13 @@
               <th>B&R Rate</th>
               <th>Ranking Points</th>
               <th>Rank Level</th>
+              <th>Last Modified</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="player in filteredPlayers" :key="player.id">
+            <tr v-for="player in filteredPlayers" :key="player.id" :class="{ 'recently-modified': isRecentlyModified(player) }">
               <td><span class="badge badge-info">{{ player.membership_card_number || 'N/A' }}</span></td>
               <td><strong>{{ player.name }}</strong></td>
               <td>
@@ -113,6 +124,14 @@
                 <span class="badge" :class="getRankBadgeClass(player.ranking_level)">
                   {{ formatRankLevel(player.ranking_level) }}
                 </span>
+              </td>
+              <td>
+                <div class="last-modified-cell">
+                  <span v-if="getLastModified(player)" class="last-modified-time" :class="{ 'recent': isRecentlyModified(player) }">
+                    {{ formatLastModified(getLastModified(player)) }}
+                  </span>
+                  <span v-else class="text-muted">Never</span>
+                </div>
               </td>
               <td>
                 <span class="badge" :class="player.is_active ? 'badge-success' : 'badge-secondary'">
@@ -590,8 +609,10 @@ export default {
     const searchQuery = ref('')
     const skillFilter = ref('')
     const membershipFilter = ref('')
+    const recentModifiedFilter = ref('') // 'all', 'today', '24h'
     const pointHistory = ref([])
     const currentYear = new Date().getFullYear()
+    const lastModifiedMap = ref({}) // 存储每个选手的最后修改时间 { playerId: { time, action, admin } }
     
     // Stats Modal
     const showStatsModal = ref(false)
@@ -666,6 +687,22 @@ export default {
         players = players.filter(p => p.membership_level === membershipFilter.value)
       }
       
+      // Filter by last modified time
+      if (recentModifiedFilter.value === '24h') {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        players = players.filter(p => {
+          const lastModified = getLastModified(p)
+          return lastModified && new Date(lastModified.time) > twentyFourHoursAgo
+        })
+      } else if (recentModifiedFilter.value === 'today') {
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        players = players.filter(p => {
+          const lastModified = getLastModified(p)
+          return lastModified && new Date(lastModified.time) >= todayStart
+        })
+      }
+      
       return players
     })
 
@@ -732,6 +769,80 @@ export default {
       if (rate >= 10) return 'rate-good'
       if (rate >= 5) return 'rate-average'
       return 'rate-below'
+    }
+
+    // 获取选手的最后修改时间
+    const getLastModified = (player) => {
+      if (!player || !player.id) return null
+      return lastModifiedMap.value[player.id] || null
+    }
+
+    // 格式化最后修改时间
+    const formatLastModified = (lastModified) => {
+      if (!lastModified || !lastModified.time) return 'Never'
+      const modifiedDate = new Date(lastModified.time)
+      const now = new Date()
+      const diffMs = now - modifiedDate
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
+
+      if (diffMins < 1) return 'Just now'
+      if (diffMins < 60) return `${diffMins}m ago`
+      if (diffHours < 24) return `${diffHours}h ago`
+      if (diffDays === 1) return 'Yesterday'
+      if (diffDays < 7) return `${diffDays}d ago`
+      
+      // 超过一周显示具体日期
+      return modifiedDate.toLocaleDateString('en-NZ', {
+        month: 'short',
+        day: 'numeric',
+        year: modifiedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      })
+    }
+
+    // 判断是否在最近24小时内修改过
+    const isRecentlyModified = (player) => {
+      const lastModified = getLastModified(player)
+      if (!lastModified) return false
+      const modifiedDate = new Date(lastModified.time)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      return modifiedDate > twentyFourHoursAgo
+    }
+
+    // 加载所有选手的最后修改时间
+    const loadLastModifiedTimes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('admin_audit_log')
+          .select('target_user_id, action, created_at, details')
+          .in('action', ['update_division_stats', 'add_pro_points', 'add_student_points'])
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error loading last modified times:', error)
+          return
+        }
+
+        // 为每个选手找到最新的修改记录
+        const map = {}
+        if (data) {
+          data.forEach(log => {
+            if (log.target_user_id) {
+              if (!map[log.target_user_id] || new Date(log.created_at) > new Date(map[log.target_user_id].time)) {
+                map[log.target_user_id] = {
+                  time: log.created_at,
+                  action: log.action,
+                  details: log.details
+                }
+              }
+            }
+          })
+        }
+        lastModifiedMap.value = map
+      } catch (err) {
+        console.error('Error loading last modified times:', err)
+      }
     }
 
     const getCurrentYearPoints = (player) => {
@@ -872,7 +983,9 @@ export default {
         newLosses = getNewLosses()
         newBreakAndRun = getNewBreakAndRun()
 
-        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?\n\n` +
+        const lastModified = getLastModified(selectedPlayer.value)
+        const lastModifiedInfo = lastModified ? `\n\n📝 Last modified: ${formatLastModified(lastModified)}` : ''
+        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?${lastModifiedInfo}\n\n` +
           `Wins: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')} + ${incrementForm.value.wins} = ${newWins}\n` +
           `Losses: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')} + ${incrementForm.value.losses} = ${newLosses}\n` +
           `Break and Run: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')} + ${incrementForm.value.break_and_run_count} = ${newBreakAndRun}`
@@ -891,7 +1004,9 @@ export default {
         newLosses = statsForm.value.losses
         newBreakAndRun = statsForm.value.break_and_run_count
 
-        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?\n\n` +
+        const lastModified = getLastModified(selectedPlayer.value)
+        const lastModifiedInfo = lastModified ? `\n\n📝 Last modified: ${formatLastModified(lastModified)}` : ''
+        confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} statistics?${lastModifiedInfo}\n\n` +
           `Wins: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'wins')} → ${newWins}\n` +
           `Losses: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'losses')} → ${newLosses}\n` +
           `Break and Run: ${getDivisionValue(selectedPlayer.value, statsDivision.value, 'break_and_run_count')} → ${newBreakAndRun}`
@@ -913,25 +1028,33 @@ export default {
           p_reason: statsReason.value || null
         }
 
-        // 让后端函数自行解析当前管理员 ID，避免传入 auth.users UUID 触发外键错误
-        const { data, error } = await supabase.rpc('admin_update_division_stats', rpcPayload)
+        console.log('Calling admin_update_division_stats with payload:', rpcPayload)
 
-        if (error) throw error
+        // 添加超时机制
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout: The operation took too long. Please try again.')), 30000)
+        })
+
+        // 让后端函数自行解析当前管理员 ID，避免传入 auth.users UUID 触发外键错误
+        const rpcPromise = supabase.rpc('admin_update_division_stats', rpcPayload)
+        const { data, error } = await Promise.race([rpcPromise, timeoutPromise])
+
+        if (error) {
+          console.error('RPC error:', error)
+          throw error
+        }
+
+        if (!data) {
+          throw new Error('No data returned from server')
+        }
+
+        console.log('RPC response:', data)
 
         const updatedDivisionStats = data?.stats?.[statsDivision.value] || {}
         const overallStats = data?.stats?.overall || {}
         const modeLabel = statsMode.value === 'increment' ? 'increment mode' : 'absolute mode'
 
-        alert(
-          `✅ Updated ${selectedPlayer.value.name}'s ${divisionName} stats via ${modeLabel}!\n\n` +
-          `New ${divisionName} totals:\n` +
-          `• Wins: ${updatedDivisionStats.wins ?? newWins}\n` +
-          `• Losses: ${updatedDivisionStats.losses ?? newLosses}\n` +
-          `• Break & Run: ${updatedDivisionStats.break_and_run ?? newBreakAndRun}\n\n` +
-          `Overall totals now: ${overallStats.wins ?? '-'}W / ${overallStats.losses ?? '-'}L`
-        )
-
-        // Optimistically update selected player and store
+        // Optimistically update selected player and store BEFORE closing modal
         if (selectedPlayer.value) {
           const prefix = statsDivision.value === 'student' ? 'student' : 'pro'
           selectedPlayer.value[`${prefix}_wins`] = updatedDivisionStats.wins ?? newWins
@@ -962,12 +1085,29 @@ export default {
           }
         }
 
+        // 显示成功消息
+        alert(
+          `✅ Updated ${selectedPlayer.value.name}'s ${divisionName} stats via ${modeLabel}!\n\n` +
+          `New ${divisionName} totals:\n` +
+          `• Wins: ${updatedDivisionStats.wins ?? newWins}\n` +
+          `• Losses: ${updatedDivisionStats.losses ?? newLosses}\n` +
+          `• Break & Run: ${updatedDivisionStats.break_and_run ?? newBreakAndRun}\n\n` +
+          `Overall totals now: ${overallStats.wins ?? '-'}W / ${overallStats.losses ?? '-'}L`
+        )
+
+        // 关闭模态框并重置状态
         closeStatsModal()
-        await playerStore.fetchPlayers()
+        isUpdatingStats.value = false
+
+        // 在后台刷新数据，不阻塞 UI
+        playerStore.fetchPlayers().catch(err => {
+          console.error('Error refreshing players after stats update:', err)
+        })
       } catch (err) {
         console.error('Error updating stats:', err)
-        alert('Error updating statistics: ' + err.message)
-      } finally {
+        const errorMessage = err.message || err.toString() || 'Unknown error occurred. Please check the console for details.'
+        alert('Error updating statistics: ' + errorMessage)
+        // 确保状态被重置
         isUpdatingStats.value = false
       }
     }
@@ -997,7 +1137,9 @@ export default {
       }
 
       const divisionName = pointsDivision.value === 'pro' ? '👔 Pro' : '🎓 Student'
-      const confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} points by ${pointsChange.value}?\n\n${pointsReason.value ? `Reason: ${pointsReason.value}` : 'No reason provided'}`
+      const lastModified = getLastModified(selectedPlayer.value)
+      const lastModifiedInfo = lastModified ? `\n\n📝 Last modified: ${formatLastModified(lastModified)}` : ''
+      const confirmMsg = `Update ${selectedPlayer.value.name}'s ${divisionName} points by ${pointsChange.value}?${lastModifiedInfo}\n\n${pointsReason.value ? `Reason: ${pointsReason.value}` : 'No reason provided'}`
       
       if (!confirm(confirmMsg)) return
 
@@ -1012,14 +1154,29 @@ export default {
           p_reason: pointsReason.value || 'No reason provided'
         }
 
+        console.log('Calling', functionName, 'with payload:', rpcPayload)
+
+        // 添加超时机制
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout: The operation took too long. Please try again.')), 30000)
+        })
+
         // 让后端函数自行解析当前管理员 ID，避免传入 auth.users UUID 触发外键错误
-        const { data, error } = await supabase.rpc(functionName, rpcPayload)
+        const rpcPromise = supabase.rpc(functionName, rpcPayload)
+        const { data, error } = await Promise.race([rpcPromise, timeoutPromise])
 
-        if (error) throw error
+        if (error) {
+          console.error('RPC error:', error)
+          throw error
+        }
 
-        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s ${divisionName} points!\n\nPoints Change: ${pointsChange.value > 0 ? '+' : ''}${pointsChange.value}\nNew Total (${divisionName}): ${data.current_total}\n\nRecorded for: ${data.year}-${data.month}`)
+        if (!data) {
+          throw new Error('No data returned from server')
+        }
 
-        // Optimistically update UI: selected player and store list
+        console.log('RPC response:', data)
+
+        // Optimistically update UI: selected player and store list BEFORE showing alert
         const divisionKey = pointsDivision.value === 'pro' ? 'pro_ranking_points' : 'student_ranking_points'
         if (selectedPlayer.value) {
           selectedPlayer.value[divisionKey] = data.current_total ?? ((selectedPlayer.value[divisionKey] || 0) + pointsChange.value)
@@ -1032,16 +1189,43 @@ export default {
           }
         }
 
+        // 显示成功消息
+        alert(`✅ Successfully updated ${selectedPlayer.value.name}'s ${divisionName} points!\n\nPoints Change: ${pointsChange.value > 0 ? '+' : ''}${pointsChange.value}\nNew Total (${divisionName}): ${data.current_total}\n\nRecorded for: ${data.year}-${data.month}`)
+
+        // 更新最后修改时间
+        if (selectedPlayer.value?.id) {
+          lastModifiedMap.value[selectedPlayer.value.id] = {
+            time: new Date().toISOString(),
+            action: pointsDivision.value === 'pro' ? 'add_pro_points' : 'add_student_points',
+            details: { points_change: pointsChange.value }
+          }
+        }
+
+        // 关闭模态框并重置状态
         closePointsModal()
-        await playerStore.fetchPlayers()
-        
-        // Reload ranking point history
-        const { data: historyData } = await supabase.from('ranking_point_history').select('*')
-        if (historyData) pointHistory.value = historyData
+        isUpdatingPoints.value = false
+
+        // 在后台刷新数据，不阻塞 UI
+        Promise.all([
+          playerStore.fetchPlayers().catch(err => {
+            console.error('Error refreshing players after points update:', err)
+          }),
+          supabase.from('ranking_point_history').select('*').then(({ data: historyData }) => {
+            if (historyData) pointHistory.value = historyData
+          }).catch(err => {
+            console.error('Error refreshing point history:', err)
+          }),
+          loadLastModifiedTimes().catch(err => {
+            console.error('Error refreshing last modified times:', err)
+          })
+        ]).catch(err => {
+          console.error('Error refreshing data after points update:', err)
+        })
       } catch (err) {
         console.error('Error updating points:', err)
-        alert('Error updating points: ' + err.message)
-      } finally {
+        const errorMessage = err.message || err.toString() || 'Unknown error occurred. Please check the console for details.'
+        alert('Error updating points: ' + errorMessage)
+        // 确保状态被重置
         isUpdatingPoints.value = false
       }
     }
@@ -1099,6 +1283,7 @@ export default {
 
     onMounted(async () => {
       await playerStore.fetchPlayers()
+      await loadLastModifiedTimes()
       
       // Load point history for ranking points calculation
       try {
@@ -1120,6 +1305,7 @@ export default {
       searchQuery,
       skillFilter,
       membershipFilter,
+      recentModifiedFilter,
       playerForm,
       filteredPlayers,
       getRankBadgeClass,
@@ -1132,6 +1318,9 @@ export default {
       getCurrentYearPoints,
       currentYear,
       statsChanged,
+      getLastModified,
+      formatLastModified,
+      isRecentlyModified,
       showStatsModal,
       isUpdatingStats,
       statsMode,
@@ -1577,6 +1766,30 @@ export default {
   /* 隐藏表格，显示卡片 */
   .table-container {
     display: none;
+  }
+
+  /* 最近修改的行高亮 */
+  .table tbody tr.recently-modified {
+    background-color: rgba(102, 126, 234, 0.08) !important;
+    border-left: 4px solid #667eea;
+  }
+
+  .table tbody tr.recently-modified:hover {
+    background-color: rgba(102, 126, 234, 0.15) !important;
+  }
+
+  .last-modified-cell {
+    font-size: 0.875rem;
+  }
+
+  .last-modified-time {
+    color: #6c757d;
+    font-weight: 500;
+  }
+
+  .last-modified-time.recent {
+    color: #667eea;
+    font-weight: 600;
   }
 
   /* 玩家卡片布局 */
