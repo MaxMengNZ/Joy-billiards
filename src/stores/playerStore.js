@@ -23,21 +23,36 @@ export const usePlayerStore = defineStore('player', {
   },
 
   actions: {
-    async fetchPlayers() {
+    async fetchPlayers(useAdminRPC = false) {
       this.loading = true
       this.error = null
       try {
-        // Use public_users view for public player information
-        const { data, error } = await supabase
-          .from('public_users')
-          .select('*')
-          .order('wins', { ascending: false })
+        let data, error
+        
+        if (useAdminRPC) {
+          // Security: Use admin RPC for admin pages (includes email, phone, etc.)
+          // This function has built-in admin permission check at database level
+          // Frontend should also verify admin access before calling this
+          const result = await supabase.rpc('admin_get_all_users')
+          data = result.data
+          error = result.error
+        } else {
+          // Use public_users view for public player information (no sensitive data)
+          // This view does NOT include email, phone, or other sensitive fields
+          const result = await supabase
+            .from('public_users')
+            .select('*')
+            .order('wins', { ascending: false })
+          data = result.data
+          error = result.error
+        }
         
         if (error) throw error
         this.players = data || []
       } catch (err) {
         this.error = err.message
-        console.error('Error fetching players:', err)
+        // Security: Don't log sensitive error details
+        console.error('Error fetching players')
       } finally {
         this.loading = false
       }

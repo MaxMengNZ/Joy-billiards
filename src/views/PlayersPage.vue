@@ -2,17 +2,22 @@
   <div class="players-page">
     <div class="page-header">
       <h1>👥 Players Management</h1>
-      <button class="btn btn-primary" @click="showCreateModal = true">
-        Add New Player
-      </button>
+      <div class="header-actions">
+        <button class="btn btn-warning" @click="checkDuplicates">
+          🔍 Check Duplicates
+        </button>
+        <button class="btn btn-primary" @click="showCreateModal = true">
+          Add New Player
+        </button>
+      </div>
     </div>
 
-    <div v-if="playerStore.loading" class="loading">
+    <div v-if="playerStore?.loading" class="loading">
       <div class="spinner"></div>
     </div>
 
-    <div v-else-if="playerStore.error" class="alert alert-danger">
-      {{ playerStore.error }}
+    <div v-else-if="playerStore?.error" class="alert alert-danger">
+      {{ playerStore?.error }}
     </div>
 
     <div v-else>
@@ -92,7 +97,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="player in filteredPlayers" :key="player.id" :class="{ 'recently-modified': isRecentlyModified(player) }">
+            <tr v-for="player in (filteredPlayers || [])" :key="player.id" :class="{ 'recently-modified': isRecentlyModified(player) }">
               <td><span class="badge badge-info">{{ player.membership_card_number || 'N/A' }}</span></td>
               <td><strong>{{ player.name }}</strong></td>
               <td>
@@ -157,14 +162,14 @@
             </tr>
           </tbody>
         </table>
-        <div v-if="filteredPlayers.length === 0" class="text-center p-4">
+        <div v-if="!filteredPlayers || filteredPlayers.length === 0" class="text-center p-4">
           <p class="text-secondary">No players found</p>
         </div>
       </div>
 
       <!-- Mobile Players Cards -->
       <div class="mobile-players-grid">
-        <div v-for="player in filteredPlayers" :key="player.id" class="mobile-player-card">
+        <div v-for="player in (filteredPlayers || [])" :key="player.id" class="mobile-player-card">
           <!-- Card Header: Name + Badges -->
           <div class="mobile-player-header">
             <div class="mobile-player-info">
@@ -562,6 +567,142 @@
       </div>
     </div>
 
+    <!-- Duplicate Check Modal -->
+    <div v-if="showDuplicateModal" class="modal">
+      <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h2>🔍 Duplicate Member Information Check</h2>
+          <button class="btn btn-secondary btn-sm" @click="closeDuplicateModal">Close</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="(!duplicateResults.membershipCards || duplicateResults.membershipCards.length === 0) && 
+                     (!duplicateResults.emails || duplicateResults.emails.length === 0) && 
+                     (!duplicateResults.phones || duplicateResults.phones.length === 0) && 
+                     (!duplicateResults.names || duplicateResults.names.length === 0)" 
+               class="alert alert-success">
+            ✅ No duplicates found! All member information is unique.
+          </div>
+
+          <!-- Duplicate Membership Cards -->
+          <div v-if="duplicateResults.membershipCards && duplicateResults.membershipCards.length > 0" class="duplicate-section">
+            <h3 class="duplicate-title">⚠️ Duplicate Membership Cards ({{ duplicateResults.membershipCards?.length || 0 }})</h3>
+            <div v-for="item in (duplicateResults.membershipCards || [])" :key="'card-' + item.value" class="duplicate-group">
+              <div class="duplicate-value">
+                Card Number: <strong>{{ item.value }}</strong> ({{ item.players?.length || 0 }} players)
+                <button class="btn btn-sm btn-warning" @click="deleteOldDuplicates(item.players, 'membershipCard')" style="margin-left: 1rem;">
+                  🗑️ Delete Oldest (Keep Newest)
+                </button>
+              </div>
+              <div class="duplicate-players">
+                <div v-for="(player, idx) in getSortedPlayersByDate(item.players)" :key="player.id" 
+                     class="duplicate-player-item" 
+                     :class="{ 'keep-newest': idx === 0, 'delete-oldest': idx > 0 }">
+                  <span class="player-name">
+                    {{ player.name }}
+                    <span v-if="idx === 0" class="badge badge-success">✓ Keep (Newest)</span>
+                    <span v-else class="badge badge-warning">⚠ Old (Will Delete)</span>
+                  </span>
+                  <span class="player-info">ID: {{ player.id.substring(0, 8) }}...</span>
+                  <span class="player-info" v-if="authStore.isAdmin">Email: {{ player.email || 'N/A' }}</span>
+                  <span class="player-info" v-if="authStore.isAdmin">Phone: {{ player.phone || 'N/A' }}</span>
+                  <span class="player-info">Registered: {{ formatDate(player.created_at) }}</span>
+                  <button v-if="idx > 0" class="btn btn-sm btn-danger" @click="deleteDuplicatePlayer(player)" title="Delete this duplicate">
+                    🗑️ Delete
+                  </button>
+                  <span v-else class="text-success">✓ Keeping</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate Emails -->
+          <div v-if="duplicateResults.emails && duplicateResults.emails.length > 0" class="duplicate-section">
+            <h3 class="duplicate-title">⚠️ Duplicate Emails ({{ duplicateResults.emails?.length || 0 }})</h3>
+            <div v-for="item in (duplicateResults.emails || [])" :key="'email-' + item.value" class="duplicate-group">
+              <div class="duplicate-value">
+                Email: <strong>{{ item.value }}</strong> ({{ item.players?.length || 0 }} players)
+                <button class="btn btn-sm btn-warning" @click="deleteOldDuplicates(item.players, 'email')" style="margin-left: 1rem;">
+                  🗑️ Delete Oldest (Keep Newest)
+                </button>
+              </div>
+              <div class="duplicate-players">
+                <div v-for="(player, idx) in getSortedPlayersByDate(item.players)" :key="player.id" 
+                     class="duplicate-player-item" 
+                     :class="{ 'keep-newest': idx === 0, 'delete-oldest': idx > 0 }">
+                  <span class="player-name">
+                    {{ player.name }}
+                    <span v-if="idx === 0" class="badge badge-success">✓ Keep (Newest)</span>
+                    <span v-else class="badge badge-warning">⚠ Old (Will Delete)</span>
+                  </span>
+                  <span class="player-info">ID: {{ player.id.substring(0, 8) }}...</span>
+                  <span class="player-info">Card: {{ player.membership_card_number || 'N/A' }}</span>
+                  <span class="player-info" v-if="authStore.isAdmin">Phone: {{ player.phone || 'N/A' }}</span>
+                  <span class="player-info">Registered: {{ formatDate(player.created_at) }}</span>
+                  <button v-if="idx > 0" class="btn btn-sm btn-danger" @click="deleteDuplicatePlayer(player)" title="Delete this duplicate">
+                    🗑️ Delete
+                  </button>
+                  <span v-else class="text-success">✓ Keeping</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate Phones -->
+          <div v-if="duplicateResults.phones && duplicateResults.phones.length > 0" class="duplicate-section">
+            <h3 class="duplicate-title">⚠️ Duplicate Phone Numbers ({{ duplicateResults.phones?.length || 0 }})</h3>
+            <div v-for="item in (duplicateResults.phones || [])" :key="'phone-' + item.value" class="duplicate-group">
+              <div class="duplicate-value">Phone: <strong>{{ item.value }}</strong> ({{ item.players?.length || 0 }} players)</div>
+              <div class="duplicate-players">
+                <div v-for="player in (item.players || [])" :key="player.id" class="duplicate-player-item">
+                  <span class="player-name">{{ player.name }}</span>
+                  <span class="player-info">ID: {{ player.id.substring(0, 8) }}...</span>
+                  <span class="player-info">Card: {{ player.membership_card_number || 'N/A' }}</span>
+                  <span class="player-info">Email: {{ player.email || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate Names -->
+          <div v-if="duplicateResults.names && duplicateResults.names.length > 0" class="duplicate-section">
+            <h3 class="duplicate-title">ℹ️ Duplicate Names ({{ duplicateResults.names?.length || 0 }})</h3>
+            <p class="duplicate-note">Note: Same names may be legitimate if they are different people. Please verify before deleting.</p>
+            <div v-for="item in (duplicateResults.names || [])" :key="'name-' + item.value" class="duplicate-group">
+              <div class="duplicate-value">
+                Name: <strong>{{ item.value }}</strong> ({{ item.players?.length || 0 }} players)
+                <button class="btn btn-sm btn-warning" @click="deleteOldDuplicates(item.players, 'name')" style="margin-left: 1rem;">
+                  🗑️ Delete Oldest (Keep Newest)
+                </button>
+              </div>
+              <div class="duplicate-players">
+                <div v-for="(player, idx) in getSortedPlayersByDate(item.players)" :key="player.id" 
+                     class="duplicate-player-item" 
+                     :class="{ 'keep-newest': idx === 0, 'delete-oldest': idx > 0 }">
+                  <span class="player-name">
+                    {{ player.name }}
+                    <span v-if="idx === 0" class="badge badge-success">✓ Keep (Newest)</span>
+                    <span v-else class="badge badge-warning">⚠ Old (Will Delete)</span>
+                  </span>
+                  <span class="player-info">ID: {{ player.id.substring(0, 8) }}...</span>
+                  <span class="player-info">Card: {{ player.membership_card_number || 'N/A' }}</span>
+                  <span class="player-info" v-if="authStore.isAdmin">Email: {{ player.email || 'N/A' }}</span>
+                  <span class="player-info" v-if="authStore.isAdmin">Phone: {{ player.phone || 'N/A' }}</span>
+                  <span class="player-info">Registered: {{ formatDate(player.created_at) }}</span>
+                  <button v-if="idx > 0" class="btn btn-sm btn-danger" @click="deleteDuplicatePlayer(player)" title="Delete this duplicate">
+                    🗑️ Delete
+                  </button>
+                  <span v-else class="text-success">✓ Keeping</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeDuplicateModal">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Create/Edit Player Modal -->
     <div v-if="showCreateModal || editingPlayer" class="modal">
       <div class="modal-content">
@@ -597,12 +738,14 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePlayerStore } from '../stores/playerStore'
+import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../config/supabase'
 
 export default {
   name: 'PlayersPage',
   setup() {
     const playerStore = usePlayerStore()
+    const authStore = useAuthStore()
     
     const showCreateModal = ref(false)
     const editingPlayer = ref(null)
@@ -613,6 +756,15 @@ export default {
     const pointHistory = ref([])
     const currentYear = new Date().getFullYear()
     const lastModifiedMap = ref({}) // 存储每个选手的最后修改时间 { playerId: { time, action, admin } }
+    
+    // Duplicate Check Modal
+    const showDuplicateModal = ref(false)
+    const duplicateResults = ref({
+      membershipCards: [],
+      emails: [],
+      phones: [],
+      names: []
+    })
     
     // Stats Modal
     const showStatsModal = ref(false)
@@ -660,31 +812,37 @@ export default {
     }
 
     const filteredPlayers = computed(() => {
+      if (!playerStore || !playerStore.sortedPlayers || !Array.isArray(playerStore.sortedPlayers)) return []
       let players = playerStore.sortedPlayers
       
       // Get current year for ranking points calculation
       const currentYear = new Date().getFullYear()
       
       // Add current_year_points to each player
+      const pointHistoryArray = Array.isArray(pointHistory.value) ? pointHistory.value : []
       players = players.map(player => ({
         ...player,
-        current_year_points: pointHistory.value
-          .filter(p => p.user_id === player.id && p.year === currentYear)
+        current_year_points: pointHistoryArray
+          .filter(p => p && p.user_id === player.id && p.year === currentYear)
           .reduce((sum, p) => sum + (p.points_change || 0), 0)
       }))
       
+      if (!Array.isArray(players)) {
+        return []
+      }
+      
       if (searchQuery.value) {
         players = players.filter(p => 
-          p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+          p && p.name && p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
       }
       
       if (skillFilter.value) {
-        players = players.filter(p => p.ranking_level === skillFilter.value)
+        players = players.filter(p => p && p.ranking_level === skillFilter.value)
       }
       
       if (membershipFilter.value) {
-        players = players.filter(p => p.membership_level === membershipFilter.value)
+        players = players.filter(p => p && p.membership_level === membershipFilter.value)
       }
       
       // Filter by last modified time
@@ -703,7 +861,7 @@ export default {
         })
       }
       
-      return players
+      return Array.isArray(players) ? players : []
     })
 
     const getRankBadgeClass = (level) => {
@@ -812,6 +970,12 @@ export default {
 
     // 加载所有选手的最后修改时间
     const loadLastModifiedTimes = async () => {
+      // Security: Only admins can load audit log
+      if (!authStore.isAdmin) {
+        console.warn('Non-admin user attempted to load audit log')
+        return
+      }
+      
       try {
         const { data, error } = await supabase
           .from('admin_audit_log')
@@ -826,9 +990,9 @@ export default {
 
         // 为每个选手找到最新的修改记录
         const map = {}
-        if (data) {
+        if (data && Array.isArray(data)) {
           data.forEach(log => {
-            if (log.target_user_id) {
+            if (log && log.target_user_id) {
               if (!map[log.target_user_id] || new Date(log.created_at) > new Date(map[log.target_user_id].time)) {
                 map[log.target_user_id] = {
                   time: log.created_at,
@@ -847,8 +1011,9 @@ export default {
 
     const getCurrentYearPoints = (player) => {
       if (!player) return 0
-      return pointHistory.value
-        .filter(p => p.user_id === player.id && p.year === currentYear)
+      const pointHistoryArray = Array.isArray(pointHistory.value) ? pointHistory.value : []
+      return pointHistoryArray
+        .filter(p => p && p.user_id === player.id && p.year === currentYear)
         .reduce((sum, p) => sum + (p.points_change || 0), 0)
     }
 
@@ -1028,7 +1193,7 @@ export default {
           p_reason: statsReason.value || null
         }
 
-        console.log('Calling admin_update_division_stats with payload:', rpcPayload)
+        // Security: Don't log sensitive payload data
 
         // 添加超时机制
         const timeoutPromise = new Promise((_, reject) => {
@@ -1048,7 +1213,7 @@ export default {
           throw new Error('No data returned from server')
         }
 
-        console.log('RPC response:', data)
+        // Security: Don't log sensitive response data
 
         const updatedDivisionStats = data?.stats?.[statsDivision.value] || {}
         const overallStats = data?.stats?.overall || {}
@@ -1100,7 +1265,7 @@ export default {
         isUpdatingStats.value = false
 
         // 在后台刷新数据，不阻塞 UI
-        playerStore.fetchPlayers().catch(err => {
+        playerStore.fetchPlayers(true).catch(err => {
           console.error('Error refreshing players after stats update:', err)
         })
       } catch (err) {
@@ -1154,7 +1319,7 @@ export default {
           p_reason: pointsReason.value || 'No reason provided'
         }
 
-        console.log('Calling', functionName, 'with payload:', rpcPayload)
+        // Security: Don't log sensitive function calls
 
         // 添加超时机制
         const timeoutPromise = new Promise((_, reject) => {
@@ -1174,7 +1339,7 @@ export default {
           throw new Error('No data returned from server')
         }
 
-        console.log('RPC response:', data)
+        // Security: Don't log sensitive response data
 
         // Optimistically update UI: selected player and store list BEFORE showing alert
         const divisionKey = pointsDivision.value === 'pro' ? 'pro_ranking_points' : 'student_ranking_points'
@@ -1207,7 +1372,7 @@ export default {
 
         // 在后台刷新数据，不阻塞 UI
         Promise.all([
-          playerStore.fetchPlayers().catch(err => {
+          playerStore.fetchPlayers(true).catch(err => {
             console.error('Error refreshing players after points update:', err)
           }),
           supabase.from('ranking_point_history').select('*').then(({ data: historyData }) => {
@@ -1264,7 +1429,7 @@ export default {
 
       if (result.success) {
         closeModal()
-        await playerStore.fetchPlayers()
+        await playerStore.fetchPlayers(true)
       } else {
         alert('Error: ' + result.error)
       }
@@ -1274,10 +1439,225 @@ export default {
       if (confirm(`Are you sure you want to delete ${player.name}?`)) {
         const result = await playerStore.deletePlayer(player.id)
         if (result.success) {
-          await playerStore.fetchPlayers()
+          await playerStore.fetchPlayers(true)
         } else {
           alert('Error: ' + result.error)
         }
+      }
+    }
+
+    // 检查重复的会员信息
+    const checkDuplicates = () => {
+      // Security: Verify admin access
+      if (!authStore.isAdmin) {
+        alert('⛔ Access Denied: This function is only available to administrators')
+        return
+      }
+      
+      if (!playerStore || !playerStore.players || !Array.isArray(playerStore.players)) {
+        alert('Player data not loaded yet. Please wait...')
+        return
+      }
+      const players = playerStore.players
+      if (!players || players.length === 0) {
+        alert('No players found.')
+        return
+      }
+      const duplicates = {
+        membershipCards: {},
+        emails: {},
+        phones: {},
+        names: {}
+      }
+
+      // 检查会员卡号重复
+      players.forEach(player => {
+        const cardNumber = player.membership_card_number
+        if (cardNumber && cardNumber !== 'N/A') {
+          if (!duplicates.membershipCards[cardNumber]) {
+            duplicates.membershipCards[cardNumber] = []
+          }
+          duplicates.membershipCards[cardNumber].push(player)
+        }
+      })
+
+      // 检查邮箱重复
+      players.forEach(player => {
+        const email = player.email
+        if (email) {
+          if (!duplicates.emails[email]) {
+            duplicates.emails[email] = []
+          }
+          duplicates.emails[email].push(player)
+        }
+      })
+
+      // 检查手机号重复
+      players.forEach(player => {
+        const phone = player.phone
+        if (phone) {
+          if (!duplicates.phones[phone]) {
+            duplicates.phones[phone] = []
+          }
+          duplicates.phones[phone].push(player)
+        }
+      })
+
+      // 检查姓名重复（完全相同的姓名）
+      players.forEach(player => {
+        const name = player.name?.toLowerCase().trim()
+        if (name) {
+          if (!duplicates.names[name]) {
+            duplicates.names[name] = []
+          }
+          duplicates.names[name].push(player)
+        }
+      })
+
+      // 过滤出真正的重复项（至少2个）
+      duplicateResults.value = {
+        membershipCards: Object.entries(duplicates.membershipCards || {})
+          .filter(([_, players]) => players && Array.isArray(players) && players.length > 1)
+          .map(([cardNumber, players]) => ({ value: cardNumber, players: players || [] })),
+        emails: Object.entries(duplicates.emails || {})
+          .filter(([_, players]) => players && Array.isArray(players) && players.length > 1)
+          .map(([email, players]) => ({ value: email, players: players || [] })),
+        phones: Object.entries(duplicates.phones || {})
+          .filter(([_, players]) => players && Array.isArray(players) && players.length > 1)
+          .map(([phone, players]) => ({ value: phone, players: players || [] })),
+        names: Object.entries(duplicates.names || {})
+          .filter(([_, players]) => players && Array.isArray(players) && players.length > 1)
+          .map(([name, players]) => ({ value: name, players: players || [] }))
+      }
+
+      showDuplicateModal.value = true
+    }
+
+    const closeDuplicateModal = () => {
+      showDuplicateModal.value = false
+    }
+
+    // 按注册日期排序选手（最新的在前）
+    const getSortedPlayersByDate = (players) => {
+      if (!players || !Array.isArray(players) || players.length === 0) {
+        return []
+      }
+      return [...players].sort((a, b) => {
+        const dateA = new Date(a.created_at || a.updated_at || 0)
+        const dateB = new Date(b.created_at || b.updated_at || 0)
+        return dateB - dateA // 降序：最新的在前
+      })
+    }
+
+    // 格式化日期
+    const formatDate = (dateString) => {
+      if (!dateString) return 'Unknown'
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-NZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    // 删除重复的选手
+    const deleteDuplicatePlayer = async (player) => {
+      const confirmMsg = `Are you sure you want to delete this duplicate player?\n\n` +
+        `Name: ${player.name}\n` +
+        `Card: ${player.membership_card_number || 'N/A'}\n` +
+        `Email: ${player.email || 'N/A'}\n` +
+        `Phone: ${player.phone || 'N/A'}\n` +
+        `Registered: ${formatDate(player.created_at)}\n\n` +
+        `⚠️ This action cannot be undone!`
+      
+      if (!confirm(confirmMsg)) return
+
+      try {
+        const result = await playerStore.deletePlayer(player.id)
+        if (result.success) {
+          // 刷新选手列表
+          await playerStore.fetchPlayers(true)
+          // 重新检查重复项
+          checkDuplicates()
+          alert(`✅ Successfully deleted ${player.name}`)
+        } else {
+          alert('Error deleting player: ' + result.error)
+        }
+      } catch (err) {
+        console.error('Error deleting duplicate player:', err)
+        alert('Error deleting player: ' + err.message)
+      }
+    }
+
+    // 批量删除最旧的重复项（保留最新的）
+    const deleteOldDuplicates = async (players, type) => {
+      // Security: Verify admin access
+      if (!authStore.isAdmin) {
+        alert('⛔ Access Denied: This function is only available to administrators')
+        return
+      }
+      
+      if (!players || !Array.isArray(players) || players.length === 0) {
+        alert('Invalid players data')
+        return
+      }
+      
+      const sorted = getSortedPlayersByDate(players)
+      if (!sorted || sorted.length === 0) {
+        alert('No players to process')
+        return
+      }
+      
+      const newest = sorted[0]
+      const oldOnes = sorted.slice(1)
+
+      if (oldOnes.length === 0) {
+        alert('No old records to delete')
+        return
+      }
+
+      const typeName = type === 'membershipCard' ? 'Membership Card' : 
+                      type === 'email' ? 'Email' : 'Phone'
+      
+      const confirmMsg = `Delete ${oldOnes.length} old duplicate record(s) and keep the newest?\n\n` +
+        `✅ KEEPING (Newest):\n` +
+        `   ${newest.name} - Registered: ${formatDate(newest.created_at)}\n\n` +
+        `🗑️ DELETING (Old):\n` +
+        oldOnes.map(p => `   ${p.name} - Registered: ${formatDate(p.created_at)}`).join('\n') +
+        `\n\n⚠️ This action cannot be undone!`
+      
+      if (!confirm(confirmMsg)) return
+
+      let successCount = 0
+      let errorCount = 0
+      const errors = []
+
+      for (const player of oldOnes) {
+        try {
+          const result = await playerStore.deletePlayer(player.id)
+          if (result.success) {
+            successCount++
+          } else {
+            errorCount++
+            errors.push(`${player.name}: ${result.error}`)
+          }
+        } catch (err) {
+          errorCount++
+          errors.push(`${player.name}: ${err.message}`)
+        }
+      }
+
+          // 刷新选手列表
+          await playerStore.fetchPlayers(true)
+          // 重新检查重复项
+          checkDuplicates()
+
+      if (errorCount === 0) {
+        alert(`✅ Successfully deleted ${successCount} old duplicate record(s)!\n\nKept: ${newest.name}`)
+      } else {
+        alert(`⚠️ Deleted ${successCount} record(s), but ${errorCount} failed:\n\n${errors.join('\n')}`)
       }
     }
 
@@ -1352,7 +1732,16 @@ export default {
       editPlayer,
       closeModal,
       savePlayer,
-      confirmDelete
+      confirmDelete,
+      checkDuplicates,
+      showDuplicateModal,
+      duplicateResults,
+      closeDuplicateModal,
+      deleteDuplicatePlayer,
+      deleteOldDuplicates,
+      getSortedPlayersByDate,
+      formatDate,
+      authStore
     }
   }
 }
@@ -1370,6 +1759,12 @@ export default {
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .page-header h1 {
@@ -1984,6 +2379,98 @@ export default {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Duplicate Check Modal Styles */
+.duplicate-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.duplicate-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.duplicate-note {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.duplicate-group {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.duplicate-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ffc107;
+}
+
+.duplicate-players {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.duplicate-player-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1.5fr auto;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #667eea;
+  align-items: center;
+}
+
+.duplicate-player-item.keep-newest {
+  background: #f0fdf4;
+  border-left-color: #10b981;
+}
+
+.duplicate-player-item.delete-oldest {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+  opacity: 0.8;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.player-info {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .duplicate-player-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .player-info {
+    font-size: 0.8125rem;
+  }
 }
 
 .break-run-count {
