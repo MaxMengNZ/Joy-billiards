@@ -29,7 +29,7 @@
             <router-link to="/" class="nav-link">Home</router-link>
             <router-link to="/membership" class="nav-link">💳 Membership</router-link>
             <router-link to="/leaderboard" class="nav-link">🏆 Rankings</router-link>
-            <router-link to="/tournaments" class="nav-link">Tournaments</router-link>
+            <router-link to="/tournaments" class="nav-link">Calendar</router-link>
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link">Admin</router-link>
             
@@ -54,7 +54,7 @@
             <router-link to="/" class="nav-link" @click="closeMobileMenu">Home</router-link>
             <router-link to="/membership" class="nav-link" @click="closeMobileMenu">💳 Membership</router-link>
             <router-link to="/leaderboard" class="nav-link" @click="closeMobileMenu">🏆 Rankings</router-link>
-            <router-link to="/tournaments" class="nav-link" @click="closeMobileMenu">Tournaments</router-link>
+            <router-link to="/tournaments" class="nav-link" @click="closeMobileMenu">Calendar</router-link>
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link" @click="closeMobileMenu">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link" @click="closeMobileMenu">Admin</router-link>
             

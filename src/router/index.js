@@ -61,14 +61,7 @@ const routes = [
     path: '/tournaments',
     name: 'Tournaments',
     component: () => import('../views/TournamentsPage.vue'),
-    meta: { title: 'Tournaments' }
-  },
-  {
-    path: '/tournaments/:id',
-    name: 'TournamentDetail',
-    component: () => import('../views/TournamentDetailPage.vue'),
-    meta: { title: 'Tournament Details' },
-    props: true
+    meta: { title: 'Calendar' }
   },
   {
     path: '/profile',

@@ -33,7 +33,7 @@ export const useStatsStore = defineStore('stats', {
         // Get actual counts from database using public view
         const [playersResult, tournamentsResult, usersDataResult] = await Promise.all([
           supabase.from('public_users').select('id', { count: 'exact', head: true }),
-          supabase.from('tournaments').select('id', { count: 'exact', head: true }),
+          supabase.from('tournaments').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
           supabase.from('public_users').select('wins, losses, break_and_run_count')
         ])
 

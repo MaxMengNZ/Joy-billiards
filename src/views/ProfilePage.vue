@@ -392,10 +392,10 @@
               </div>
               <div class="tournament-actions">
                 <router-link 
-                  :to="`/tournaments/${reg.tournament.id}`" 
+                  to="/tournaments" 
                   class="btn btn-primary btn-sm"
                 >
-                  View Details
+                  View Calendar
                 </router-link>
                 <button 
                   class="btn btn-danger btn-sm"
