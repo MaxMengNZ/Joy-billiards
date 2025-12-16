@@ -45,21 +45,21 @@
       </button>
     </div>
 
-    <!-- Tabs for Monthly and Annual -->
+    <!-- Tabs for Year, Monthly and Annual -->
     <div class="tabs">
       <button 
         class="tab-button"
-        :class="{ active: activeTab === 'current' }"
-        @click="activeTab = 'current'"
+        :class="{ active: activeTab === 'year' }"
+        @click="activeTab = 'year'"
       >
-        🔥 Current Season ({{ currentYear }})
+        🏆 Current Year ({{ currentYear }})
       </button>
       <button 
         class="tab-button"
         :class="{ active: activeTab === 'monthly' }"
         @click="activeTab = 'monthly'"
       >
-        📅 Monthly ({{ currentMonthName }} {{ currentYear }})
+        📅 Monthly
       </button>
       <button 
         class="tab-button"
@@ -70,9 +70,19 @@
       </button>
     </div>
 
+    <!-- Month Selector for Monthly Tab -->
+    <div v-if="activeTab === 'monthly'" class="month-selector">
+      <label class="selector-label">Select Month:</label>
+      <select v-model="selectedMonth" @change="loadMonthlyRankings" class="month-select">
+        <option v-for="month in availableMonths" :key="month.value" :value="month.value">
+          {{ month.label }}
+        </option>
+      </select>
+    </div>
+
     <!-- Year Selector for Annual Tab -->
     <div v-if="activeTab === 'annual'" class="year-selector">
-      <label class="year-label">Select Year:</label>
+      <label class="selector-label">Select Year:</label>
       <select v-model="selectedYear" @change="loadAnnualRankings" class="year-select">
         <option v-for="year in availableYears" :key="year" :value="year">
           {{ year }}
@@ -105,6 +115,20 @@
               </div>
               <h3>{{ topThree[1].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[1]) }} pts</p>
+              <div class="player-stats-top3">
+                <div class="stat-row">
+                  <span class="stat-label">W/L:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[1], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[1], divisionFilter, 'losses') }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-value">{{ calculateWinRate(topThree[1]) }}%</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[1], divisionFilter, 'break_and_run_count') }}</span>
+                </div>
+              </div>
             </template>
             <template v-else>
               <div class="empty-placeholder">
@@ -132,6 +156,20 @@
               </div>
               <h3>{{ topThree[0].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[0]) }} pts</p>
+              <div class="player-stats-top3">
+                <div class="stat-row">
+                  <span class="stat-label">W/L:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[0], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[0], divisionFilter, 'losses') }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-value">{{ calculateWinRate(topThree[0]) }}%</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[0], divisionFilter, 'break_and_run_count') }}</span>
+                </div>
+              </div>
             </template>
             <template v-else>
               <div class="empty-placeholder">
@@ -159,6 +197,20 @@
               </div>
               <h3>{{ topThree[2].name }}</h3>
               <p class="points">{{ getDisplayPoints(topThree[2]) }} pts</p>
+              <div class="player-stats-top3">
+                <div class="stat-row">
+                  <span class="stat-label">W/L:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[2], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[2], divisionFilter, 'losses') }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-value">{{ calculateWinRate(topThree[2]) }}%</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-value">{{ getDivisionValue(topThree[2], divisionFilter, 'break_and_run_count') }}</span>
+                </div>
+              </div>
             </template>
             <template v-else>
               <div class="empty-placeholder">
@@ -175,7 +227,11 @@
         <div class="card-header">
           <h2 class="card-title">🎖️ Full Rankings</h2>
           <div class="season-info">
-            <span>Season {{ currentYear }}</span>
+            <span v-if="activeTab === 'year'">Year {{ currentYear }}</span>
+            <span v-else-if="activeTab === 'monthly'">
+              {{ availableMonths.find(m => m.value === selectedMonth)?.label || (currentMonthName + ' ' + currentYear) }}
+            </span>
+            <span v-else-if="activeTab === 'annual'">Year {{ selectedYear }}</span>
           </div>
         </div>
         <div class="card-body">
@@ -183,78 +239,131 @@
             <div 
               v-for="(player, index) in rankedPlayers" 
               :key="player.id"
-              class="player-rank-card"
+              class="player-rank-card-new"
               :class="[getRankClass(index + 1), `level-${player.ranking_level}`]"
-              :style="{ animationDelay: `${index * 0.05}s` }"
             >
-              <!-- Rank Number -->
-              <div class="rank-number-section">
-                <div class="rank-number" :class="getRankClass(index + 1)">
-                  <span class="rank-text">{{ index + 1 }}</span>
-                  <div v-if="index < 3" class="rank-crown">
-                    <span v-if="index === 0">👑</span>
-                    <span v-if="index === 1">🥈</span>
-                    <span v-if="index === 2">🥉</span>
-                  </div>
-                </div>
+              <!-- Rank Number - Large and Prominent -->
+              <div class="rank-number-large" :class="getRankClass(index + 1)">
+                <span class="rank-medal" v-if="index < 3">
+                  <span v-if="index === 0">🥇</span>
+                  <span v-if="index === 1">🥈</span>
+                  <span v-if="index === 2">🥉</span>
+                </span>
+                <span class="rank-text-large">{{ index + 1 }}</span>
               </div>
 
-              <!-- Player Info -->
-              <div class="player-main-info">
-                <div class="player-name-section">
-                  <div class="player-name">
-                    {{ player.name }}
-                    <!-- 移除会员等级显示以保护隐私 -->
-                  </div>
-                  <div class="player-stats-mini">
-                    <span class="stat-item">
-                      <span class="stat-label">W/L:</span>
-                      <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'wins') }}/{{ getDivisionValue(player, divisionFilter, 'losses') }}</span>
-                    </span>
-                    <span class="stat-item">
-                      <span class="stat-label">Win Rate:</span>
-                      <span class="stat-value">{{ calculateWinRate(player) }}%</span>
-                    </span>
-                    <span class="stat-item">
-                      <span class="stat-label">Matches:</span>
-                      <span class="stat-value">{{ getDivisionMatches(player, divisionFilter) }}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Rank Badge and Points -->
-              <div class="player-rank-info">
-                <div class="rank-badge-large" :class="`rank-${player.ranking_level}`">
+              <!-- Player Main Info -->
+              <div class="player-info-main">
+                <!-- Rank Badge -->
+                <div class="rank-badge-compact" :class="`rank-${player.ranking_level}`">
                   <img 
                     v-if="!iconErrors[`${player.id}-${player.ranking_level}`]"
                     :src="getRankIcon(player.ranking_level).src" 
                     :alt="getRankIcon(player.ranking_level).alt"
-                    class="badge-icon"
+                    class="badge-icon-small"
                     @error="iconErrors[`${player.id}-${player.ranking_level}`] = true"
                   />
-                  <span v-else class="badge-emoji">{{ getRankIcon(player.ranking_level).emoji }}</span>
-                  <span class="badge-name">{{ formatRankName(player.ranking_level) }}</span>
+                  <span v-else class="badge-emoji-small">{{ getRankIcon(player.ranking_level).emoji }}</span>
                 </div>
-                <div class="points-section">
-                  <div class="points-value">{{ getDisplayPoints(player) }}</div>
-                  <div class="points-label">points</div>
+                
+                <!-- Player Name -->
+                <div class="player-name-large">{{ player.name }}</div>
+                
+                <!-- Stats Row -->
+                <div class="player-stats-row">
+                  <span class="stat-badge">
+                    <span class="stat-label">W/L:</span>
+                    <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'wins') }}/{{ getDivisionValue(player, divisionFilter, 'losses') }}</span>
+                  </span>
+                  <span class="stat-badge">
+                    <span class="stat-label">Win:</span>
+                    <span class="stat-value">{{ calculateWinRate(player) }}%</span>
+                  </span>
+                  <span class="stat-badge highlight">
+                    <span class="stat-label">🎯 B&R:</span>
+                    <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'break_and_run_count') }}</span>
+                  </span>
                 </div>
               </div>
 
-              <!-- Progress Bar -->
-              <div class="rank-progress">
-                <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
-                    :class="`rank-${player.ranking_level}`"
-                    :style="{ width: `${calculateRankProgress(player)}%` }"
-                  >
-                    <span class="progress-label">{{ calculateRankProgress(player) }}%</span>
-                  </div>
+              <!-- Points Section - Right Aligned -->
+              <div class="points-section-large">
+                <div class="points-value-large">{{ getDisplayPoints(player) }}</div>
+                <div class="points-label-small">points</div>
+                <button 
+                  v-if="canViewHistory(player)"
+                  class="btn-history" 
+                  @click="openPointHistory(player)"
+                  title="View Point History"
+                >
+                  📊 History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Point History Modal -->
+      <div v-if="showHistoryModal" class="modal" @click.self="closeHistoryModal">
+        <div class="modal-content history-modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+          <div class="modal-header">
+            <h2>📊 Point History - {{ selectedPlayerHistory?.name || 'Player' }}</h2>
+            <button class="btn btn-secondary btn-sm" @click="closeHistoryModal">Close</button>
+          </div>
+          <div class="modal-body">
+            <div v-if="loadingHistory" class="text-center p-4">
+              <div class="spinner"></div>
+              <p>Loading history...</p>
+            </div>
+            <div v-else-if="pointHistoryList.length === 0" class="text-center p-4">
+              <p class="text-muted">No point history available for this player.</p>
+            </div>
+            <div v-else>
+              <!-- Summary Stats -->
+              <div class="history-summary">
+                <div class="summary-item">
+                  <span class="summary-label">Total Records:</span>
+                  <span class="summary-value">{{ pointHistoryList.length }}</span>
                 </div>
-                <div class="progress-info">
-                  <span class="next-rank-label">{{ getNextRankLabel(player) }}</span>
+                <div class="summary-item">
+                  <span class="summary-label">Total Points:</span>
+                  <span class="summary-value positive">
+                    +{{ pointHistoryList.filter(h => h.points_change > 0).reduce((sum, h) => sum + h.points_change, 0) }}
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Current Season:</span>
+                  <span class="summary-value">{{ currentYear }}</span>
+                </div>
+              </div>
+
+              <!-- History List -->
+              <div class="history-list">
+                <div 
+                  v-for="(record, index) in pointHistoryList" 
+                  :key="record.id"
+                  class="history-item"
+                  :class="{ 'positive': record.points_change > 0, 'negative': record.points_change < 0 }"
+                >
+                  <div class="history-date">
+                    <div class="date-main">{{ formatHistoryDate(record.awarded_at) }}</div>
+                    <div class="date-time">{{ formatHistoryTime(record.awarded_at) }}</div>
+                  </div>
+                  <div class="history-details">
+                    <div class="history-reason">{{ record.reason || 'No reason provided' }}</div>
+                    <div class="history-meta">
+                      <span class="meta-item">{{ record.year }}-{{ String(record.month).padStart(2, '0') }}</span>
+                    </div>
+                  </div>
+                  <div class="history-points">
+                    <div class="points-change" :class="{ 'positive': record.points_change > 0, 'negative': record.points_change < 0 }">
+                      <span v-if="record.points_change > 0">+</span>{{ record.points_change }}
+                    </div>
+                    <div class="points-cumulative">
+                      Total: {{ calculateCumulativePoints(index) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -345,8 +454,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { supabase } from '../config/supabase'
+import { useAuthStore } from '../stores/authStore'
 import SkeletonLeaderboard from '../components/skeleton/SkeletonLeaderboard.vue'
 import { getRankIcon } from '../utils/rankIcons'
 
@@ -356,11 +466,54 @@ export default {
     SkeletonLeaderboard
   },
   setup() {
+    const authStore = useAuthStore()
     const loading = ref(true)
     const players = ref([])
-    const activeTab = ref('current')
+    const activeTab = ref('year') // 默认显示 Current Year
     const divisionFilter = ref('pro') // 默认显示 Pro 组
     const iconErrors = ref({}) // 跟踪图标加载失败
+    
+    // Point History Modal
+    const showHistoryModal = ref(false)
+    const selectedPlayerHistory = ref(null)
+    const pointHistoryList = ref([])
+    const loadingHistory = ref(false)
+    const currentUserId = ref(null) // Store current user's user_id (not auth_id)
+    
+    // Load current user's user_id on mount
+    const loadCurrentUserId = async () => {
+      if (!authStore.user) {
+        currentUserId.value = null
+        return
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_id', authStore.user.id)
+          .maybeSingle()
+        
+        if (error) {
+          console.error('Error loading current user ID:', error)
+          return
+        }
+        
+        currentUserId.value = data?.id || null
+      } catch (err) {
+        console.error('Error in loadCurrentUserId:', err)
+      }
+    }
+    
+    // Check if current user can view player's history
+    const canViewHistory = (player) => {
+      if (!authStore.user || !player) return false
+      // Admin can view all
+      if (authStore.isAdmin) return true
+      // User can view their own history
+      // Check if player's id matches current user's user_id
+      return currentUserId.value && player.id === currentUserId.value
+    }
     
     // Get NZ timezone date
     const nzDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Pacific/Auckland" }))
@@ -372,6 +525,38 @@ export default {
     // For Annual Rankings - show current year and last year only
     const selectedYear = ref(currentYear)
     const availableYears = [currentYear, currentYear - 1]
+    
+    // For Monthly Rankings - show current month and previous months
+    const selectedMonth = ref(`${currentYear}-${currentMonth}`)
+    const availableMonths = computed(() => {
+      const months = []
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December']
+      
+      // Show current year's months from January to current month (most recent first)
+      for (let m = currentMonth; m >= 1; m--) {
+        months.push({
+          month: m,
+          year: currentYear,
+          value: `${currentYear}-${m}`,
+          label: `${monthNames[m - 1]} ${currentYear}`
+        })
+      }
+      
+      // Show previous year's months (from December to current month + 1)
+      if (currentMonth < 12) {
+        for (let m = 12; m > currentMonth; m--) {
+          months.push({
+            month: m,
+            year: currentYear - 1,
+            value: `${currentYear - 1}-${m}`,
+            label: `${monthNames[m - 1]} ${currentYear - 1}`
+          })
+        }
+      }
+      
+      return months
+    })
 
     const getDivisionStatKey = (division, field) => {
       const prefix = division === 'student' ? 'student' : 'pro'
@@ -404,22 +589,15 @@ export default {
     ]
 
     const rankedPlayers = computed(() => {
-      // 🎯 根据组别获取对应的积分
+      // 🎯 根据 activeTab 和组别获取对应的积分
       const playersWithPoints = players.value.filter(player => {
-        const divisionPoints = divisionFilter.value === 'pro' 
-          ? (player.pro_ranking_points || 0)
-          : (player.student_ranking_points || 0)
-        
-        return divisionPoints > 0
+        const points = getDisplayPoints(player)
+        return points > 0
       })
       
       const sorted = playersWithPoints.sort((a, b) => {
-        const aPoints = divisionFilter.value === 'pro' 
-          ? (a.pro_ranking_points || 0)
-          : (a.student_ranking_points || 0)
-        const bPoints = divisionFilter.value === 'pro' 
-          ? (b.pro_ranking_points || 0)
-          : (b.student_ranking_points || 0)
+        const aPoints = getDisplayPoints(a)
+        const bPoints = getDisplayPoints(b)
         
         if (bPoints !== aPoints) return bPoints - aPoints
         // 如果积分相同，按组别胜场数排序
@@ -433,8 +611,36 @@ export default {
     })
 
     const getDisplayPoints = (player) => {
-      // 🎯 根据组别返回对应的积分
-      if (divisionFilter.value === 'pro') {
+      // 🎯 根据 activeTab、divisionFilter 和组别返回对应的积分
+      const division = divisionFilter.value
+      const divisionSuffix = division === 'pro' ? 'pro' : 'student'
+      
+      if (activeTab.value === 'year') {
+        // Current Year: 显示当前年份的积分（按组别）
+        return player[`current_year_${divisionSuffix}_points`] || 0
+      } else if (activeTab.value === 'monthly') {
+        // Monthly: 显示选中月份的积分（按组别）
+        if (!selectedMonth.value) {
+          // Fallback: use current month if not set
+          const currentMonthData = availableMonths.value[0]
+          if (currentMonthData) {
+            const monthKey = `month_${currentMonthData.year}_${currentMonthData.month}_${divisionSuffix}_points`
+            return player[monthKey] || 0
+          }
+          return 0
+        }
+        
+        // Parse selectedMonth value (format: "YYYY-M")
+        const [year, month] = selectedMonth.value.split('-').map(Number)
+        const monthKey = `month_${year}_${month}_${divisionSuffix}_points`
+        return player[monthKey] || 0
+      } else if (activeTab.value === 'annual') {
+        // Annual: 显示选中年份的积分（按组别）
+        return player[`selected_year_${divisionSuffix}_points`] || 0
+      }
+      
+      // Default: fallback to total points
+      if (division === 'pro') {
         return player.pro_ranking_points || 0
       } else {
         return player.student_ranking_points || 0
@@ -464,40 +670,104 @@ export default {
         if (pointError) throw pointError
         
         // Calculate RANKING points for each user (段位积分，影响排名)
-        const playersWithPoints = usersData.map(user => {
-          // Calculate current year total (for Current Season)
-          const yearPoints = pointHistory
-            .filter(p => p.user_id === user.id && p.year === currentYear)
-            .reduce((sum, p) => sum + (p.points_change || 0), 0)
-          
-          // Calculate current month total (for Monthly)
-          const monthPoints = pointHistory
-            .filter(p => p.user_id === user.id && p.year === currentYear && p.month === currentMonth)
-            .reduce((sum, p) => sum + (p.points_change || 0), 0)
-          
-          // Calculate selected year total (for Annual)
-          const selectedYearPoints = pointHistory
-            .filter(p => p.user_id === user.id && p.year === selectedYear.value)
-            .reduce((sum, p) => sum + (p.points_change || 0), 0)
-          
-          // 🔍 调试：打印数据看看
-          if (user.name && user.name.includes('Sayed')) {
-            console.log('🔍 Sayed 的数据:', {
-              name: user.name,
-              ranking_points: user.ranking_points,
-              loyalty_points: user.loyalty_points,
-              yearPoints,
-              monthPoints,
-              currentYear,
-              pointHistoryCount: pointHistory.filter(p => p.user_id === user.id).length
+        // Helper function to filter by division
+        // Compatible with old format (before division prefix was added)
+        const filterByDivision = (history, division) => {
+          if (division === 'pro') {
+            return history.filter(p => {
+              if (!p.reason) return false
+              const reason = p.reason.toLowerCase()
+              // New format: "Pro: ..."
+              if (p.reason.startsWith('Pro:')) return true
+              // Old format: exclude student-related records
+              if (reason.includes('student')) return false
+              // Default: old records without prefix are Pro (legacy data)
+              return true
             })
+          } else {
+            return history.filter(p => {
+              if (!p.reason) return false
+              const reason = p.reason.toLowerCase()
+              // New format: "Student: ..."
+              if (p.reason.startsWith('Student:')) return true
+              // Old format: include student-related records
+              if (reason.includes('student')) return true
+              // Exclude everything else
+              return false
+            })
+          }
+        }
+        
+        const playersWithPoints = usersData.map(user => {
+          const userHistory = pointHistory.filter(p => p.user_id === user.id)
+          
+          // Filter by current division
+          const proHistory = filterByDivision(userHistory, 'pro')
+          const studentHistory = filterByDivision(userHistory, 'student')
+          
+          // Calculate current year total (for Current Year tab) - Pro
+          const proYearPoints = proHistory
+            .filter(p => p.year === currentYear)
+            .reduce((sum, p) => sum + (p.points_change || 0), 0)
+          
+          // Calculate current year total (for Current Year tab) - Student
+          const studentYearPoints = studentHistory
+            .filter(p => p.year === currentYear)
+            .reduce((sum, p) => sum + (p.points_change || 0), 0)
+          
+          // Calculate selected year total (for Annual tab) - Pro
+          const proSelectedYearPoints = proHistory
+            .filter(p => p.year === selectedYear.value)
+            .reduce((sum, p) => sum + (p.points_change || 0), 0)
+          
+          // Calculate selected year total (for Annual tab) - Student
+          const studentSelectedYearPoints = studentHistory
+            .filter(p => p.year === selectedYear.value)
+            .reduce((sum, p) => sum + (p.points_change || 0), 0)
+          
+          // Calculate points for each month (for Monthly tab) - Pro and Student separately
+          const monthPointsData = {}
+          
+          // Calculate for current year months - Pro
+          for (let month = 1; month <= 12; month++) {
+            const proMonthPoints = proHistory
+              .filter(p => p.year === currentYear && p.month === month)
+              .reduce((sum, p) => sum + (p.points_change || 0), 0)
+            monthPointsData[`month_${currentYear}_${month}_pro_points`] = proMonthPoints
+            
+            const studentMonthPoints = studentHistory
+              .filter(p => p.year === currentYear && p.month === month)
+              .reduce((sum, p) => sum + (p.points_change || 0), 0)
+            monthPointsData[`month_${currentYear}_${month}_student_points`] = studentMonthPoints
+          }
+          
+          // Calculate for previous year months (if needed) - Pro and Student
+          if (currentYear > 2024) {
+            for (let month = 1; month <= 12; month++) {
+              const proMonthPoints = proHistory
+                .filter(p => p.year === currentYear - 1 && p.month === month)
+                .reduce((sum, p) => sum + (p.points_change || 0), 0)
+              monthPointsData[`month_${currentYear - 1}_${month}_pro_points`] = proMonthPoints
+              
+              const studentMonthPoints = studentHistory
+                .filter(p => p.year === currentYear - 1 && p.month === month)
+                .reduce((sum, p) => sum + (p.points_change || 0), 0)
+              monthPointsData[`month_${currentYear - 1}_${month}_student_points`] = studentMonthPoints
+            }
           }
           
           return {
             ...user,
-            current_year_points: yearPoints,
-            current_month_points: monthPoints,
-            selected_year_points: selectedYearPoints,
+            // Pro points
+            current_year_pro_points: proYearPoints,
+            selected_year_pro_points: proSelectedYearPoints,
+            // Student points
+            current_year_student_points: studentYearPoints,
+            selected_year_student_points: studentSelectedYearPoints,
+            // Combined for backward compatibility
+            current_year_points: proYearPoints + studentYearPoints,
+            selected_year_points: proSelectedYearPoints + studentSelectedYearPoints,
+            ...monthPointsData,
             // ✅ 强制使用数据库的 ranking_points，不使用 loyalty_points
             ranking_points: user.ranking_points || 0
           }
@@ -514,6 +784,119 @@ export default {
     const loadAnnualRankings = async () => {
       // Reload leaderboard when year selection changes
       await loadLeaderboard()
+    }
+
+    const loadMonthlyRankings = async () => {
+      // Reload leaderboard when month selection changes
+      // The data is already loaded, just need to trigger recomputation
+      // No need to reload, just update the selected month
+    }
+
+    // Point History Functions
+    const openPointHistory = async (player) => {
+      // Security: Check permissions
+      if (!canViewHistory(player)) {
+        alert('⛔ Access Denied: You can only view your own point history or you need admin privileges.')
+        return
+      }
+      
+      if (!player || !player.id) {
+        console.error('Invalid player data:', player)
+        alert('Invalid player data')
+        return
+      }
+      
+      selectedPlayerHistory.value = player
+      showHistoryModal.value = true
+      loadingHistory.value = true
+      pointHistoryList.value = []
+
+      try {
+        // Load point history for this player
+        const { data, error } = await supabase
+          .from('ranking_point_history')
+          .select('*')
+          .eq('user_id', player.id)
+          .order('awarded_at', { ascending: false })
+
+        if (error) {
+          console.error('Supabase error:', error)
+          throw error
+        }
+
+        if (data) {
+          // Filter by current division (Pro or Student)
+          // Compatible with old format
+          const division = divisionFilter.value
+          if (division === 'pro') {
+            pointHistoryList.value = data.filter(p => {
+              if (!p.reason) return false
+              const reason = p.reason.toLowerCase()
+              // New format: "Pro: ..."
+              if (p.reason.startsWith('Pro:')) return true
+              // Old format: exclude student-related records
+              if (reason.includes('student')) return false
+              // Default: old records without prefix are Pro (legacy data)
+              return true
+            })
+          } else {
+            pointHistoryList.value = data.filter(p => {
+              if (!p.reason) return false
+              const reason = p.reason.toLowerCase()
+              // New format: "Student: ..."
+              if (p.reason.startsWith('Student:')) return true
+              // Old format: include student-related records
+              if (reason.includes('student')) return true
+              // Exclude everything else
+              return false
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Error loading point history:', err)
+        alert('Failed to load point history: ' + err.message)
+      } finally {
+        loadingHistory.value = false
+      }
+    }
+
+    const closeHistoryModal = () => {
+      showHistoryModal.value = false
+      selectedPlayerHistory.value = null
+      pointHistoryList.value = []
+    }
+
+    const formatHistoryDate = (dateString) => {
+      if (!dateString) return 'Unknown'
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-NZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'Pacific/Auckland'
+      })
+    }
+
+    const formatHistoryTime = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleTimeString('en-NZ', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Pacific/Auckland'
+      })
+    }
+
+    const calculateCumulativePoints = (index) => {
+      // Calculate cumulative points from the beginning (oldest first)
+      // Since list is sorted descending (newest first), we need to reverse
+      const reversedList = [...pointHistoryList.value].reverse()
+      let cumulative = 0
+      // Sum from the beginning up to the current index (in reversed order)
+      for (let i = 0; i <= (reversedList.length - 1 - index); i++) {
+        cumulative += reversedList[i]?.points_change || 0
+      }
+      return cumulative
     }
 
     const formatRankBadge = (level) => {
@@ -589,7 +972,13 @@ export default {
       return `${pointsNeeded} pts to ${nextRank.name}`
     }
 
-    onMounted(() => {
+    // Watch for division filter changes and reload data
+    watch(divisionFilter, () => {
+      loadLeaderboard()
+    })
+
+    onMounted(async () => {
+      await loadCurrentUserId()
       loadLeaderboard()
     })
 
@@ -602,6 +991,9 @@ export default {
       currentMonthName,
       selectedYear,
       availableYears,
+      selectedMonth,
+      availableMonths,
+      loadMonthlyRankings,
       rankingLevels,
       rankedPlayers,
       topThree,
@@ -617,7 +1009,19 @@ export default {
       getNextRankLabel,
       loadAnnualRankings,
       getRankIcon,
-      iconErrors
+      iconErrors,
+      // Point History
+      showHistoryModal,
+      selectedPlayerHistory,
+      pointHistoryList,
+      loadingHistory,
+      canViewHistory,
+      openPointHistory,
+      closeHistoryModal,
+      formatHistoryDate,
+      formatHistoryTime,
+      calculateCumulativePoints,
+      authStore
     }
   }
 }
@@ -937,7 +1341,8 @@ export default {
 }
 
 /* Year Selector */
-.year-selector {
+.year-selector,
+.month-selector {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -953,13 +1358,15 @@ export default {
   margin-right: auto;
 }
 
+.selector-label,
 .year-label {
   font-size: 1rem;
   font-weight: 600;
   color: #1a1a2e;
 }
 
-.year-select {
+.year-select,
+.month-select {
   padding: 0.625rem 1.25rem;
   border: 2px solid #667eea;
   background: white;
@@ -970,14 +1377,17 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   outline: none;
+  min-width: 200px;
 }
 
-.year-select:hover {
+.year-select:hover,
+.month-select:hover {
   border-color: #764ba2;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
-.year-select:focus {
+.year-select:focus,
+.month-select:focus {
   border-color: #764ba2;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -1135,6 +1545,33 @@ export default {
   font-weight: 700;
   color: var(--primary-color);
   margin: 0;
+}
+
+/* Top 3 Stats */
+.player-stats-top3 {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.stat-row .stat-label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stat-row .stat-value {
+  color: #1a1a2e;
+  font-weight: 700;
 }
 
 
@@ -1646,6 +2083,446 @@ export default {
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
+}
+
+/* New Classic Leaderboard Style */
+.player-rank-card-new {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  border-left: 6px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 0.75rem;
+}
+
+.player-rank-card-new:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.player-rank-card-new.rank-first {
+  border-left-color: #FFD700;
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFEDD5 100%);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+}
+
+.player-rank-card-new.rank-second {
+  border-left-color: #C0C0C0;
+  background: linear-gradient(135deg, #F0F4F8 0%, #E2E8F0 100%);
+  box-shadow: 0 4px 16px rgba(192, 192, 192, 0.3);
+}
+
+.player-rank-card-new.rank-third {
+  border-left-color: #CD7F32;
+  background: linear-gradient(135deg, #FEF3E2 0%, #FCE7CC 100%);
+  box-shadow: 0 4px 16px rgba(205, 127, 50, 0.3);
+}
+
+/* Rank Number - Large and Prominent */
+.rank-number-large {
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.rank-text-large {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #1a1a2e;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rank-number-large.rank-first .rank-text-large {
+  color: #FFD700;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+}
+
+.rank-number-large.rank-second .rank-text-large {
+  color: #C0C0C0;
+  text-shadow: 0 2px 8px rgba(192, 192, 192, 0.5);
+}
+
+.rank-number-large.rank-third .rank-text-large {
+  color: #CD7F32;
+  text-shadow: 0 2px 8px rgba(205, 127, 50, 0.5);
+}
+
+.rank-medal {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Player Info Main */
+.player-info-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rank-badge-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.1);
+  width: fit-content;
+  margin-bottom: 0.25rem;
+}
+
+.badge-icon-small {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.badge-emoji-small {
+  font-size: 1.25rem;
+}
+
+.player-name-large {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.2;
+}
+
+.player-stats-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.stat-badge .stat-label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stat-badge .stat-value {
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+.stat-badge.highlight {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.stat-badge.highlight .stat-value {
+  color: #f57c00;
+}
+
+/* Points Section Large */
+.points-section-large {
+  text-align: right;
+  min-width: 120px;
+}
+
+.points-value-large {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #667eea;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.points-label-small {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+/* Responsive for new layout */
+@media (max-width: 768px) {
+  .player-rank-card-new {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .rank-number-large {
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .rank-text-large {
+    font-size: 2rem;
+  }
+
+  .player-info-main {
+    width: 100%;
+  }
+
+  .points-section-large {
+    width: 100%;
+    text-align: left;
+  }
+
+  .points-value-large {
+    font-size: 1.75rem;
+  }
+
+  .player-stats-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* History Button */
+.btn-history {
+  margin-top: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 6px;
+  color: #667eea;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-history:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Point History Modal */
+.history-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.history-summary {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.summary-value.positive {
+  color: #28a745;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.history-item.positive {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+}
+
+.history-item.negative {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 100%);
+}
+
+.history-date {
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.date-main {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.date-time {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.history-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-reason {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.history-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.meta-item {
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.history-points {
+  min-width: 120px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.points-change {
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.points-change.positive {
+  color: #28a745;
+}
+
+.points-change.negative {
+  color: #dc3545;
+}
+
+.points-cumulative {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .history-date {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .history-points {
+    min-width: auto;
+    width: 100%;
+    text-align: left;
+  }
+
+  .history-summary {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 
 .rank-progress {
