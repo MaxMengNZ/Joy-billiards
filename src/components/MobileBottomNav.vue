@@ -24,7 +24,7 @@
       :class="{ active: isActive('/tournaments') }"
     >
       <span class="nav-icon">🎯</span>
-      <span class="nav-label">Events</span>
+      <span class="nav-label">Calendar</span>
     </router-link>
 
     <router-link 
