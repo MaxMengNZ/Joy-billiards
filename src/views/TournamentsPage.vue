@@ -1228,9 +1228,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   overflow-y: auto;
   padding: 20px;
+  padding-bottom: calc(var(--mobile-nav-height, 80px) + 20px + env(safe-area-inset-bottom));
 }
 
 .modal-content {
@@ -1654,7 +1655,7 @@ export default {
 
   /* Calendar Container Mobile */
   .tournaments-content {
-    padding: 0 1rem 2rem;
+    padding: 0 1rem calc(var(--mobile-nav-height, 80px) + 2rem + env(safe-area-inset-bottom));
   }
 
   .calendar-container {
