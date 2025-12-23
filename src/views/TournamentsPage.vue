@@ -169,7 +169,18 @@
 
             <!-- Participants List -->
             <div class="participants-section">
-              <h3>👥 Participants ({{ participantsList.length }})</h3>
+              <div class="participants-header">
+                <h3>👥 Participants ({{ participantsList.length }})</h3>
+                <!-- Admin: Add Player Button -->
+                <button
+                  v-if="authStore.isAdmin && selectedEvent.status !== 'completed'"
+                  class="btn btn-primary btn-sm"
+                  @click="openAddPlayerModal"
+                  title="Add player manually"
+                >
+                  ➕ Add Player
+                </button>
+              </div>
               <div v-if="loadingParticipants" class="text-center p-2">
                 <div class="spinner-small"></div>
               </div>
@@ -186,6 +197,15 @@
                   <span class="participant-number">{{ idx + 1 }}.</span>
                   <span class="participant-name">{{ participant.user?.name || 'Unknown' }}</span>
                   <span v-if="participant.user_id === currentUserId" class="badge badge-success">You</span>
+                  <!-- Admin: Remove Player Button -->
+                  <button
+                    v-if="authStore.isAdmin && selectedEvent.status !== 'completed'"
+                    class="btn btn-danger btn-sm btn-remove-player"
+                    @click="removePlayer(participant.user_id)"
+                    title="Remove player"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             </div>
@@ -213,11 +233,18 @@
             <!-- Admin Actions -->
             <div class="admin-actions" v-if="authStore.isAdmin">
               <button
+                v-if="selectedEvent.status !== 'completed'"
                 class="btn btn-success btn-lg"
                 @click="completeTournament"
-                :disabled="selectedEvent.status === 'completed'"
               >
                 ✅ Complete Tournament
+              </button>
+              <button
+                v-if="selectedEvent.status === 'completed' && participantsList.length > 0"
+                class="btn btn-primary btn-lg"
+                @click="openResultEntryModal"
+              >
+                📊 Enter Tournament Results
               </button>
               <button class="btn btn-secondary btn-lg" @click="editEvent">
                 Edit
@@ -225,6 +252,194 @@
               <button class="btn btn-danger btn-lg" @click="confirmDeleteEvent">
                 Delete
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tournament Results Entry Modal (Admin Only) -->
+    <div v-if="showResultEntryModal" class="modal" @click.self="closeResultEntryModal">
+      <div class="modal-content modal-large" style="max-width: 900px; max-height: 90vh;">
+        <div class="modal-header">
+          <h2>📊 Enter Tournament Results - {{ selectedEvent?.name }}</h2>
+          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeResultEntryModal" aria-label="Close modal">Close</button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+            <strong>📋 Instructions:</strong>
+            <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+              <li>Enter each player's final ranking (1st, 2nd, 3rd, etc.)</li>
+              <li>Points will be automatically calculated based on ranking</li>
+              <li>Manually enter Wins and Losses for each player</li>
+              <li>You can optionally add Break & Run count</li>
+            </ul>
+          </div>
+
+          <div class="tournament-results-form">
+            <div
+              v-for="(participant, index) in resultEntryList"
+              :key="participant.user_id"
+              class="result-entry-item"
+            >
+              <div class="result-entry-header">
+                <span class="result-entry-number">{{ index + 1 }}</span>
+                <span class="result-entry-name">{{ participant.user?.name || 'Unknown' }}</span>
+              </div>
+              
+              <div class="result-entry-fields">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Final Ranking *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    v-model.number="participant.ranking"
+                    min="1"
+                    :max="resultEntryList.length"
+                    placeholder="1, 2, 3..."
+                    @input="updateResultEntry(participant)"
+                  />
+                  <small class="form-text">Ranking determines points automatically</small>
+                </div>
+                
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Wins *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    v-model.number="participant.wins"
+                    min="0"
+                    placeholder="0"
+                  />
+                  <small class="form-text">Number of matches won</small>
+                </div>
+                
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Losses *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    v-model.number="participant.losses"
+                    min="0"
+                    placeholder="0"
+                  />
+                  <small class="form-text">Number of matches lost</small>
+                </div>
+                
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Break & Run (Optional)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    v-model.number="participant.break_and_run"
+                    min="0"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div class="result-entry-preview" v-if="participant.ranking">
+                <div class="preview-item">
+                  <span class="preview-label">Points:</span>
+                  <span class="preview-value points-positive">+{{ getPointsForRanking(participant.ranking) }}</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-label">Wins:</span>
+                  <span class="preview-value">{{ participant.wins || 0 }}</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-label">Losses:</span>
+                  <span class="preview-value">{{ participant.losses || 0 }}</span>
+                </div>
+                <div class="preview-item" v-if="participant.break_and_run > 0">
+                  <span class="preview-label">Break & Run:</span>
+                  <span class="preview-value">+{{ participant.break_and_run }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-entry-summary" v-if="resultEntryList.some(p => p.ranking)">
+            <h4>📊 Summary</h4>
+            <div class="summary-stats">
+              <div class="summary-item">
+                <span class="summary-label">Total Players:</span>
+                <span class="summary-value">{{ resultEntryList.length }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Rankings Entered:</span>
+                <span class="summary-value">{{ resultEntryList.filter(p => p.ranking).length }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Division:</span>
+                <span class="summary-value badge" :class="selectedEvent?.participant_category === 'adult' ? 'badge-primary' : 'badge-success'">
+                  {{ selectedEvent?.participant_category === 'adult' ? 'Pro' : 'Student' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeResultEntryModal" :disabled="isSubmittingResults">
+            Cancel
+          </button>
+          <button
+            class="btn btn-success btn-lg"
+            @click="submitTournamentResults"
+            :disabled="isSubmittingResults || !canSubmitResults"
+          >
+            <span v-if="isSubmittingResults">Processing...</span>
+            <span v-else>✅ Submit Results & Update Stats</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Player Modal (Admin Only) -->
+    <div v-if="showAddPlayerModal" class="modal" @click.self="closeAddPlayerModal">
+      <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+        <div class="modal-header">
+          <h2>➕ Add Player to Tournament</h2>
+          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeAddPlayerModal" aria-label="Close modal">Close</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="loadingPlayers" class="text-center p-4">
+            <div class="spinner"></div>
+            <p>Loading players...</p>
+          </div>
+          <div v-else>
+            <div class="form-group">
+              <label class="form-label">Search Player</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model="playerSearchQuery"
+                placeholder="Type to search players..."
+              />
+            </div>
+            <div class="players-list" style="max-height: 400px; overflow-y: auto; margin-top: 1rem;">
+              <div v-if="filteredPlayersList.length === 0" class="text-muted p-2 text-center">
+                No players found.
+              </div>
+              <div
+                v-for="player in filteredPlayersList"
+                :key="player.id"
+                class="player-select-item"
+                :class="{ 'already-registered': isPlayerRegistered(player.id) }"
+              >
+                <div class="player-select-info">
+                  <span class="player-select-name">{{ player.name }}</span>
+                  <span v-if="isPlayerRegistered(player.id)" class="badge badge-warning">Already Registered</span>
+                </div>
+                <button
+                  v-if="!isPlayerRegistered(player.id)"
+                  class="btn btn-primary btn-sm"
+                  @click.stop="addPlayerToEvent(player)"
+                  :disabled="isAddingPlayer"
+                >
+                  Add
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -358,6 +573,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTournamentStore } from '../stores/tournamentStore'
 import { useAuthStore } from '../stores/authStore'
+import { usePlayerStore } from '../stores/playerStore'
 import { formatNZDate } from '../utils/timezone'
 import { supabase } from '../config/supabase'
 
@@ -367,6 +583,7 @@ export default {
     const router = useRouter()
     const tournamentStore = useTournamentStore()
     const authStore = useAuthStore()
+    const playerStore = usePlayerStore()
     
     // Calendar state
     const currentMonth = ref(new Date().getMonth())
@@ -388,6 +605,18 @@ export default {
     const isRegistering = ref(false)
     const isCancelling = ref(false)
     const registrationCounts = ref({})
+    
+    // Add Player Modal (Admin)
+    const showAddPlayerModal = ref(false)
+    const allPlayers = ref([])
+    const loadingPlayers = ref(false)
+    const playerSearchQuery = ref('')
+    const isAddingPlayer = ref(false)
+    
+    // Tournament Results Entry Modal (Admin)
+    const showResultEntryModal = ref(false)
+    const resultEntryList = ref([])
+    const isSubmittingResults = ref(false)
     
     // Event form
     const eventForm = ref({
@@ -841,6 +1070,287 @@ export default {
       router.push('/login')
     }
 
+    // Filtered players list for add player modal
+    const filteredPlayersList = computed(() => {
+      if (!playerSearchQuery.value.trim()) {
+        return allPlayers.value || []
+      }
+      const query = playerSearchQuery.value.toLowerCase()
+      return (allPlayers.value || []).filter(player => 
+        player.name?.toLowerCase().includes(query)
+      )
+    })
+
+    // Check if player is already registered
+    const isPlayerRegistered = (playerId) => {
+      return participantsList.value.some(p => p.user_id === playerId)
+    }
+
+    // Open add player modal
+    const openAddPlayerModal = async () => {
+      if (!authStore.isAdmin) return
+      
+      showAddPlayerModal.value = true
+      loadingPlayers.value = true
+      playerSearchQuery.value = ''
+      
+      try {
+        // Fetch all players using admin RPC (includes all user data)
+        await playerStore.fetchPlayers(true) // useAdminRPC = true
+        allPlayers.value = playerStore.players || []
+      } catch (err) {
+        console.error('Error loading players:', err)
+        alert('Error loading players: ' + err.message)
+        allPlayers.value = []
+      } finally {
+        loadingPlayers.value = false
+      }
+    }
+
+    // Close add player modal
+    const closeAddPlayerModal = () => {
+      showAddPlayerModal.value = false
+      playerSearchQuery.value = ''
+    }
+
+    // Add player to event (Admin only)
+    const addPlayerToEvent = async (player) => {
+      if (!authStore.isAdmin || !selectedEvent.value) return
+      
+      if (isPlayerRegistered(player.id)) {
+        alert('This player is already registered for this tournament')
+        return
+      }
+
+      isAddingPlayer.value = true
+      try {
+        const { error } = await supabase
+          .from('tournament_registrations')
+          .insert([{
+            tournament_id: selectedEvent.value.id,
+            user_id: player.id,
+            status: 'registered'
+          }])
+
+        if (error) throw error
+
+        // Update local state
+        participantsList.value.push({
+          id: Date.now(),
+          user_id: player.id,
+          user: { name: player.name || 'Unknown' }
+        })
+        
+        registrationCounts.value[selectedEvent.value.id] = (registrationCounts.value[selectedEvent.value.id] || 0) + 1
+
+        alert(`✅ Successfully added ${player.name} to the tournament!`)
+      } catch (err) {
+        console.error('Error adding player:', err)
+        alert('Error: ' + err.message)
+      } finally {
+        isAddingPlayer.value = false
+      }
+    }
+
+    // Remove player from event (Admin only)
+    const removePlayer = async (userId) => {
+      if (!authStore.isAdmin || !selectedEvent.value) return
+      
+      const player = participantsList.value.find(p => p.user_id === userId)
+      const playerName = player?.user?.name || 'this player'
+      
+      if (!confirm(`Are you sure you want to remove ${playerName} from this tournament?`)) {
+        return
+      }
+
+      try {
+        const { error } = await supabase
+          .from('tournament_registrations')
+          .delete()
+          .eq('tournament_id', selectedEvent.value.id)
+          .eq('user_id', userId)
+
+        if (error) throw error
+
+        // Update local state
+        participantsList.value = participantsList.value.filter(p => p.user_id !== userId)
+        registrationCounts.value[selectedEvent.value.id] = Math.max(0, (registrationCounts.value[selectedEvent.value.id] || 0) - 1)
+
+        alert(`✅ Successfully removed ${playerName} from the tournament`)
+      } catch (err) {
+        console.error('Error removing player:', err)
+        alert('Error: ' + err.message)
+      }
+    }
+
+    // Tournament Results Entry Functions
+    // Points calculation based on ranking (from HEYBALL_RANKING_RULES.md)
+    const getPointsForRanking = (ranking) => {
+      if (!ranking || ranking < 1) return 0
+      if (ranking === 1) return 20 // Champion
+      if (ranking === 2) return 15 // Runner-up
+      if (ranking >= 3 && ranking <= 4) return 10 // Top 4
+      if (ranking >= 5 && ranking <= 8) return 6 // Top 8
+      return 3 // Participation
+    }
+
+    // Calculate wins based on ranking (simplified for weekly tournaments)
+    const getWinsForRanking = (ranking, totalPlayers) => {
+      if (!ranking || ranking < 1) return 0
+      // For weekly tournaments, we use a simplified approach:
+      // Top players get more wins, lower players get fewer
+      if (ranking === 1) return 3 // Champion typically wins 3+ matches
+      if (ranking === 2) return 2 // Runner-up typically wins 2 matches
+      if (ranking >= 3 && ranking <= 4) return 1 // Top 4 typically wins 1 match
+      // Others: 0 wins (lost in first round)
+      return 0
+    }
+
+    // Calculate losses based on ranking
+    const getLossesForRanking = (ranking, totalPlayers) => {
+      if (!ranking || ranking < 1) return 0
+      // Champion has no losses
+      if (ranking === 1) return 0
+      // All others have at least 1 loss (the match they lost)
+      return 1
+    }
+
+    // Open result entry modal
+    const openResultEntryModal = () => {
+      if (!authStore.isAdmin || !selectedEvent.value || selectedEvent.value.status !== 'completed') return
+      
+      // Initialize result entry list from participants
+      resultEntryList.value = participantsList.value.map(p => ({
+        user_id: p.user_id,
+        user: p.user,
+        ranking: null,
+        break_and_run: 0,
+        points: 0,
+        wins: null,
+        losses: null
+      }))
+      
+      showResultEntryModal.value = true
+    }
+
+    // Close result entry modal
+    const closeResultEntryModal = () => {
+      showResultEntryModal.value = false
+      resultEntryList.value = []
+    }
+
+    // Update result entry when ranking changes
+    const updateResultEntry = (participant) => {
+      if (participant.ranking) {
+        participant.points = getPointsForRanking(participant.ranking)
+        // Wins and losses are now manually entered, so we don't auto-calculate them
+      }
+    }
+
+    // Check if can submit results
+    const canSubmitResults = computed(() => {
+      if (!resultEntryList.value.length) return false
+      // Check if all participants have rankings, wins, and losses
+      return resultEntryList.value.every(p => 
+        p.ranking && p.ranking >= 1 &&
+        (p.wins !== null && p.wins !== undefined && p.wins >= 0) &&
+        (p.losses !== null && p.losses !== undefined && p.losses >= 0)
+      )
+    })
+
+    // Submit tournament results
+    const submitTournamentResults = async () => {
+      if (!authStore.isAdmin || !selectedEvent.value) return
+      
+      if (!canSubmitResults.value) {
+        alert('Please enter rankings for all participants')
+        return
+      }
+
+      // Validate rankings are unique
+      const rankings = resultEntryList.value.map(p => p.ranking).filter(r => r)
+      const uniqueRankings = new Set(rankings)
+      if (rankings.length !== uniqueRankings.size) {
+        alert('⚠️ Rankings must be unique! Please check for duplicate rankings.')
+        return
+      }
+
+      const confirmMsg = `Submit tournament results for "${selectedEvent.value.name}"?\n\n` +
+        `This will:\n` +
+        `- Add points to ${resultEntryList.value.length} players\n` +
+        `- Update wins/losses statistics\n` +
+        `- Record Break & Run counts\n\n` +
+        `Division: ${selectedEvent.value.participant_category === 'adult' ? 'Pro' : 'Student'}\n\n` +
+        `Continue?`
+      
+      if (!confirm(confirmMsg)) return
+
+      isSubmittingResults.value = true
+      const division = selectedEvent.value.participant_category === 'adult' ? 'pro' : 'student'
+      const tournamentName = selectedEvent.value.name
+      let successCount = 0
+      let errorCount = 0
+      const errors = []
+
+      try {
+        // Process each participant
+        for (const participant of resultEntryList.value) {
+          try {
+            const points = getPointsForRanking(participant.ranking)
+            const wins = participant.wins || 0
+            const losses = participant.losses || 0
+            const breakAndRun = participant.break_and_run || 0
+
+            // Add points
+            const pointsFunction = division === 'pro' ? 'admin_add_pro_points' : 'admin_add_student_points'
+            const reason = `${tournamentName} - Rank ${participant.ranking}`
+            
+            const { error: pointsError } = await supabase.rpc(pointsFunction, {
+              p_user_id: participant.user_id,
+              p_points_change: points,
+              p_reason: reason
+            })
+
+            if (pointsError) throw new Error(`Points: ${pointsError.message}`)
+
+            // Update stats (wins, losses, break_and_run)
+            const { error: statsError } = await supabase.rpc('admin_update_division_stats', {
+              p_user_id: participant.user_id,
+              p_division: division,
+              p_mode: 'increment',
+              p_wins: wins,
+              p_losses: losses,
+              p_break_and_run: breakAndRun,
+              p_reason: `${tournamentName} - Rank ${participant.ranking}`
+            })
+
+            if (statsError) throw new Error(`Stats: ${statsError.message}`)
+
+            successCount++
+          } catch (err) {
+            errorCount++
+            errors.push(`${participant.user?.name || 'Unknown'}: ${err.message}`)
+            console.error(`Error processing ${participant.user?.name}:`, err)
+          }
+        }
+
+        // Show results
+        if (errorCount === 0) {
+          alert(`✅ Successfully updated results for all ${successCount} players!`)
+          closeResultEntryModal()
+          // Refresh participants list to show updated data
+          await openEventDetails(selectedEvent.value)
+        } else {
+          alert(`⚠️ Updated ${successCount} players successfully.\n\nErrors (${errorCount}):\n${errors.join('\n')}`)
+        }
+      } catch (err) {
+        console.error('Error submitting results:', err)
+        alert('Error submitting results: ' + err.message)
+      } finally {
+        isSubmittingResults.value = false
+      }
+    }
+
     // Initialize
     onMounted(async () => {
       isLoading.value = true
@@ -898,7 +1408,29 @@ export default {
       confirmDeleteEvent,
       saveEvent,
       closeCreateModal,
-      goToLogin
+      goToLogin,
+      showAddPlayerModal,
+      allPlayers,
+      loadingPlayers,
+      playerSearchQuery,
+      isAddingPlayer,
+      openAddPlayerModal,
+      closeAddPlayerModal,
+      filteredPlayersList,
+      isPlayerRegistered,
+      addPlayerToEvent,
+      removePlayer,
+      showResultEntryModal,
+      resultEntryList,
+      isSubmittingResults,
+      openResultEntryModal,
+      closeResultEntryModal,
+      getPointsForRanking,
+      getWinsForRanking,
+      getLossesForRanking,
+      updateResultEntry,
+      canSubmitResults,
+      submitTournamentResults
     }
   }
 }
@@ -1330,6 +1862,17 @@ export default {
   border-top: 2px solid #e9ecef;
 }
 
+.participants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.participants-header h3 {
+  margin: 0;
+}
+
 .participants-section h3 {
   font-size: 1.25rem;
   font-weight: 700;
@@ -1352,6 +1895,13 @@ export default {
   padding: 0.75rem;
   background: #f8f9fa;
   border-radius: 8px;
+  justify-content: space-between;
+}
+
+.btn-remove-player {
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
 }
 
 .participant-item.is-current-user {
@@ -1419,6 +1969,199 @@ export default {
   font-size: 0.875rem;
   color: #6c757d;
   text-align: center;
+}
+
+/* Add Player Modal Styles */
+.players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.player-select-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.player-select-item:hover:not(.already-registered) {
+  background: #e9ecef;
+  border-color: #9C27B0;
+  transform: translateX(4px);
+}
+
+.player-select-item.already-registered {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #fff3cd;
+}
+
+.player-select-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.player-select-name {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+/* Tournament Results Entry Styles */
+.tournament-results-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.result-entry-item {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.result-entry-item:hover {
+  border-color: #9C27B0;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.1);
+}
+
+.result-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.result-entry-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #9C27B0 0%, #673AB7 100%);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.result-entry-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.result-entry-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .result-entry-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.result-entry-preview {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #9C27B0;
+}
+
+.preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.preview-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.preview-value.points-positive {
+  color: #28a745;
+}
+
+.result-entry-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(156, 39, 176, 0.2);
+}
+
+.result-entry-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #1a1a2e;
+  font-size: 1.25rem;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* Mobile Responsive for Results Entry */
+@media (max-width: 768px) {
+  .result-entry-fields {
+    flex-direction: column;
+  }
+
+  .result-entry-preview {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .summary-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 
 .complete-details {
