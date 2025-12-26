@@ -1293,61 +1293,97 @@ export default {
       const errors = []
 
       try {
-        // Process each participant
-        for (const participant of resultEntryList.value) {
+        // Process each participant with timeout protection
+        for (let i = 0; i < resultEntryList.value.length; i++) {
+          const participant = resultEntryList.value[i]
+          const participantName = participant.user?.name || `Player ${i + 1}`
+          
           try {
+            console.log(`Processing ${participantName} (${i + 1}/${resultEntryList.value.length})...`)
+            
             const points = getPointsForRanking(participant.ranking)
             const wins = participant.wins || 0
             const losses = participant.losses || 0
             const breakAndRun = participant.break_and_run || 0
 
-            // Add points
+            // Add points with timeout
             const pointsFunction = division === 'pro' ? 'admin_add_pro_points' : 'admin_add_student_points'
-            const reason = `${tournamentName} - Rank ${participant.ranking}`
+            const reason = `${division === 'pro' ? 'Pro:' : 'Student:'} ${tournamentName} - Rank ${participant.ranking}`
             
-            const { error: pointsError } = await supabase.rpc(pointsFunction, {
+            const pointsPromise = supabase.rpc(pointsFunction, {
               p_user_id: participant.user_id,
               p_points_change: points,
               p_reason: reason
             })
 
-            if (pointsError) throw new Error(`Points: ${pointsError.message}`)
+            const pointsTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Points update timeout (30s)')), 30000)
+            )
 
-            // Update stats (wins, losses, break_and_run)
-            const { error: statsError } = await supabase.rpc('admin_update_division_stats', {
+            const { error: pointsError } = await Promise.race([pointsPromise, pointsTimeout])
+
+            if (pointsError) {
+              console.error(`Points error for ${participantName}:`, pointsError)
+              throw new Error(`Points: ${pointsError.message || JSON.stringify(pointsError)}`)
+            }
+
+            console.log(`✅ Points added for ${participantName}`)
+
+            // Update stats (wins, losses, break_and_run) with timeout
+            const statsPromise = supabase.rpc('admin_update_division_stats', {
               p_user_id: participant.user_id,
               p_division: division,
               p_mode: 'increment',
               p_wins: wins,
               p_losses: losses,
               p_break_and_run: breakAndRun,
-              p_reason: `${tournamentName} - Rank ${participant.ranking}`
+              p_reason: `${division === 'pro' ? 'Pro:' : 'Student:'} ${tournamentName} - Rank ${participant.ranking}`
             })
 
-            if (statsError) throw new Error(`Stats: ${statsError.message}`)
+            const statsTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Stats update timeout (30s)')), 30000)
+            )
 
+            const { error: statsError } = await Promise.race([statsPromise, statsTimeout])
+
+            if (statsError) {
+              console.error(`Stats error for ${participantName}:`, statsError)
+              throw new Error(`Stats: ${statsError.message || JSON.stringify(statsError)}`)
+            }
+
+            console.log(`✅ Stats updated for ${participantName}`)
             successCount++
           } catch (err) {
             errorCount++
-            errors.push(`${participant.user?.name || 'Unknown'}: ${err.message}`)
-            console.error(`Error processing ${participant.user?.name}:`, err)
+            const errorMsg = err.message || String(err)
+            errors.push(`${participantName}: ${errorMsg}`)
+            console.error(`❌ Error processing ${participantName}:`, err)
           }
         }
 
         // Show results
+        console.log(`Results submission complete: ${successCount} success, ${errorCount} errors`)
+        
         if (errorCount === 0) {
           alert(`✅ Successfully updated results for all ${successCount} players!`)
           closeResultEntryModal()
           // Refresh participants list to show updated data
-          await openEventDetails(selectedEvent.value)
+          if (selectedEvent.value) {
+            await openEventDetails(selectedEvent.value)
+          }
         } else {
-          alert(`⚠️ Updated ${successCount} players successfully.\n\nErrors (${errorCount}):\n${errors.join('\n')}`)
+          const errorSummary = errors.slice(0, 5).join('\n')
+          const moreErrors = errors.length > 5 ? `\n... and ${errors.length - 5} more errors` : ''
+          alert(`⚠️ Updated ${successCount} players successfully.\n\nErrors (${errorCount}):\n${errorSummary}${moreErrors}\n\nCheck console for full details.`)
         }
       } catch (err) {
-        console.error('Error submitting results:', err)
-        alert('Error submitting results: ' + err.message)
+        console.error('❌ Fatal error submitting results:', err)
+        const errorMsg = err.message || String(err) || 'Unknown error'
+        alert(`❌ Error submitting results: ${errorMsg}\n\nCheck console for details.`)
       } finally {
+        // Always reset loading state, even on error
         isSubmittingResults.value = false
+        console.log('Submission process ended, loading state reset')
       }
     }
 
@@ -2012,6 +2048,53 @@ export default {
 .player-select-name {
   font-weight: 500;
   color: #1a1a2e;
+  font-size: 1rem;
+}
+
+/* Mobile Optimization for Add Player Modal */
+@media (max-width: 768px) {
+  .player-select-item {
+    padding: 1.25rem 1rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    min-height: 60px;
+  }
+
+  .player-select-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .player-select-name {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1a1a2e;
+    line-height: 1.5;
+    word-break: break-word;
+    letter-spacing: 0.01em;
+  }
+
+  .player-select-item .btn {
+    flex-shrink: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    min-width: 60px;
+    min-height: 36px;
+    font-weight: 600;
+  }
+
+  .player-select-item .btn-primary {
+    margin: 0;
+  }
+
+  .players-list {
+    gap: 0.75rem;
+  }
 }
 
 /* Tournament Results Entry Styles */

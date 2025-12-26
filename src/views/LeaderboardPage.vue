@@ -90,6 +90,19 @@
       </select>
     </div>
 
+    <!-- Export Button (Admin Only) -->
+    <div v-if="authStore.isAdmin" class="export-section">
+      <div class="export-buttons">
+        <button class="btn btn-primary" @click="exportToCSV" :disabled="loading || rankedPlayers.length === 0">
+          📥 Export to CSV
+        </button>
+        <button class="btn btn-success" @click="exportToExcel" :disabled="loading || rankedPlayers.length === 0">
+          📊 Export to Excel
+        </button>
+      </div>
+      <p class="export-hint">Export current leaderboard data for {{ divisionFilter === 'pro' ? 'Pro' : 'Student' }} Division - {{ getPeriodLabel() }}</p>
+    </div>
+
     <!-- Leaderboard -->
     <div v-if="loading" class="loading">
       <div class="spinner"></div>
@@ -977,6 +990,116 @@ export default {
       loadLeaderboard()
     })
 
+    // Get period label for export filename
+    const getPeriodLabel = () => {
+      if (activeTab.value === 'year') {
+        return `Year-${currentYear.value}`
+      } else if (activeTab.value === 'monthly') {
+        if (selectedMonth.value) {
+          const [year, month] = selectedMonth.value.split('-')
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          return `${year}-${monthNames[parseInt(month) - 1]}`
+        }
+        return `Month-${currentMonthName.value}`
+      } else if (activeTab.value === 'annual') {
+        return `Annual-${selectedYear.value}`
+      }
+      return 'Leaderboard'
+    }
+
+    // Export to CSV
+    const exportToCSV = () => {
+      if (!rankedPlayers.value.length) {
+        alert('No data to export')
+        return
+      }
+
+      const division = divisionFilter.value === 'pro' ? 'Pro' : 'Student'
+      const period = getPeriodLabel()
+      
+      // CSV Headers
+      const headers = [
+        'Rank',
+        'Name',
+        'Points',
+        'Wins',
+        'Losses',
+        'Win Rate (%)',
+        'Break & Run',
+        'Ranking Level',
+        'Division',
+        'Period'
+      ]
+
+      // CSV Rows
+      const rows = rankedPlayers.value.map((player, index) => {
+        const rank = index + 1
+        const points = getDisplayPoints(player)
+        const wins = getDivisionValue(player, divisionFilter.value, 'wins')
+        const losses = getDivisionValue(player, divisionFilter.value, 'losses')
+        const winRateStr = calculateWinRate(player, divisionFilter.value)
+        const winRate = parseFloat(winRateStr) || 0
+        const breakAndRun = getDivisionValue(player, divisionFilter.value, 'break_and_run_count')
+        const rankingLevel = formatRankName(player.ranking_level || 'beginner')
+
+        return [
+          rank,
+          player.name || 'N/A',
+          points,
+          wins,
+          losses,
+          winRate.toFixed(1),
+          breakAndRun,
+          rankingLevel,
+          division,
+          period
+        ]
+      })
+
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => {
+          // Escape commas and quotes in cell values
+          const cellStr = String(cell || '')
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`
+          }
+          return cellStr
+        }).join(','))
+      ].join('\n')
+
+      // Add BOM for Excel UTF-8 support
+      const BOM = '\uFEFF'
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      
+      link.setAttribute('href', url)
+      link.setAttribute('download', `Joy-Billiards-Leaderboard-${division}-${period}-${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      alert(`✅ Exported ${rankedPlayers.value.length} players to CSV`)
+    }
+
+    // Export to Excel (using CSV format that Excel can open)
+    const exportToExcel = () => {
+      // For now, we'll use CSV format which Excel can open
+      // If you want true .xlsx format, we can add xlsx library later
+      exportToCSV()
+      
+      // Future: Implement true Excel export using xlsx library
+      // const XLSX = require('xlsx')
+      // const ws = XLSX.utils.json_to_sheet(data)
+      // const wb = XLSX.utils.book_new()
+      // XLSX.utils.book_append_sheet(wb, ws, 'Leaderboard')
+      // XLSX.writeFile(wb, filename)
+    }
+
     onMounted(async () => {
       await loadCurrentUserId()
       loadLeaderboard()
@@ -1021,7 +1144,10 @@ export default {
       formatHistoryDate,
       formatHistoryTime,
       calculateCumulativePoints,
-      authStore
+      authStore,
+      exportToCSV,
+      exportToExcel,
+      getPeriodLabel
     }
   }
 }
@@ -1390,6 +1516,61 @@ export default {
 .month-select:focus {
   border-color: #764ba2;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Export Section (Admin Only) */
+.export-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(156, 39, 176, 0.2);
+  box-shadow: 0 4px 16px rgba(156, 39, 176, 0.1);
+}
+
+.export-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.export-buttons .btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.export-buttons .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.export-buttons .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-buttons .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.export-buttons .btn-success {
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+  border: none;
+  color: white;
+}
+
+.export-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-style: italic;
 }
 
 /* Podium - Enhanced */
