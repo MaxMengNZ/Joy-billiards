@@ -72,8 +72,8 @@
 
     <!-- Month Selector for Monthly Tab -->
     <div v-if="activeTab === 'monthly'" class="month-selector">
-      <label class="selector-label">Select Month:</label>
-      <select v-model="selectedMonth" @change="loadMonthlyRankings" class="month-select">
+      <label for="month-select" class="selector-label">Select Month:</label>
+      <select id="month-select" name="month-select" v-model="selectedMonth" @change="loadMonthlyRankings" class="month-select">
         <option v-for="month in availableMonths" :key="month.value" :value="month.value">
           {{ month.label }}
         </option>
@@ -82,8 +82,8 @@
 
     <!-- Year Selector for Annual Tab -->
     <div v-if="activeTab === 'annual'" class="year-selector">
-      <label class="selector-label">Select Year:</label>
-      <select v-model="selectedYear" @change="loadAnnualRankings" class="year-select">
+      <label for="year-select" class="selector-label">Select Year:</label>
+      <select id="year-select" name="year-select" v-model="selectedYear" @change="loadAnnualRankings" class="year-select">
         <option v-for="year in availableYears" :key="year" :value="year">
           {{ year }}
         </option>
@@ -141,6 +141,10 @@
                   <span class="stat-label">🎯 Break & Run:</span>
                   <span class="stat-value">{{ getDivisionValue(topThree[1], divisionFilter, 'break_and_run_count') }}</span>
                 </div>
+                <div class="stat-row">
+                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-value">{{ topThree[1].tournaments_played || 0 }}</span>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -182,6 +186,10 @@
                   <span class="stat-label">🎯 Break & Run:</span>
                   <span class="stat-value">{{ getDivisionValue(topThree[0], divisionFilter, 'break_and_run_count') }}</span>
                 </div>
+                <div class="stat-row">
+                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-value">{{ topThree[0].tournaments_played || 0 }}</span>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -222,6 +230,10 @@
                 <div class="stat-row">
                   <span class="stat-label">🎯 Break & Run:</span>
                   <span class="stat-value">{{ getDivisionValue(topThree[2], divisionFilter, 'break_and_run_count') }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-value">{{ topThree[2].tournaments_played || 0 }}</span>
                 </div>
               </div>
             </template>
@@ -295,6 +307,10 @@
                   <span class="stat-badge highlight">
                     <span class="stat-label">🎯 B&R:</span>
                     <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'break_and_run_count') }}</span>
+                  </span>
+                  <span class="stat-badge">
+                    <span class="stat-label">📅 Events:</span>
+                    <span class="stat-value">{{ player.tournaments_played || 0 }}</span>
                   </span>
                 </div>
               </div>
@@ -681,6 +697,18 @@ export default {
           .select('*')
         
         if (pointError) throw pointError
+
+        // Count total point history records per user (Events Played = Total Records in History)
+        // Simple approach: count all point history records for each user
+        const tournamentsPerUser = {}
+        
+        pointHistory.forEach(record => {
+          const userId = record.user_id
+          if (!tournamentsPerUser[userId]) {
+            tournamentsPerUser[userId] = 0
+          }
+          tournamentsPerUser[userId]++
+        })
         
         // Calculate RANKING points for each user (段位积分，影响排名)
         // Helper function to filter by division
@@ -782,7 +810,9 @@ export default {
             selected_year_points: proSelectedYearPoints + studentSelectedYearPoints,
             ...monthPointsData,
             // ✅ 强制使用数据库的 ranking_points，不使用 loyalty_points
-            ranking_points: user.ranking_points || 0
+            ranking_points: user.ranking_points || 0,
+            // ✅ Events/Tournaments Played count
+            tournaments_played: tournamentsPerUser[user.id] || 0
           }
         })
         
@@ -1026,6 +1056,7 @@ export default {
         'Losses',
         'Win Rate (%)',
         'Break & Run',
+        'Events Played',
         'Ranking Level',
         'Division',
         'Period'
@@ -1040,6 +1071,7 @@ export default {
         const winRateStr = calculateWinRate(player, divisionFilter.value)
         const winRate = parseFloat(winRateStr) || 0
         const breakAndRun = getDivisionValue(player, divisionFilter.value, 'break_and_run_count')
+        const tournamentsPlayed = player.tournaments_played || 0
         const rankingLevel = formatRankName(player.ranking_level || 'beginner')
 
         return [
@@ -1050,6 +1082,7 @@ export default {
           losses,
           winRate.toFixed(1),
           breakAndRun,
+          tournamentsPlayed,
           rankingLevel,
           division,
           period

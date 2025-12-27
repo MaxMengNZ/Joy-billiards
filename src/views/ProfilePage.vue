@@ -141,8 +141,10 @@
             <div class="card-body">
               <form @submit.prevent="saveProfile">
                 <div class="form-group">
-                  <label class="form-label">Full Name</label>
+                  <label for="profile-name" class="form-label">Full Name</label>
                   <input
+                    id="profile-name"
+                    name="profile-name"
                     type="text"
                     class="form-control"
                     v-model="editForm.name"
@@ -152,8 +154,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Email</label>
+                  <label for="profile-email" class="form-label">Email</label>
                   <input
+                    id="profile-email"
+                    name="profile-email"
                     type="email"
                     class="form-control"
                     v-model="editForm.email"
@@ -163,8 +167,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Phone</label>
+                  <label for="profile-phone" class="form-label">Phone</label>
                   <input
+                    id="profile-phone"
+                    name="profile-phone"
                     type="tel"
                     class="form-control"
                     v-model="editForm.phone"
@@ -173,8 +179,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Date of Birth</label>
+                  <label for="profile-birthday" class="form-label">Date of Birth</label>
                   <input
+                    id="profile-birthday"
+                    name="profile-birthday"
                     type="text"
                     class="form-control"
                     v-model="editForm.birthday"
@@ -185,8 +193,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Address</label>
+                  <label for="profile-address" class="form-label">Address</label>
                   <textarea
+                    id="profile-address"
+                    name="profile-address"
                     class="form-control"
                     v-model="editForm.address"
                     :disabled="!isEditing"
@@ -196,8 +206,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">ID Card / Driver License</label>
+                  <label for="profile-id-card" class="form-label">ID Card / Driver License</label>
                   <input
+                    id="profile-id-card"
+                    name="profile-id-card"
                     type="text"
                     class="form-control"
                     v-model="editForm.id_card"
@@ -264,6 +276,13 @@
                   <div class="stat-content">
                     <div class="stat-value">{{ currentYearPoints }}</div>
                     <div class="stat-label">Ranking Points ({{ currentYear }})</div>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon">📅</div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ tournamentsPlayed }}</div>
+                    <div class="stat-label">Events Played</div>
                   </div>
                 </div>
               </div>
@@ -428,8 +447,10 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">New Password</label>
+            <label for="new-password" class="form-label">New Password</label>
             <input
+              id="new-password"
+              name="new-password"
               type="password"
               class="form-control"
               v-model="newPassword"
@@ -438,8 +459,10 @@
             >
           </div>
           <div class="form-group">
-            <label class="form-label">Confirm New Password</label>
+            <label for="confirm-new-password" class="form-label">Confirm New Password</label>
             <input
+              id="confirm-new-password"
+              name="confirm-new-password"
               type="password"
               class="form-control"
               v-model="confirmNewPassword"
@@ -551,6 +574,15 @@ export default {
         .reduce((sum, p) => sum + (p.points_change || 0), 0)
     })
 
+    // Count tournaments played from point history
+    // Simple approach: Events Played = Total Records in Point History
+    const tournamentsPlayed = computed(() => {
+      if (!profile.value || !pointHistory.value || pointHistory.value.length === 0) return 0
+      
+      // Simply return the total number of point history records
+      return pointHistory.value.length
+    })
+
     const retryCount = ref(0)
     const maxRetries = 5
 
@@ -599,9 +631,60 @@ export default {
             .from('ranking_point_history')
             .select('*')
             .eq('user_id', data.id)
+            .order('awarded_at', { ascending: false }) // Order by date for easier debugging
           
           if (!historyError && historyData) {
             pointHistory.value = historyData
+            console.log(`[ProfilePage] Loaded ${historyData.length} point history records for user ${data.name}`)
+            // Log ALL records for debugging
+            console.log(`[ProfilePage] All point history records:`, historyData.map(r => ({
+              reason: r.reason,
+              points_change: r.points_change,
+              awarded_at: r.awarded_at,
+              year: r.year,
+              month: r.month
+            })))
+            // Log tournament-related records for debugging - use same logic as computed
+            const isTournamentRecord = (reason) => {
+              if (!reason) return false
+              const reasonLower = reason.toLowerCase()
+              // Check for rank-based records (new format: "Pro: Tournament Name - Rank X" or "Student: Tournament Name - Rank X")
+              if ((reason.startsWith('Pro:') || reason.startsWith('Student:')) && reason.includes('Rank')) {
+                return true
+              }
+              // Also check for records that just have "Rank" (might be old format or missing prefix)
+              if (reason.includes('Rank')) {
+                return true
+              }
+              // Check for tournament-related keywords
+              if (reasonLower.includes('tournament') || reasonLower.includes('weekly')) {
+                return true
+              }
+              // Check for old format that might have rank information
+              if (reasonLower.includes('champion') || reasonLower.includes('runner') || reasonLower.includes('top')) {
+                return true
+              }
+              return false
+            }
+            const tournamentRecords = historyData.filter(r => isTournamentRecord(r.reason))
+            console.log(`[ProfilePage] Found ${tournamentRecords.length} tournament-related records:`, tournamentRecords.map(r => ({
+              reason: r.reason,
+              points: r.points_change,
+              date: r.awarded_at
+            })))
+            
+            // Also show what tournament keys would be extracted
+            const tournamentKeys = new Set()
+            tournamentRecords.forEach(record => {
+              let tournamentKey = record.reason
+              if (tournamentKey.includes(' - Rank')) {
+                tournamentKey = tournamentKey.split(' - Rank')[0].trim()
+              }
+              tournamentKeys.add(tournamentKey)
+            })
+            console.log(`[ProfilePage] Unique tournament keys (${tournamentKeys.size}):`, Array.from(tournamentKeys))
+          } else if (historyError) {
+            console.error('[ProfilePage] Error loading point history:', historyError)
           }
           
           retryCount.value = 0 // Reset retry count on success
@@ -913,6 +996,7 @@ export default {
       pointHistory,
       currentYear,
       currentYearPoints,
+      tournamentsPlayed,
       proStats,
       studentStats,
       isEditing,

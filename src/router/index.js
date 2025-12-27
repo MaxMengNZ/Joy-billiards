@@ -123,39 +123,45 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  document.title = `${to.meta.title} - Joy Billiards NZ` || 'Joy Billiards Tournament System'
-  
-  // Check if route requires authentication
-  if (to.meta.requiresAuth) {
-    const { useAuthStore } = await import('../stores/authStore')
-    const authStore = useAuthStore()
+  try {
+    document.title = `${to.meta.title} - Joy Billiards NZ` || 'Joy Billiards Tournament System'
     
-    // Wait for auth initialization if not already done
-    if (!authStore.user && !authStore.session) {
-      console.log('Waiting for auth initialization...')
-      await authStore.initialize()
-    }
-    
-    // If not logged in after initialization, redirect to login
-    if (!authStore.user) {
-      console.log('User not authenticated, redirecting to login')
-      alert('Please login to access this page')
-      next('/login')
-      return
-    }
-    
-    // Check if route requires admin role
-    if (to.meta.requiresAdmin) {
-      // If not admin, redirect to home
-      if (authStore.userRole !== 'admin') {
-        alert('⛔ Access Denied: This page is only accessible to administrators')
-        next('/')
+    // Check if route requires authentication
+    if (to.meta.requiresAuth) {
+      const { useAuthStore } = await import('../stores/authStore')
+      const authStore = useAuthStore()
+      
+      // Wait for auth initialization if not already done
+      if (!authStore.user && !authStore.session) {
+        console.log('Waiting for auth initialization...')
+        await authStore.initialize()
+      }
+      
+      // If not logged in after initialization, redirect to login
+      if (!authStore.user) {
+        console.log('User not authenticated, redirecting to login')
+        alert('Please login to access this page')
+        next('/login')
         return
       }
+      
+      // Check if route requires admin role
+      if (to.meta.requiresAdmin) {
+        // If not admin, redirect to home
+        if (authStore.userRole !== 'admin') {
+          alert('⛔ Access Denied: This page is only accessible to administrators')
+          next('/')
+          return
+        }
+      }
     }
+    
+    next()
+  } catch (error) {
+    console.error('Router navigation error:', error)
+    // If there's an error, still allow navigation but log it
+    next()
   }
-  
-  next()
 })
 
 export default router
