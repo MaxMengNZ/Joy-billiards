@@ -6,7 +6,17 @@ import './assets/styles/main.css'
 import { logStorageReport, getStorageReport, clearAllCaches } from './utils/storageMonitor'
 
 // Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
+// TEMPORARILY DISABLED to fix website loading issues
+// Users need to clear Service Worker cache manually
+if (false && 'serviceWorker' in navigator) {
+  // Unregister all existing service workers first
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.unregister()
+      console.log('Unregistered Service Worker:', registration.scope)
+    })
+  })
+  
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
@@ -20,6 +30,26 @@ if ('serviceWorker' in navigator) {
       .catch((error) => {
         console.warn('⚠️ Service Worker registration failed:', error)
       })
+  })
+}
+
+// Auto-clear Service Worker cache on page load (temporary fix)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of registrations) {
+        await registration.unregister()
+        console.log('✅ Cleared Service Worker:', registration.scope)
+      }
+      
+      // Clear all caches
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map(name => caches.delete(name)))
+      console.log('✅ Cleared all caches')
+    } catch (err) {
+      console.warn('⚠️ Error clearing Service Worker:', err)
+    }
   })
 }
 

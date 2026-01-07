@@ -637,52 +637,8 @@ export default {
             pointHistory.value = historyData
             console.log(`[ProfilePage] Loaded ${historyData.length} point history records for user ${data.name}`)
             // Log ALL records for debugging
-            console.log(`[ProfilePage] All point history records:`, historyData.map(r => ({
-              reason: r.reason,
-              points_change: r.points_change,
-              awarded_at: r.awarded_at,
-              year: r.year,
-              month: r.month
-            })))
-            // Log tournament-related records for debugging - use same logic as computed
-            const isTournamentRecord = (reason) => {
-              if (!reason) return false
-              const reasonLower = reason.toLowerCase()
-              // Check for rank-based records (new format: "Pro: Tournament Name - Rank X" or "Student: Tournament Name - Rank X")
-              if ((reason.startsWith('Pro:') || reason.startsWith('Student:')) && reason.includes('Rank')) {
-                return true
-              }
-              // Also check for records that just have "Rank" (might be old format or missing prefix)
-              if (reason.includes('Rank')) {
-                return true
-              }
-              // Check for tournament-related keywords
-              if (reasonLower.includes('tournament') || reasonLower.includes('weekly')) {
-                return true
-              }
-              // Check for old format that might have rank information
-              if (reasonLower.includes('champion') || reasonLower.includes('runner') || reasonLower.includes('top')) {
-                return true
-              }
-              return false
-            }
-            const tournamentRecords = historyData.filter(r => isTournamentRecord(r.reason))
-            console.log(`[ProfilePage] Found ${tournamentRecords.length} tournament-related records:`, tournamentRecords.map(r => ({
-              reason: r.reason,
-              points: r.points_change,
-              date: r.awarded_at
-            })))
-            
-            // Also show what tournament keys would be extracted
-            const tournamentKeys = new Set()
-            tournamentRecords.forEach(record => {
-              let tournamentKey = record.reason
-              if (tournamentKey.includes(' - Rank')) {
-                tournamentKey = tournamentKey.split(' - Rank')[0].trim()
-              }
-              tournamentKeys.add(tournamentKey)
-            })
-            console.log(`[ProfilePage] Unique tournament keys (${tournamentKeys.size}):`, Array.from(tournamentKeys))
+            // Point history loaded successfully
+            console.log(`[ProfilePage] Loaded ${historyData.length} point history records`)
           } else if (historyError) {
             console.error('[ProfilePage] Error loading point history:', historyError)
           }

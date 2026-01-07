@@ -1050,7 +1050,10 @@ export default {
           throw new Error('Invalid date or time format')
         }
 
-        // Build data object with only fields that exist in database
+        // Build data object with ONLY fields that exist in database schema
+        // Database tournaments table has: id, name, description, tournament_type, start_date, 
+        // end_date, max_players, entry_fee, prize_pool, status, created_at, updated_at
+        // DO NOT include: participant_category, event_type, min_players (these don't exist in DB)
         const data = {
           name: eventForm.value.name,
           description: eventForm.value.description || '',
@@ -1060,22 +1063,25 @@ export default {
           max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
           status: eventForm.value.status || 'registration'
         }
-
-        // Add optional fields if they exist in database schema
-        // Note: These fields may not exist in all database versions
-        // Only include if database supports them
-        if (eventForm.value.participant_category) {
-          data.participant_category = eventForm.value.participant_category
-        }
-        if (eventForm.value.event_type) {
-          data.event_type = eventForm.value.event_type
-        }
-        if (eventForm.value.min_players) {
-          data.min_players = parseInt(eventForm.value.min_players) || 8
-        }
+        
+        // Optional: prize_pool (can be added later)
+        // data.prize_pool = 0
 
         console.log('[TournamentsPage] Event data to save:', JSON.stringify(data, null, 2))
 
+        // Check if user is admin before creating
+        console.log('[TournamentsPage] Current user:', {
+          isAuthenticated: authStore.isAuthenticated,
+          isAdmin: authStore.isAdmin,
+          userRole: authStore.userRole,
+          userId: authStore.user?.id
+        })
+        
+        if (!authStore.isAdmin) {
+          alert('Only administrators can create tournaments')
+          return
+        }
+        
         let result
         if (editingEvent.value) {
           console.log('[TournamentsPage] Updating tournament:', editingEvent.value.id)
