@@ -1050,31 +1050,45 @@ export default {
           throw new Error('Invalid date or time format')
         }
 
+        // Build data object with only fields that exist in database
         const data = {
           name: eventForm.value.name,
           description: eventForm.value.description || '',
           tournament_type: 'single_elimination',
           start_date: startDateTime.toISOString(),
-          participant_category: eventForm.value.participant_category,
-          event_type: eventForm.value.event_type,
           entry_fee: parseFloat(eventForm.value.entry_fee) || 20,
-          min_players: parseInt(eventForm.value.min_players) || 8,
           max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
-          status: eventForm.value.status
+          status: eventForm.value.status || 'registration'
         }
 
-        console.log('Event data to save:', data)
+        // Add optional fields if they exist in database schema
+        // Note: These fields may not exist in all database versions
+        // Only include if database supports them
+        if (eventForm.value.participant_category) {
+          data.participant_category = eventForm.value.participant_category
+        }
+        if (eventForm.value.event_type) {
+          data.event_type = eventForm.value.event_type
+        }
+        if (eventForm.value.min_players) {
+          data.min_players = parseInt(eventForm.value.min_players) || 8
+        }
+
+        console.log('[TournamentsPage] Event data to save:', JSON.stringify(data, null, 2))
 
         let result
         if (editingEvent.value) {
-          console.log('Updating tournament:', editingEvent.value.id)
+          console.log('[TournamentsPage] Updating tournament:', editingEvent.value.id)
           result = await tournamentStore.updateTournament(editingEvent.value.id, data)
         } else {
-          console.log('Creating new tournament')
+          console.log('[TournamentsPage] Creating new tournament, calling store...')
+          const startTime = Date.now()
           result = await tournamentStore.createTournament(data)
+          const duration = Date.now() - startTime
+          console.log(`[TournamentsPage] Tournament creation took ${duration}ms`)
         }
 
-        console.log('Save result:', result)
+        console.log('[TournamentsPage] Save result:', result)
 
         if (result && result.success) {
           closeCreateModal()

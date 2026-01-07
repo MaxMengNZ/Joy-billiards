@@ -71,23 +71,48 @@ export const useTournamentStore = defineStore('tournament', {
     async createTournament(tournamentData) {
       this.loading = true
       this.error = null
+      
+      console.log('[TournamentStore] Creating tournament with data:', tournamentData)
+      
       try {
-        const { data, error } = await supabase
+        // Add timeout wrapper (30 seconds)
+        const insertPromise = supabase
           .from('tournaments')
           .insert([tournamentData])
           .select()
         
-        if (error) throw error
-        if (data && data[0]) {
-          this.tournaments.unshift(data[0])
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Tournament creation timeout after 30 seconds')), 30000)
+        )
+        
+        console.log('[TournamentStore] Sending insert request to Supabase...')
+        const { data, error } = await Promise.race([insertPromise, timeoutPromise])
+        
+        console.log('[TournamentStore] Supabase response received:', { data, error })
+        
+        if (error) {
+          console.error('[TournamentStore] Supabase error:', error)
+          throw error
         }
+        
+        if (!data || !data[0]) {
+          console.error('[TournamentStore] No data returned from insert')
+          throw new Error('No data returned from database')
+        }
+        
+        console.log('[TournamentStore] Tournament created successfully:', data[0])
+        
+        // Add to local state
+        this.tournaments.unshift(data[0])
+        
         return { success: true, data: data[0] }
       } catch (err) {
-        this.error = err.message
-        console.error('Error creating tournament:', err)
-        return { success: false, error: err.message }
+        console.error('[TournamentStore] Error creating tournament:', err)
+        this.error = err.message || 'Failed to create tournament'
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
+        console.log('[TournamentStore] createTournament completed, loading set to false')
       }
     },
 
