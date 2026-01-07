@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
 import './assets/styles/main.css'
+import { logStorageReport, getStorageReport, clearAllCaches } from './utils/storageMonitor'
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -28,5 +29,21 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.mount('#app')
+
+// Add storage monitoring tools to window (for debugging)
+if (import.meta.env.DEV) {
+  window.checkStorage = async () => {
+    console.log('📊 Checking storage usage...')
+    return await logStorageReport()
+  }
+  
+  window.getStorageReport = getStorageReport
+  window.clearAllCaches = clearAllCaches
+  
+  console.log('💡 Storage tools available:')
+  console.log('  - checkStorage() - View storage report in console')
+  console.log('  - getStorageReport() - Get storage report as object')
+  console.log('  - clearAllCaches() - Clear all Service Worker caches')
+}
 
 

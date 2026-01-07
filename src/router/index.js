@@ -140,7 +140,8 @@ router.beforeEach(async (to, from, next) => {
       // If not logged in after initialization, redirect to login
       if (!authStore.user) {
         console.log('User not authenticated, redirecting to login')
-        alert('Please login to access this page')
+        // Don't show alert on mobile, just redirect silently
+        // The login page will show appropriate message if needed
         next('/login')
         return
       }
@@ -149,7 +150,8 @@ router.beforeEach(async (to, from, next) => {
       if (to.meta.requiresAdmin) {
         // If not admin, redirect to home
         if (authStore.userRole !== 'admin') {
-          alert('⛔ Access Denied: This page is only accessible to administrators')
+          console.log('Access denied: Admin role required')
+          // Don't show alert on mobile, just redirect silently
           next('/')
           return
         }

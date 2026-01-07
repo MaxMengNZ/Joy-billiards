@@ -31,6 +31,7 @@
       to="/membership" 
       class="nav-item"
       :class="{ active: isActive('/membership') }"
+      @click="handleNavClick"
     >
       <span class="nav-icon">💳</span>
       <span class="nav-label">Card</span>
@@ -51,6 +52,7 @@
       to="/profile" 
       class="nav-item"
       :class="{ active: isActive('/profile') }"
+      @click="handleNavClick"
     >
       <span class="nav-icon">👤</span>
       <span class="nav-label">Me</span>
@@ -81,6 +83,30 @@ export default {
       return route.path.startsWith(path)
     }
 
+    const handleNavClick = async (event) => {
+      const target = event.currentTarget
+      const toPath = target.getAttribute('to')
+      
+      console.log('Mobile nav clicked:', toPath)
+      
+      // For profile route, check if user is authenticated
+      if (toPath === '/profile') {
+        // Wait a bit for auth to initialize if needed
+        if (!authStore.isAuthenticated) {
+          // Give auth store a moment to initialize
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          if (!authStore.isAuthenticated) {
+            console.log('Not authenticated, navigation will be handled by router guard')
+            // Router guard will redirect to login
+          }
+        }
+      }
+      
+      // Don't prevent default - let router-link handle navigation
+      // This ensures proper Vue Router navigation
+    }
+
     onMounted(() => {
       checkMobile()
       window.addEventListener('resize', checkMobile)
@@ -93,7 +119,8 @@ export default {
     return {
       isMobile,
       isActive,
-      authStore
+      authStore,
+      handleNavClick
     }
   }
 }
@@ -137,6 +164,14 @@ export default {
   min-height: 56px;
   border-radius: 12px;
   position: relative;
+  /* Mobile touch optimization */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  /* Ensure clickable area */
+  pointer-events: auto;
 }
 
 .nav-item:active {
@@ -147,6 +182,7 @@ export default {
   font-size: 24px;
   margin-bottom: 2px;
   transition: all 0.3s ease;
+  pointer-events: none; /* Allow clicks to pass through to parent */
 }
 
 .nav-label {
@@ -154,6 +190,7 @@ export default {
   font-weight: 500;
   transition: all 0.3s ease;
   white-space: nowrap;
+  pointer-events: none; /* Allow clicks to pass through to parent */
 }
 
 .nav-item.active {

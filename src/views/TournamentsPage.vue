@@ -529,9 +529,22 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeCreateModal">Cancel</button>
-          <button class="btn btn-success" @click="saveEvent">
-            {{ editingEvent ? 'Update' : 'Create' }}
+          <button 
+            class="btn btn-secondary" 
+            @click="closeCreateModal"
+            :disabled="isSavingEvent"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button 
+            class="btn btn-success" 
+            @click="saveEvent"
+            :disabled="isSavingEvent"
+            type="button"
+          >
+            <span v-if="isSavingEvent" class="spinner-small"></span>
+            <span v-else>{{ editingEvent ? 'Update' : 'Create' }}</span>
           </button>
         </div>
       </div>
@@ -617,6 +630,9 @@ export default {
     const showResultEntryModal = ref(false)
     const resultEntryList = ref([])
     const isSubmittingResults = ref(false)
+    
+    // Event form saving state
+    const isSavingEvent = ref(false)
     
     // Event form
     const eventForm = ref({
@@ -1011,38 +1027,70 @@ export default {
 
     // Save event
     const saveEvent = async () => {
-      if (!eventForm.value.name || !eventForm.value.date || !eventForm.value.time) {
-        alert('Please fill in all required fields')
+      // Prevent double submission
+      if (isSavingEvent.value) {
+        console.log('Already saving event, please wait...')
         return
       }
 
-      const startDateTime = new Date(`${eventForm.value.date}T${eventForm.value.time}`)
-      const data = {
-        name: eventForm.value.name,
-        description: eventForm.value.description || '',
-        tournament_type: 'single_elimination',
-        start_date: startDateTime.toISOString(),
-        participant_category: eventForm.value.participant_category,
-        event_type: eventForm.value.event_type,
-        entry_fee: parseFloat(eventForm.value.entry_fee) || 20,
-        min_players: parseInt(eventForm.value.min_players) || 8,
-        max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
-        status: eventForm.value.status
+      // Validate required fields
+      if (!eventForm.value.name || !eventForm.value.date || !eventForm.value.time) {
+        alert('Please fill in all required fields (Name, Date, Time)')
+        return
       }
 
-      let result
-      if (editingEvent.value) {
-        result = await tournamentStore.updateTournament(editingEvent.value.id, data)
-      } else {
-        result = await tournamentStore.createTournament(data)
-      }
+      isSavingEvent.value = true
+      console.log('Saving event...', eventForm.value)
 
-      if (result.success) {
-        closeCreateModal()
-        await tournamentStore.fetchTournaments()
-        await loadRegistrationCounts()
-      } else {
-        alert('Error: ' + result.error)
+      try {
+        const startDateTime = new Date(`${eventForm.value.date}T${eventForm.value.time}`)
+        
+        // Validate date
+        if (isNaN(startDateTime.getTime())) {
+          throw new Error('Invalid date or time format')
+        }
+
+        const data = {
+          name: eventForm.value.name,
+          description: eventForm.value.description || '',
+          tournament_type: 'single_elimination',
+          start_date: startDateTime.toISOString(),
+          participant_category: eventForm.value.participant_category,
+          event_type: eventForm.value.event_type,
+          entry_fee: parseFloat(eventForm.value.entry_fee) || 20,
+          min_players: parseInt(eventForm.value.min_players) || 8,
+          max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
+          status: eventForm.value.status
+        }
+
+        console.log('Event data to save:', data)
+
+        let result
+        if (editingEvent.value) {
+          console.log('Updating tournament:', editingEvent.value.id)
+          result = await tournamentStore.updateTournament(editingEvent.value.id, data)
+        } else {
+          console.log('Creating new tournament')
+          result = await tournamentStore.createTournament(data)
+        }
+
+        console.log('Save result:', result)
+
+        if (result && result.success) {
+          closeCreateModal()
+          await tournamentStore.fetchTournaments()
+          await loadRegistrationCounts()
+          console.log('✅ Event saved successfully')
+        } else {
+          const errorMsg = result?.error || 'Unknown error occurred'
+          console.error('❌ Error saving event:', errorMsg)
+          alert('Error saving event: ' + errorMsg)
+        }
+      } catch (err) {
+        console.error('❌ Exception in saveEvent:', err)
+        alert('Error: ' + (err.message || 'Failed to save event. Please try again.'))
+      } finally {
+        isSavingEvent.value = false
       }
     }
 
@@ -1423,6 +1471,7 @@ export default {
       isCancelling,
       registrationCounts,
       eventForm,
+      isSavingEvent,
       getRegistrationCount,
       getEventIcon,
       getEventName,
