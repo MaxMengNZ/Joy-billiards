@@ -231,44 +231,57 @@
 
         <div class="col col-2">
           <div class="card">
-            <div class="card-header">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
               <h2 class="card-title">📊 Statistics</h2>
+              <div class="year-selector-profile">
+                <label for="profile-year-select" class="selector-label" style="margin-right: 10px;">View:</label>
+                <select 
+                  id="profile-year-select" 
+                  name="profile-year-select" 
+                  v-model="statsYearFilter" 
+                  class="year-select"
+                  style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;"
+                >
+                  <option value="all">All Years (Total)</option>
+                  <option :value="currentYear">{{ currentYear }} (Current Year)</option>
+                </select>
+              </div>
             </div>
             <div class="card-body">
               <div class="stats-grid">
                 <div class="stat-item">
                   <div class="stat-icon">🏆</div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ profile?.wins || 0 }}</div>
-                    <div class="stat-label">Wins</div>
+                    <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.wins || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.wins || 0), 0)) || 0) }}</div>
+                    <div class="stat-label">Wins {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">📉</div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ profile?.losses || 0 }}</div>
-                    <div class="stat-label">Losses</div>
+                    <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.losses || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.losses || 0), 0)) || 0) }}</div>
+                    <div class="stat-label">Losses {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">🎮</div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ (profile?.wins || 0) + (profile?.losses || 0) }}</div>
-                    <div class="stat-label">Matches Played</div>
+                    <div class="stat-value">{{ statsYearFilter === 'all' ? ((profile?.wins || 0) + (profile?.losses || 0)) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.wins || 0) + (s.losses || 0), 0)) || 0) }}</div>
+                    <div class="stat-label">Matches Played {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">📈</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ calculateWinRate }}%</div>
-                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-label">Win Rate {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">🎯</div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ profile?.break_and_run_count || 0 }}</div>
-                    <div class="stat-label">Break & Run</div>
+                    <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.break_and_run_count || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.break_and_run_count || 0), 0)) || 0) }}</div>
+                    <div class="stat-label">Break & Run {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
@@ -281,8 +294,8 @@
                 <div class="stat-item">
                   <div class="stat-icon">📅</div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ tournamentsPlayed }}</div>
-                    <div class="stat-label">Events Played</div>
+                    <div class="stat-value">{{ tournamentsPlayedFiltered }}</div>
+                    <div class="stat-label">Events Played {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
               </div>
@@ -505,6 +518,7 @@ export default {
     const profile = ref(null)
     const pointHistory = ref([])
     const currentYear = new Date().getFullYear()
+    const statsYearFilter = ref('all') // 'all' or currentYear
     const isEditing = ref(false)
     const showChangePassword = ref(false)
     const newPassword = ref('')
@@ -535,33 +549,70 @@ export default {
       const key = getDivisionStatKey(division, field)
       return profile.value[key] ?? 0
     }
+    
+    // Get year-specific division value
+    const getDivisionValueForYear = (division, field, year) => {
+      if (!profile.value) return 0
+      
+      // If year filter is set and year_stats available, use year-specific data
+      if (statsYearFilter.value !== 'all' && profile.value.year_stats) {
+        const year = parseInt(statsYearFilter.value)
+        const yearStat = profile.value.year_stats.find(s => s.division === division && s.year === year)
+        if (yearStat) {
+          if (field === 'wins') return yearStat.wins || 0
+          if (field === 'losses') return yearStat.losses || 0
+          if (field === 'break_and_run_count') return yearStat.break_and_run_count || 0
+        }
+      }
+      
+      // Fallback to total stats
+      return getDivisionValue(division, field)
+    }
 
-    const proStats = computed(() => ({
-      wins: getDivisionValue('pro', 'wins'),
-      losses: getDivisionValue('pro', 'losses'),
-      matches: getDivisionValue('pro', 'wins') + getDivisionValue('pro', 'losses'),
-      breakAndRun: getDivisionValue('pro', 'break_and_run_count'),
-      winRate: (() => {
-        const matches = getDivisionValue('pro', 'wins') + getDivisionValue('pro', 'losses')
-        if (matches === 0) return '0.0'
-        return ((getDivisionValue('pro', 'wins') / matches) * 100).toFixed(1)
-      })()
-    }))
+    const proStats = computed(() => {
+      const wins = getDivisionValueForYear('pro', 'wins', statsYearFilter.value)
+      const losses = getDivisionValueForYear('pro', 'losses', statsYearFilter.value)
+      const matches = wins + losses
+      const breakAndRun = getDivisionValueForYear('pro', 'break_and_run_count', statsYearFilter.value)
+      return {
+        wins,
+        losses,
+        matches,
+        breakAndRun,
+        winRate: matches === 0 ? '0.0' : ((wins / matches) * 100).toFixed(1)
+      }
+    })
 
-    const studentStats = computed(() => ({
-      wins: getDivisionValue('student', 'wins'),
-      losses: getDivisionValue('student', 'losses'),
-      matches: getDivisionValue('student', 'wins') + getDivisionValue('student', 'losses'),
-      breakAndRun: getDivisionValue('student', 'break_and_run_count'),
-      winRate: (() => {
-        const matches = getDivisionValue('student', 'wins') + getDivisionValue('student', 'losses')
-        if (matches === 0) return '0.0'
-        return ((getDivisionValue('student', 'wins') / matches) * 100).toFixed(1)
-      })()
-    }))
+    const studentStats = computed(() => {
+      const wins = getDivisionValueForYear('student', 'wins', statsYearFilter.value)
+      const losses = getDivisionValueForYear('student', 'losses', statsYearFilter.value)
+      const matches = wins + losses
+      const breakAndRun = getDivisionValueForYear('student', 'break_and_run_count', statsYearFilter.value)
+      return {
+        wins,
+        losses,
+        matches,
+        breakAndRun,
+        winRate: matches === 0 ? '0.0' : ((wins / matches) * 100).toFixed(1)
+      }
+    })
 
     const calculateWinRate = computed(() => {
       if (!profile.value) return 0
+      
+      // Use year-specific stats if filter is set
+      if (statsYearFilter.value !== 'all' && profile.value.year_stats) {
+        const year = parseInt(statsYearFilter.value)
+        const proStats = profile.value.year_stats.find(s => s.division === 'pro' && s.year === year)
+        const studentStats = profile.value.year_stats.find(s => s.division === 'student' && s.year === year)
+        const wins = (proStats?.wins || 0) + (studentStats?.wins || 0)
+        const losses = (proStats?.losses || 0) + (studentStats?.losses || 0)
+        const total = wins + losses
+        if (total === 0) return 0
+        return ((wins / total) * 100).toFixed(1)
+      }
+      
+      // Fallback to total stats
       const total = profile.value.wins + profile.value.losses
       if (total === 0) return 0
       return ((profile.value.wins / total) * 100).toFixed(1)
@@ -581,6 +632,19 @@ export default {
       
       // Simply return the total number of point history records
       return pointHistory.value.length
+    })
+    
+    // Filtered tournaments played based on year filter
+    const tournamentsPlayedFiltered = computed(() => {
+      if (!profile.value || !pointHistory.value || pointHistory.value.length === 0) return 0
+      
+      if (statsYearFilter.value === 'all') {
+        return pointHistory.value.length
+      } else {
+        // Filter by selected year
+        const year = parseInt(statsYearFilter.value)
+        return pointHistory.value.filter(p => p.year === year).length
+      }
     })
 
     const retryCount = ref(0)
@@ -604,6 +668,17 @@ export default {
 
         if (data) {
           profile.value = data
+          
+          // Load year-specific stats
+          const { data: yearStatsData, error: yearStatsError } = await supabase
+            .from('user_year_stats')
+            .select('*')
+            .eq('user_id', data.id)
+          
+          if (!yearStatsError && yearStatsData) {
+            // Store year stats in profile for use in computed properties
+            profile.value.year_stats = yearStatsData
+          }
           // Format birthday from YYYY-MM-DD to DD/MM/YYYY
           let formattedBirthday = ''
           if (data.birthday) {
@@ -955,6 +1030,8 @@ export default {
       tournamentsPlayed,
       proStats,
       studentStats,
+      statsYearFilter,
+      tournamentsPlayedFiltered,
       isEditing,
       editForm,
       showChangePassword,

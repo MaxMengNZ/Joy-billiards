@@ -131,19 +131,19 @@
               <div class="player-stats-top3">
                 <div class="stat-row">
                   <span class="stat-label">W/L:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[1], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[1], divisionFilter, 'losses') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[1], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[1], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">Win Rate:</span>
-                  <span class="stat-value">{{ calculateWinRate(topThree[1]) }}%</span>
+                  <span class="stat-value">{{ calculateWinRateForYear(topThree[1], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">🎯 Break & Run:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[1], divisionFilter, 'break_and_run_count') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[1], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">📅 Events:</span>
-                  <span class="stat-value">{{ topThree[1].tournaments_played || 0 }}</span>
+                  <span class="stat-value">{{ activeTab === 'year' ? (topThree[1].tournaments_played_current_year || 0) : (topThree[1].tournaments_played || 0) }}</span>
                 </div>
               </div>
             </template>
@@ -176,19 +176,19 @@
               <div class="player-stats-top3">
                 <div class="stat-row">
                   <span class="stat-label">W/L:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[0], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[0], divisionFilter, 'losses') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[0], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[0], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">Win Rate:</span>
-                  <span class="stat-value">{{ calculateWinRate(topThree[0]) }}%</span>
+                  <span class="stat-value">{{ calculateWinRateForYear(topThree[0], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">🎯 Break & Run:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[0], divisionFilter, 'break_and_run_count') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[0], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">📅 Events:</span>
-                  <span class="stat-value">{{ topThree[0].tournaments_played || 0 }}</span>
+                  <span class="stat-value">{{ activeTab === 'year' ? (topThree[0].tournaments_played_current_year || 0) : (topThree[0].tournaments_played || 0) }}</span>
                 </div>
               </div>
             </template>
@@ -221,19 +221,19 @@
               <div class="player-stats-top3">
                 <div class="stat-row">
                   <span class="stat-label">W/L:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[2], divisionFilter, 'wins') }}/{{ getDivisionValue(topThree[2], divisionFilter, 'losses') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[2], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[2], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">Win Rate:</span>
-                  <span class="stat-value">{{ calculateWinRate(topThree[2]) }}%</span>
+                  <span class="stat-value">{{ calculateWinRateForYear(topThree[2], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">🎯 Break & Run:</span>
-                  <span class="stat-value">{{ getDivisionValue(topThree[2], divisionFilter, 'break_and_run_count') }}</span>
+                  <span class="stat-value">{{ getDivisionValueForYear(topThree[2], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">📅 Events:</span>
-                  <span class="stat-value">{{ topThree[2].tournaments_played || 0 }}</span>
+                  <span class="stat-value">{{ activeTab === 'year' ? (topThree[2].tournaments_played_current_year || 0) : (topThree[2].tournaments_played || 0) }}</span>
                 </div>
               </div>
             </template>
@@ -298,19 +298,19 @@
                 <div class="player-stats-row">
                   <span class="stat-badge">
                     <span class="stat-label">W/L:</span>
-                    <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'wins') }}/{{ getDivisionValue(player, divisionFilter, 'losses') }}</span>
+                    <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(player, divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                   <span class="stat-badge">
                     <span class="stat-label">Win:</span>
-                    <span class="stat-value">{{ calculateWinRate(player) }}%</span>
+                    <span class="stat-value">{{ calculateWinRateForYear(player, activeTab === 'year' ? currentYear : null) }}%</span>
                   </span>
                   <span class="stat-badge highlight">
                     <span class="stat-label">🎯 B&R:</span>
-                    <span class="stat-value">{{ getDivisionValue(player, divisionFilter, 'break_and_run_count') }}</span>
+                    <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                   <span class="stat-badge">
                     <span class="stat-label">📅 Events:</span>
-                    <span class="stat-value">{{ player.tournaments_played || 0 }}</span>
+                    <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'tournaments_played', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                 </div>
               </div>
@@ -597,6 +597,47 @@ export default {
 
     const getDivisionValue = (player, division, field) => {
       if (!player) return 0
+      
+      // For "Current Year" tab, we need to filter stats by year
+      // Note: wins/losses/break_and_run_count are stored in user table as totals
+      // We need to calculate year-specific stats from point history or match records
+      // For now, we'll return total stats for all tabs except when we have year-specific data
+      
+      // If activeTab is 'year' (Current Year), we should ideally filter by year
+      // But since wins/losses/break_and_run are not stored per year in the database,
+      // we'll need to calculate them from point history or match records
+      // For now, return total stats (this will be improved)
+      
+      const key = getDivisionStatKey(division, field)
+      return player[key] ?? 0
+    }
+    
+    // Get year-specific division value (for current year tab)
+    const getDivisionValueForYear = (player, division, field, year) => {
+      if (!player) return 0
+      
+      // For Events Played, we have year-specific data
+      if (field === 'tournaments_played') {
+        if (activeTab.value === 'year' && year === currentYear) {
+          return player.tournaments_played_current_year || 0
+        }
+        return player.tournaments_played || 0
+      }
+      
+      // For wins/losses/break_and_run, use year-specific stats from user_year_stats table
+      if (activeTab.value === 'year' && year === currentYear) {
+        if (division === 'pro') {
+          if (field === 'wins') return player.pro_current_year_wins || 0
+          if (field === 'losses') return player.pro_current_year_losses || 0
+          if (field === 'break_and_run_count') return player.pro_current_year_break_and_run || 0
+        } else {
+          if (field === 'wins') return player.student_current_year_wins || 0
+          if (field === 'losses') return player.student_current_year_losses || 0
+          if (field === 'break_and_run_count') return player.student_current_year_break_and_run || 0
+        }
+      }
+      
+      // Fallback to total stats for other tabs or if year-specific data not available
       const key = getDivisionStatKey(division, field)
       return player[key] ?? 0
     }
@@ -697,10 +738,21 @@ export default {
           .select('*')
         
         if (pointError) throw pointError
+        
+        // Get year-specific stats from user_year_stats table
+        const { data: yearStats, error: yearStatsError } = await supabase
+          .from('user_year_stats')
+          .select('*')
+        
+        if (yearStatsError) {
+          console.warn('Error loading year stats:', yearStatsError)
+          // Continue without year stats if table doesn't exist yet
+        }
 
-        // Count total point history records per user (Events Played = Total Records in History)
-        // Simple approach: count all point history records for each user
-        const tournamentsPerUser = {}
+        // Count point history records per user (Events Played = Total Records in History)
+        // Calculate both total and current year counts
+        const tournamentsPerUser = {} // Total events (all years)
+        const tournamentsPerUserCurrentYear = {} // Current year events only
         
         pointHistory.forEach(record => {
           const userId = record.user_id
@@ -708,6 +760,14 @@ export default {
             tournamentsPerUser[userId] = 0
           }
           tournamentsPerUser[userId]++
+          
+          // Count current year events
+          if (record.year === currentYear) {
+            if (!tournamentsPerUserCurrentYear[userId]) {
+              tournamentsPerUserCurrentYear[userId] = 0
+            }
+            tournamentsPerUserCurrentYear[userId]++
+          }
         })
         
         // Calculate RANKING points for each user (段位积分，影响排名)
@@ -741,6 +801,24 @@ export default {
         
         const playersWithPoints = usersData.map(user => {
           const userHistory = pointHistory.filter(p => p.user_id === user.id)
+          
+          // Get year-specific stats for this user
+          const userYearStats = (yearStats || []).filter(s => s.user_id === user.id)
+          const proYearStats = userYearStats.filter(s => s.division === 'pro' && s.year === currentYear)
+          const studentYearStats = userYearStats.filter(s => s.division === 'student' && s.year === currentYear)
+          
+          // Calculate current year stats (sum all records for current year)
+          const proCurrentYearStats = proYearStats.reduce((acc, s) => ({
+            wins: acc.wins + (s.wins || 0),
+            losses: acc.losses + (s.losses || 0),
+            break_and_run_count: acc.break_and_run_count + (s.break_and_run_count || 0)
+          }), { wins: 0, losses: 0, break_and_run_count: 0 })
+          
+          const studentCurrentYearStats = studentYearStats.reduce((acc, s) => ({
+            wins: acc.wins + (s.wins || 0),
+            losses: acc.losses + (s.losses || 0),
+            break_and_run_count: acc.break_and_run_count + (s.break_and_run_count || 0)
+          }), { wins: 0, losses: 0, break_and_run_count: 0 })
           
           // Filter by current division
           const proHistory = filterByDivision(userHistory, 'pro')
@@ -797,6 +875,45 @@ export default {
             }
           }
           
+          // Calculate current year stats (wins, losses, break_and_run) from point history
+          // For current year tab, we need to calculate stats from point history records
+          const proYearHistory = proHistory.filter(p => p.year === currentYear)
+          const studentYearHistory = studentHistory.filter(p => p.year === currentYear)
+          
+          // Calculate year-specific stats by grouping point history records by tournament
+          // Each point history record with a tournament reason represents a tournament participation
+          // We'll need to track wins/losses/break_and_run per tournament, but since we don't have
+          // that data in point history, we'll use a simplified approach:
+          // - Count unique tournaments per year (already done for tournaments_played_current_year)
+          // - For wins/losses: Since we can't get exact data, we'll need to query matches table
+          //   or create a year_stats table. For now, we'll calculate from point history patterns.
+          
+          // Group point history by tournament (extract tournament name from reason)
+          const getTournamentName = (reason) => {
+            if (!reason) return null
+            // Reason format: "Pro: Tournament Name - Rank X" or "Student: Tournament Name - Rank X"
+            const match = reason.match(/(?:Pro:|Student:)\s*(.+?)\s*-\s*Rank/)
+            return match ? match[1].trim() : null
+          }
+          
+          // Get unique tournaments for current year (Pro)
+          const proYearTournaments = new Set()
+          proYearHistory.forEach(p => {
+            const tournamentName = getTournamentName(p.reason)
+            if (tournamentName) proYearTournaments.add(tournamentName)
+          })
+          
+          // Get unique tournaments for current year (Student)
+          const studentYearTournaments = new Set()
+          studentYearHistory.forEach(p => {
+            const tournamentName = getTournamentName(p.reason)
+            if (tournamentName) studentYearTournaments.add(tournamentName)
+          })
+          
+          // For now, we can't accurately calculate year-specific wins/losses/break_and_run
+          // without querying matches table or having a year_stats table
+          // We'll store the point history for potential future calculation
+          
           return {
             ...user,
             // Pro points
@@ -812,7 +929,21 @@ export default {
             // ✅ 强制使用数据库的 ranking_points，不使用 loyalty_points
             ranking_points: user.ranking_points || 0,
             // ✅ Events/Tournaments Played count
-            tournaments_played: tournamentsPerUser[user.id] || 0
+            tournaments_played: tournamentsPerUser[user.id] || 0, // Total (all years)
+            tournaments_played_current_year: tournamentsPerUserCurrentYear[user.id] || 0, // Current year only
+            // Store point history for year-based stats calculation
+            pro_year_history: proYearHistory,
+            student_year_history: studentYearHistory,
+            // Store unique tournaments for current year (for potential stats calculation)
+            pro_year_tournaments: Array.from(proYearTournaments),
+            student_year_tournaments: Array.from(studentYearTournaments),
+            // ✅ Year-specific stats from user_year_stats table
+            pro_current_year_wins: proCurrentYearStats.wins,
+            pro_current_year_losses: proCurrentYearStats.losses,
+            pro_current_year_break_and_run: proCurrentYearStats.break_and_run_count,
+            student_current_year_wins: studentCurrentYearStats.wins,
+            student_current_year_losses: studentCurrentYearStats.losses,
+            student_current_year_break_and_run: studentCurrentYearStats.break_and_run_count
           }
         })
         
@@ -962,6 +1093,20 @@ export default {
     const calculateWinRate = (player, division = divisionFilter.value) => {
       const wins = getDivisionValue(player, division, 'wins')
       const losses = getDivisionValue(player, division, 'losses')
+      const total = wins + losses
+      if (total === 0) return '0.0'
+      return ((wins / total) * 100).toFixed(1)
+    }
+    
+    // Calculate win rate for specific year (for Current Year tab)
+    const calculateWinRateForYear = (player, year, division = divisionFilter.value) => {
+      if (year === null || activeTab.value !== 'year') {
+        return calculateWinRate(player, division)
+      }
+      
+      // Use year-specific wins/losses from user_year_stats table
+      const wins = getDivisionValueForYear(player, division, 'wins', year)
+      const losses = getDivisionValueForYear(player, division, 'losses', year)
       const total = wins + losses
       if (total === 0) return '0.0'
       return ((wins / total) * 100).toFixed(1)
@@ -1155,11 +1300,13 @@ export default {
       topThree,
       getDisplayPoints,
       getDivisionValue,
+      getDivisionValueForYear,
       getDivisionMatches,
       formatRankBadge,
       formatRankName,
       getRankClass,
       calculateWinRate,
+      calculateWinRateForYear,
       formatDate,
       calculateRankProgress,
       getNextRankLabel,

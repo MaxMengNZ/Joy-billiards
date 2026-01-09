@@ -1,7 +1,7 @@
 <template>
   <ErrorBoundary>
     <div id="app" class="app-container">
-      <header class="app-header" v-if="!isAuthPage">
+      <header class="app-header" v-if="!isAuthPage && !isTVDisplayPage">
         <div class="header-content">
           <div class="logo-section">
             <router-link to="/" class="logo-link">
@@ -32,6 +32,7 @@
             <router-link to="/tournaments" class="nav-link">Calendar</router-link>
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link">Admin</router-link>
+            <router-link v-if="authStore.isAdmin" to="/tv-display" class="nav-link">📺 TV Display</router-link>
             
             <!-- Auth buttons -->
             <div class="auth-nav">
@@ -57,6 +58,7 @@
             <router-link to="/tournaments" class="nav-link" @click="closeMobileMenu">Calendar</router-link>
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link" @click="closeMobileMenu">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link" @click="closeMobileMenu">Admin</router-link>
+            <router-link v-if="authStore.isAdmin" to="/tv-display" class="nav-link" @click="closeMobileMenu">📺 TV Display</router-link>
             
             <!-- Mobile Auth buttons -->
             <div class="auth-nav mobile-auth">
@@ -128,7 +130,7 @@
       </footer>
 
       <!-- Mobile Bottom Navigation -->
-      <MobileBottomNav v-if="!isAuthPage" />
+      <MobileBottomNav v-if="!isAuthPage && !isTVDisplayPage" />
       
       <!-- Floating Social Media Button (Mobile Only) -->
       <TestFloatingButton v-if="!isAuthPage" />
@@ -164,6 +166,10 @@ export default {
     const currentYear = computed(() => new Date().getFullYear())
     const isAuthPage = computed(() => {
       return route.path === '/login' || route.path === '/register'
+    })
+    
+    const isTVDisplayPage = computed(() => {
+      return route.path === '/tv-display'
     })
 
     onMounted(async () => {
@@ -223,6 +229,7 @@ export default {
       isMobileMenuOpen,
       currentYear,
       isAuthPage,
+      isTVDisplayPage,
       toggleMobileMenu,
       closeMobileMenu,
       handleLogout

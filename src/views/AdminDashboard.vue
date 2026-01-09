@@ -206,6 +206,15 @@
               <div class="action-arrow">→</div>
             </router-link>
 
+            <router-link to="/tv-display" class="action-card action-tv-display" target="_blank">
+              <div class="action-icon">📺</div>
+              <div class="action-content">
+                <h3 class="action-title">TV Display</h3>
+                <p class="action-description">Live leaderboard for TV screen (55" optimized)</p>
+              </div>
+              <div class="action-arrow">→</div>
+            </router-link>
+
             <button @click="showErrorLog = true" class="action-card action-view-errors">
               <div class="action-icon">🐛</div>
               <div class="action-content">

@@ -94,6 +94,12 @@ const routes = [
     meta: { title: '🔍 Debug Leaderboard' }
   },
   {
+    path: '/tv-display',
+    name: 'TVDisplay',
+    component: () => import('../views/TVDisplayPage.vue'),
+    meta: { title: 'TV Display - Joy Billiards', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/error/:type?',
     name: 'Error',
     component: () => import('../views/ErrorPage.vue'),
