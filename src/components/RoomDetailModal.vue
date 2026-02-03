@@ -127,24 +127,26 @@
           </div>
         </div>
 
-        <!-- Room Actions (Edit & Cancel) - Only for creator before match starts -->
-        <div v-if="canEditRoom" class="room-actions-section">
+        <!-- Room Actions (Edit & Cancel) -->
+        <div v-if="canEditRoom || canCancelRoom" class="room-actions-section">
           <div class="actions-header">
             <h3>Room Management</h3>
             <div class="action-buttons">
               <button 
-                v-if="!isEditing"
+                v-if="canEditRoom && !isEditing"
                 class="btn-edit"
                 @click="startEditing"
               >
                 Edit Room
               </button>
               <button 
+                v-if="canCancelRoom"
                 class="btn-cancel-room"
+                :class="{ 'btn-cancel-room-warning': room.status === 'in_progress' }"
                 @click="handleCancelRoom"
                 :disabled="loading"
               >
-                Cancel Room
+                {{ room.status === 'in_progress' ? 'Cancel Match' : 'Cancel Room' }}
               </button>
             </div>
           </div>
@@ -504,6 +506,13 @@ const canEditRoom = computed(() => {
          props.room.status !== 'cancelled'
 })
 
+const canCancelRoom = computed(() => {
+  // Creator or admin can cancel room at any time (except if already completed or cancelled)
+  return (isCreator.value || isAdmin.value) && 
+         props.room.status !== 'completed' &&
+         props.room.status !== 'cancelled'
+})
+
 // Methods / 方法
 const handleConfirmReady = async () => {
   error.value = ''
@@ -660,7 +669,12 @@ const handleUpdateRoom = async () => {
 }
 
 const handleCancelRoom = async () => {
-  if (!confirm('Are you sure you want to cancel this room? This action cannot be undone.')) {
+  const isInProgress = props.room.status === 'in_progress'
+  const confirmMessage = isInProgress
+    ? 'Are you sure you want to cancel this match? All progress will be lost and this action cannot be undone.'
+    : 'Are you sure you want to cancel this room? This action cannot be undone.'
+  
+  if (!confirm(confirmMessage)) {
     return
   }
 
@@ -1074,6 +1088,18 @@ watch(() => props.room, (newRoom) => {
 .btn-cancel-room:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-cancel-room-warning {
+  background: rgba(239, 68, 68, 0.4) !important;
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.btn-cancel-room-warning:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.6) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
 }
 
 /* Edit Form */

@@ -748,14 +748,24 @@ export const useBattleStore = defineStore('battle', {
 
         if (!room) throw new Error('Room not found')
 
-        // Only creator can cancel
-        if (room.created_by !== userData.id) {
-          throw new Error('Only room creator can cancel the room')
+        // Check if user is creator or admin
+        const { data: currentUserData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', userData.id)
+          .single()
+
+        const isCreator = room.created_by === userData.id
+        const isAdmin = currentUserData?.role === 'admin'
+
+        // Only creator or admin can cancel
+        if (!isCreator && !isAdmin) {
+          throw new Error('Only room creator or admin can cancel the room')
         }
 
-        // Can only cancel if match hasn't started
-        if (room.status === 'in_progress' || room.status === 'completed') {
-          throw new Error('Cannot cancel room: match has already started or completed')
+        // Cannot cancel if already completed or cancelled
+        if (room.status === 'completed' || room.status === 'cancelled') {
+          throw new Error('Cannot cancel room: match is already completed or cancelled')
         }
 
         const { data, error } = await supabase

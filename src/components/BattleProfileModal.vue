@@ -93,14 +93,14 @@
                 <div class="achievement-icon">🎯</div>
                 <div class="achievement-info">
                   <div class="achievement-label">Break & Run</div>
-                  <div class="achievement-value">{{ userData.break_and_run_count || 0 }}</div>
+                  <div class="achievement-value">{{ userData.battle_break_and_run_count || 0 }}</div>
                 </div>
               </div>
               <div class="achievement-card">
                 <div class="achievement-icon">⚡</div>
                 <div class="achievement-info">
                   <div class="achievement-label">Rack Run</div>
-                  <div class="achievement-value">{{ userData.rack_run_count || 0 }}</div>
+                  <div class="achievement-value">{{ userData.battle_rack_run_count || 0 }}</div>
                 </div>
               </div>
             </div>
@@ -296,8 +296,8 @@ const loadUserData = async () => {
         battle_losses,
         battle_position,
         battle_streak,
-        break_and_run_count,
-        rack_run_count
+        battle_break_and_run_count,
+        battle_rack_run_count
       `)
       .eq('id', battleStore.currentUser.id)
       .single()

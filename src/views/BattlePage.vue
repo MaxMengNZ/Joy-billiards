@@ -22,7 +22,7 @@
               @click="showProfileModal = true"
             >
               <span class="btn-icon">👤</span>
-              My Profile
+              <span class="btn-text">My Profile</span>
             </button>
             <button 
               v-if="isAdmin"
@@ -30,18 +30,29 @@
               @click="showAdminQuickMatchModal = true"
             >
               <span class="btn-icon">⚡</span>
-              Admin: Quick Start
+              <span class="btn-text">Admin: Quick Start</span>
             </button>
+            <!-- Desktop Create Room Button -->
             <button 
-              class="btn-create-room"
+              class="btn-create-room btn-create-room-desktop"
               @click="showCreateRoomModal = true"
             >
               <span class="btn-icon">➕</span>
-              Create Room
+              <span class="btn-text">Create Room</span>
             </button>
           </div>
         </div>
       </div>
+
+      <!-- Floating Create Room Button (Mobile Only) -->
+      <button 
+        class="btn-create-room-floating"
+        @click="showCreateRoomModal = true"
+        aria-label="Create Room"
+        title="Create Room"
+      >
+        <span class="floating-icon">➕</span>
+      </button>
 
       <!-- Error Message -->
       <div v-if="battleStore.error" class="error-message">
@@ -427,11 +438,16 @@ onMounted(async () => {
   to { transform: rotate(360deg); }
 }
 
+/* Floating Create Room Button (Mobile Only) */
+.btn-create-room-floating {
+  display: none; /* Hidden on desktop */
+}
+
 /* Responsive - Mobile */
 @media (max-width: 768px) {
   .battle-rooms-page {
     padding: 1rem;
-    padding-bottom: calc(80px + 1rem + env(safe-area-inset-bottom)); /* Space for bottom nav */
+    padding-bottom: calc(100px + 1rem + env(safe-area-inset-bottom)); /* Space for bottom nav + floating button */
   }
 
   .header-content {
@@ -454,7 +470,11 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .btn-create-room,
+  /* Hide desktop create room button on mobile */
+  .btn-create-room-desktop {
+    display: none;
+  }
+
   .btn-profile,
   .btn-admin-quick-match {
     width: 100%;
@@ -466,6 +486,44 @@ onMounted(async () => {
 
   .btn-icon {
     font-size: 1.2rem;
+  }
+
+  /* Show floating button on mobile */
+  .btn-create-room-floating {
+    display: flex;
+    position: fixed;
+    bottom: calc(80px + 16px + env(safe-area-inset-bottom)); /* Above bottom nav */
+    right: 16px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(240, 147, 251, 0.2);
+    cursor: pointer;
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-create-room-floating:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-create-room-floating:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 0 6px rgba(240, 147, 251, 0.3);
+  }
+
+  .floating-icon {
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 300;
   }
 
   .rooms-grid {
@@ -503,7 +561,7 @@ onMounted(async () => {
 @media (max-width: 480px) {
   .battle-rooms-page {
     padding: 0.75rem;
-    padding-bottom: calc(80px + 0.75rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(100px + 0.75rem + env(safe-area-inset-bottom));
   }
 
   .battle-title {
@@ -514,11 +572,21 @@ onMounted(async () => {
     font-size: 1.75rem;
   }
 
-  .btn-create-room,
   .btn-profile,
   .btn-admin-quick-match {
     padding: 0.75rem 1.25rem;
     font-size: 0.95rem;
+  }
+
+  .btn-create-room-floating {
+    width: 60px;
+    height: 60px;
+    bottom: calc(80px + 12px + env(safe-area-inset-bottom));
+    right: 12px;
+  }
+
+  .floating-icon {
+    font-size: 26px;
   }
 
   .section-title {
