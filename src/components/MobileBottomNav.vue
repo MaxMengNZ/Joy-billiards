@@ -1,5 +1,6 @@
 <template>
   <nav class="mobile-bottom-nav" v-if="isMobile">
+    <!-- Core 5 Items -->
     <router-link 
       to="/" 
       class="nav-item"
@@ -19,6 +20,15 @@
     </router-link>
 
     <router-link 
+      to="/battle" 
+      class="nav-item"
+      :class="{ active: isActive('/battle') }"
+    >
+      <span class="nav-icon">⚔️</span>
+      <span class="nav-label">Battle</span>
+    </router-link>
+
+    <router-link 
       to="/tournaments" 
       class="nav-item"
       :class="{ active: isActive('/tournaments') }"
@@ -27,50 +37,66 @@
       <span class="nav-label">Calendar</span>
     </router-link>
 
-    <router-link 
-      to="/membership" 
-      class="nav-item"
-      :class="{ active: isActive('/membership') }"
-      @click="handleNavClick"
+    <!-- More Menu Button -->
+    <button 
+      class="nav-item nav-more"
+      :class="{ active: showMoreMenu }"
+      @click="toggleMoreMenu"
+      @blur="closeMoreMenu"
     >
-      <span class="nav-icon">💳</span>
-      <span class="nav-label">Card</span>
-    </router-link>
+      <span class="nav-icon">⋮</span>
+      <span class="nav-label">More</span>
+    </button>
 
-    <!-- Admin link - only for admins -->
-    <router-link 
-      v-if="authStore.isAdmin"
-      to="/admin" 
-      class="nav-item"
-      :class="{ active: isActive('/admin') }"
-    >
-      <span class="nav-icon">👑</span>
-      <span class="nav-label">Admin</span>
-    </router-link>
+    <!-- More Menu Dropdown -->
+    <div v-if="showMoreMenu" class="more-menu" @click.stop>
+      <router-link 
+        to="/membership" 
+        class="more-menu-item"
+        :class="{ active: isActive('/membership') }"
+        @click="handleMoreNavClick('/membership')"
+      >
+        <span class="more-icon">💳</span>
+        <span class="more-label">Membership</span>
+      </router-link>
 
-    <router-link 
-      to="/profile" 
-      class="nav-item"
-      :class="{ active: isActive('/profile') }"
-      @click="handleNavClick"
-    >
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Me</span>
-    </router-link>
+      <router-link 
+        v-if="authStore.isAdmin"
+        to="/admin" 
+        class="more-menu-item"
+        :class="{ active: isActive('/admin') }"
+        @click="handleMoreNavClick('/admin')"
+      >
+        <span class="more-icon">👑</span>
+        <span class="more-label">Admin</span>
+      </router-link>
+
+      <router-link 
+        to="/profile" 
+        class="more-menu-item"
+        :class="{ active: isActive('/profile') }"
+        @click="handleMoreNavClick('/profile')"
+      >
+        <span class="more-icon">👤</span>
+        <span class="more-label">Profile</span>
+      </router-link>
+    </div>
   </nav>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
 export default {
   name: 'MobileBottomNav',
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const authStore = useAuthStore()
     const isMobile = ref(false)
+    const showMoreMenu = ref(false)
 
     const checkMobile = () => {
       isMobile.value = window.innerWidth <= 768
@@ -83,14 +109,22 @@ export default {
       return route.path.startsWith(path)
     }
 
-    const handleNavClick = async (event) => {
-      const target = event.currentTarget
-      const toPath = target.getAttribute('to')
-      
-      console.log('Mobile nav clicked:', toPath)
+    const toggleMoreMenu = () => {
+      showMoreMenu.value = !showMoreMenu.value
+    }
+
+    const closeMoreMenu = () => {
+      // Delay to allow click events to process
+      setTimeout(() => {
+        showMoreMenu.value = false
+      }, 200)
+    }
+
+    const handleMoreNavClick = async (path) => {
+      showMoreMenu.value = false
       
       // For profile route, check if user is authenticated
-      if (toPath === '/profile') {
+      if (path === '/profile') {
         // Wait a bit for auth to initialize if needed
         if (!authStore.isAuthenticated) {
           // Give auth store a moment to initialize
@@ -103,24 +137,46 @@ export default {
         }
       }
       
-      // Don't prevent default - let router-link handle navigation
-      // This ensures proper Vue Router navigation
+      // Navigate to the path
+      router.push(path)
     }
+
+    // Close menu when route changes
+    watch(() => route.path, () => {
+      showMoreMenu.value = false
+    })
+
+    // Close menu when clicking outside
+    let handleClickOutside = null
 
     onMounted(() => {
       checkMobile()
       window.addEventListener('resize', checkMobile)
+      
+      handleClickOutside = (e) => {
+        if (!e.target.closest('.nav-more') && !e.target.closest('.more-menu')) {
+          showMoreMenu.value = false
+        }
+      }
+      
+      document.addEventListener('click', handleClickOutside)
     })
 
     onUnmounted(() => {
       window.removeEventListener('resize', checkMobile)
+      if (handleClickOutside) {
+        document.removeEventListener('click', handleClickOutside)
+      }
     })
 
     return {
       isMobile,
       isActive,
       authStore,
-      handleNavClick
+      showMoreMenu,
+      toggleMoreMenu,
+      closeMoreMenu,
+      handleMoreNavClick
     }
   }
 }
@@ -228,10 +284,133 @@ export default {
   }
 }
 
+/* More Menu Button */
+.nav-more {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-more.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+}
+
+.nav-more.active .nav-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
+}
+
+.nav-more.active .nav-label {
+  font-weight: 700;
+  color: #667eea;
+}
+
+/* More Menu Dropdown */
+.more-menu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(26, 26, 46, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  min-width: 160px;
+  z-index: 1001;
+  animation: slideUp 0.2s ease-out;
+  white-space: nowrap;
+}
+
+/* Ensure menu doesn't go off screen on small devices */
+@media (max-width: 360px) {
+  .more-menu {
+    left: auto;
+    right: 8px;
+    transform: none;
+  }
+  
+  .more-menu::after {
+    left: auto;
+    right: 24px;
+    transform: none;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.more-menu::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(26, 26, 46, 0.98);
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.more-menu-item:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: #ffffff;
+}
+
+.more-menu-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+  color: #ffffff;
+}
+
+.more-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.more-label {
+  flex: 1;
+}
+
+/* Adjust nav item positioning for More button */
+.nav-more {
+  position: relative;
+}
+
 /* Safe area support for iPhone X and newer */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .mobile-bottom-nav {
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+  
+  .more-menu {
+    bottom: calc(100% + 8px + env(safe-area-inset-bottom));
   }
 }
 </style>

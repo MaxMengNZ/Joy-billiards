@@ -1050,10 +1050,9 @@ export default {
           throw new Error('Invalid date or time format')
         }
 
-        // Build data object with ONLY fields that exist in database schema
+        // Build data object with fields that exist in database schema
         // Database tournaments table has: id, name, description, tournament_type, start_date, 
-        // end_date, max_players, entry_fee, prize_pool, status, created_at, updated_at
-        // DO NOT include: participant_category, event_type, min_players (these don't exist in DB)
+        // end_date, max_players, min_players, entry_fee, prize_pool, status, created_at, updated_at
         const data = {
           name: eventForm.value.name,
           description: eventForm.value.description || '',
@@ -1061,6 +1060,7 @@ export default {
           start_date: startDateTime.toISOString(),
           entry_fee: parseFloat(eventForm.value.entry_fee) || 20,
           max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
+          min_players: eventForm.value.min_players ? parseInt(eventForm.value.min_players) : 8,
           status: eventForm.value.status || 'registration'
         }
         

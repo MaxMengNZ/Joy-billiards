@@ -76,6 +76,12 @@ const routes = [
     meta: { title: 'Heyball Rankings' }
   },
   {
+    path: '/battle',
+    name: 'Battle',
+    component: () => import('../views/BattlePage.vue'),
+    meta: { title: 'Battle / 对战', requiresAuth: true }
+  },
+  {
     path: '/membership',
     name: 'Membership',
     component: () => import('../views/MembershipPage.vue'),

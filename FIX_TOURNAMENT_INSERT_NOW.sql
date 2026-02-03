@@ -1,4 +1,5 @@
--- ============================================
+
+}-- ============================================
 -- 🔧 IMMEDIATE FIX - Fix Tournament Insert Issue
 -- ============================================
 -- Run this in Supabase SQL Editor RIGHT NOW
@@ -101,4 +102,5 @@ WHERE tablename = 'tournaments';
 -- 2. Try creating tournament again
 -- 3. If still fails, check Supabase Dashboard → Logs for errors
 -- ============================================
+
 

@@ -176,10 +176,32 @@ export const useAuthStore = defineStore('auth', {
         const { data, error } = await Promise.race([signInPromise, timeoutPromise])
         console.log('authStore: Sign in response:', { error: !!error })
 
-        if (error) throw error
+        if (error) {
+          // Check if error is related to email verification
+          if (error.message && (
+            error.message.includes('email not confirmed') ||
+            error.message.includes('Email not confirmed') ||
+            error.message.includes('email_not_confirmed') ||
+            error.message.includes('Email address not confirmed')
+          )) {
+            throw new Error('Please verify your email address before signing in. Check your inbox for the verification email, or click "Resend verification email" below.')
+          }
+          throw error
+        }
 
         this.session = data.session
         this.user = data.user
+        
+        // Check if email is verified
+        if (this.user && !this.user.email_confirmed_at && !this.user.confirmed_at) {
+          // Email not verified, sign out and show error
+          await supabase.auth.signOut()
+          this.session = null
+          this.user = null
+          this.profile = null
+          throw new Error('Please verify your email address before signing in. Check your inbox for the verification email, or click "Resend verification email" below.')
+        }
+        
         await this.fetchProfile()
 
         // Check if user account is active

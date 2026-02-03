@@ -220,7 +220,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { supabase } from '../config/supabase'
 import { useAuthStore } from '../stores/authStore'
 
@@ -523,25 +523,28 @@ const loadData = async () => {
     const currentYear = nzDate.getFullYear()
     const currentMonth = nzDate.getMonth() + 1
 
-    // Load users
+    // Load users (force fresh data, no cache)
     const { data: usersData, error: usersError } = await supabase
       .from('public_users')
       .select('*')
+      .order('name', { ascending: true })
     
     if (usersError) throw usersError
 
-    // Load point history
+    // Load point history (force fresh data, no cache)
     const { data: pointHistoryData, error: pointError } = await supabase
       .from('ranking_point_history')
       .select('*')
+      .order('created_at', { ascending: false })
     
     if (pointError) throw pointError
     pointHistory.value = pointHistoryData || []
 
-    // Load year stats
+    // Load year stats (force fresh data, no cache)
     const { data: yearStatsData, error: yearStatsError } = await supabase
       .from('user_year_stats')
       .select('*')
+      .order('year', { ascending: false })
     
     if (yearStatsError) {
       console.warn('Year stats not available:', yearStatsError)
@@ -734,10 +737,17 @@ const startAutoPageScroll = () => {
 }
 
 // Auto refresh data
+let refreshInterval = null
 const startAutoRefresh = () => {
-  setInterval(() => {
+  // Clear existing interval if any
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+  // Refresh every 10 seconds for real-time updates
+  refreshInterval = setInterval(() => {
+    console.log('[TVDisplay] Auto-refreshing data...')
     loadData()
-  }, 30000) // Refresh every 30 seconds
+  }, 10000) // Refresh every 10 seconds
 }
 
 // Auto switch division
@@ -919,6 +929,12 @@ onMounted(() => {
   startAutoRefresh()
   startDivisionSwitch()
   startYearRotation()
+  
+  // Also refresh when division or year changes
+  watch([divisionFilter, displayYear], () => {
+    console.log('[TVDisplay] Division or year changed, refreshing data...')
+    loadData()
+  })
 
   // Try to enter fullscreen
   if (document.documentElement.requestFullscreen) {
@@ -934,6 +950,9 @@ onUnmounted(() => {
   }
   if (pageScrollInterval.value) {
     clearInterval(pageScrollInterval.value)
+  }
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
   }
   if (yearRotationInterval.value) {
     clearInterval(yearRotationInterval.value)
