@@ -175,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
 import RoomCard from '../components/BattleRoomCard.vue'
 import CreateRoomModal from '../components/CreateRoomModal.vue'
@@ -250,11 +250,13 @@ const handleRoomCreated = async () => {
 const refreshRooms = async () => {
   await loadRooms()
   if (selectedRoom.value) {
-    await battleStore.setCurrentRoom(selectedRoom.value.id)
+    // Find updated room from store
     const updatedRoom = battleStore.rooms.find(r => r.id === selectedRoom.value.id)
     if (updatedRoom) {
       selectedRoom.value = updatedRoom
     }
+    // Also update currentRoom in store (this will trigger realtime subscription)
+    await battleStore.setCurrentRoom(selectedRoom.value.id)
   }
 }
 
@@ -263,10 +265,18 @@ onMounted(async () => {
   await battleStore.initCurrentUser()
   await loadRooms()
   
-  // Auto-refresh every 5 seconds
+  // Subscribe to real-time updates for all rooms
+  battleStore.subscribeToRooms()
+  
+  // Keep auto-refresh as backup (every 10 seconds, less frequent since we have realtime)
   setInterval(() => {
     loadRooms()
-  }, 5000)
+  }, 10000)
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  battleStore.unsubscribe()
 })
 </script>
 

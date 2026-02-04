@@ -8,7 +8,9 @@ export const useBattleStore = defineStore('battle', {
     roomScores: [],
     loading: false,
     error: null,
-    currentUser: null
+    currentUser: null,
+    roomsSubscription: null, // Realtime subscription for rooms
+    roomSubscription: null // Realtime subscription for current room
   }),
 
   getters: {
@@ -235,7 +237,21 @@ export const useBattleStore = defineStore('battle', {
 
         if (!userData) throw new Error('User not found')
 
-        const { data, error } = await supabase
+        // First check if room exists and player2 is null
+        const { data: roomCheck, error: checkError } = await supabase
+          .from('battle_rooms')
+          .select('id, player1_id, player2_id, status')
+          .eq('id', roomId)
+          .single()
+
+        if (checkError) throw checkError
+        if (!roomCheck) throw new Error('Room not found')
+        if (roomCheck.player2_id) throw new Error('Room already has a player2')
+        if (roomCheck.player1_id === userData.id) throw new Error('You are already player1 in this room')
+        if (roomCheck.status !== 'waiting') throw new Error('Room is not available to join')
+
+        // Update room with player2
+        const { error: updateError } = await supabase
           .from('battle_rooms')
           .update({
             player2_id: userData.id,
@@ -243,19 +259,15 @@ export const useBattleStore = defineStore('battle', {
           })
           .eq('id', roomId)
           .is('player2_id', null)
-          .select(`
-            *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
-            created_by_user:users!battle_rooms_created_by_fkey(id, name)
-          `)
-          .single()
 
-        if (error) throw error
-        if (!data) throw new Error('Room not found or already has player2')
+        if (updateError) throw updateError
 
+        // Reload rooms to get updated data
         await this.loadRooms()
-        return { success: true, data }
+        
+        // Find the updated room
+        const updatedRoom = this.rooms.find(r => r.id === roomId)
+        return { success: true, data: updatedRoom }
       } catch (err) {
         this.error = err.message
         console.error('Error joining room:', err)
@@ -722,6 +734,12 @@ export const useBattleStore = defineStore('battle', {
     // Set current room
     async setCurrentRoom(roomId) {
       try {
+        // Unsubscribe from previous room if exists
+        if (this.roomSubscription) {
+          await supabase.removeChannel(this.roomSubscription)
+          this.roomSubscription = null
+        }
+
         const { data, error } = await supabase
           .from('battle_rooms')
           .select(`
@@ -739,9 +757,96 @@ export const useBattleStore = defineStore('battle', {
         if (data && data.status === 'in_progress') {
           await this.loadRoomScores(roomId)
         }
+
+        // Subscribe to real-time updates for this room
+        this.subscribeToRoom(roomId)
       } catch (err) {
         this.error = err.message
         console.error('Error setting current room:', err)
+      }
+    },
+
+    // Subscribe to real-time updates for a specific room
+    subscribeToRoom(roomId) {
+      // Unsubscribe from previous room if exists
+      if (this.roomSubscription) {
+        supabase.removeChannel(this.roomSubscription)
+      }
+
+      const channel = supabase
+        .channel(`room:${roomId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'battle_rooms',
+            filter: `id=eq.${roomId}`
+          },
+          async (payload) => {
+            console.log('Room updated:', payload)
+            // Reload the room data
+            const { data, error } = await supabase
+              .from('battle_rooms')
+              .select(`
+                *,
+                player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+                player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+                created_by_user:users!battle_rooms_created_by_fkey(id, name)
+              `)
+              .eq('id', roomId)
+              .single()
+
+            if (!error && data) {
+              this.currentRoom = data
+              // If room is in progress, reload scores
+              if (data.status === 'in_progress') {
+                await this.loadRoomScores(roomId)
+              }
+            }
+          }
+        )
+        .subscribe()
+
+      this.roomSubscription = channel
+    },
+
+    // Subscribe to real-time updates for all rooms
+    subscribeToRooms() {
+      // Unsubscribe from previous subscription if exists
+      if (this.roomsSubscription) {
+        supabase.removeChannel(this.roomsSubscription)
+      }
+
+      const channel = supabase
+        .channel('battle_rooms')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'battle_rooms'
+          },
+          async (payload) => {
+            console.log('Rooms changed:', payload.eventType)
+            // Reload rooms when any change occurs
+            await this.loadRooms()
+          }
+        )
+        .subscribe()
+
+      this.roomsSubscription = channel
+    },
+
+    // Unsubscribe from all real-time updates
+    unsubscribe() {
+      if (this.roomsSubscription) {
+        supabase.removeChannel(this.roomsSubscription)
+        this.roomsSubscription = null
+      }
+      if (this.roomSubscription) {
+        supabase.removeChannel(this.roomSubscription)
+        this.roomSubscription = null
       }
     },
 
@@ -902,6 +1007,86 @@ export const useBattleStore = defineStore('battle', {
       } catch (err) {
         this.error = err.message
         console.error('Error updating room:', err)
+        return { success: false, error: err.message }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Remove player from room (room creator or admin only)
+    async removePlayer(roomId, playerToRemove) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id, role')
+          .eq('auth_id', user.id)
+          .single()
+
+        if (!userData) throw new Error('User not found')
+
+        // Check if user is room creator or admin
+        const { data: room, error: roomError } = await supabase
+          .from('battle_rooms')
+          .select('id, created_by, player1_id, player2_id, status')
+          .eq('id', roomId)
+          .single()
+
+        if (roomError) throw roomError
+        if (!room) throw new Error('Room not found')
+
+        const isCreator = room.created_by === userData.id
+        const isAdmin = userData.role === 'admin'
+
+        if (!isCreator && !isAdmin) {
+          throw new Error('Only room creator or admin can remove players')
+        }
+
+        // Can only remove players if room is waiting or ready (not in progress or completed)
+        if (room.status === 'in_progress' || room.status === 'completed') {
+          throw new Error('Cannot remove players from a match in progress or completed')
+        }
+
+        // Determine which player to remove
+        let updateData = {}
+        if (playerToRemove === 'player1') {
+          if (!room.player1_id) throw new Error('Player1 is not in the room')
+          // If removing player1, we need to handle this carefully
+          // For now, we'll just clear player1_id and reset ready status
+          updateData = {
+            player1_id: null,
+            player1_ready: false
+          }
+        } else if (playerToRemove === 'player2') {
+          if (!room.player2_id) throw new Error('Player2 is not in the room')
+          updateData = {
+            player2_id: null,
+            player2_ready: false,
+            status: 'waiting' // Reset to waiting if player2 is removed
+          }
+        } else {
+          throw new Error('Invalid player to remove')
+        }
+
+        // Update room
+        const { error: updateError } = await supabase
+          .from('battle_rooms')
+          .update(updateData)
+          .eq('id', roomId)
+
+        if (updateError) throw updateError
+
+        // Reload rooms
+        await this.loadRooms()
+        return { success: true }
+      } catch (err) {
+        this.error = err.message
+        console.error('Error removing player:', err)
         return { success: false, error: err.message }
       } finally {
         this.loading = false

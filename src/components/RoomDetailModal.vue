@@ -168,7 +168,7 @@
                 <button 
                   class="wheel-btn wheel-up"
                   @click="decreaseRaceTo"
-                  :disabled="editForm.raceToScore <= 4"
+                  :disabled="editForm.raceToScore <= 2"
                 >
                   ▲
                 </button>
@@ -178,7 +178,7 @@
                 <button 
                   class="wheel-btn wheel-down"
                   @click="increaseRaceTo"
-                  :disabled="editForm.raceToScore >= 15"
+                  :disabled="editForm.raceToScore >= 21"
                 >
                   ▼
                 </button>
@@ -237,6 +237,14 @@
             <div class="player-header">
               <span class="player-label">Player 1</span>
               <span v-if="room.player1_ready" class="ready-badge">✓ Ready</span>
+              <button
+                v-if="canRemovePlayer && room.player1_id && (room.status === 'waiting' || room.status === 'ready')"
+                class="btn-remove-player"
+                @click="handleRemovePlayer('player1')"
+                title="Remove Player 1"
+              >
+                ✕
+              </button>
             </div>
             <div class="player-name">{{ room.player1?.name }}</div>
             <div v-if="room.status === 'in_progress'" class="player-score">
@@ -250,6 +258,14 @@
             <div class="player-header">
               <span class="player-label">Player 2</span>
               <span v-if="room.player2_ready" class="ready-badge">✓ Ready</span>
+              <button
+                v-if="canRemovePlayer && room.player2_id && (room.status === 'waiting' || room.status === 'ready')"
+                class="btn-remove-player"
+                @click="handleRemovePlayer('player2')"
+                title="Remove Player 2"
+              >
+                ✕
+              </button>
             </div>
             <div class="player-name">{{ room.player2?.name || 'Waiting...' }}</div>
             <div v-if="room.status === 'in_progress'" class="player-score">
@@ -394,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
 
 const props = defineProps({
@@ -511,6 +527,11 @@ const canCancelRoom = computed(() => {
   return (isCreator.value || isAdmin.value) && 
          props.room.status !== 'completed' &&
          props.room.status !== 'cancelled'
+})
+
+const canRemovePlayer = computed(() => {
+  // Only creator or admin can remove players
+  return (isCreator.value || isAdmin.value)
 })
 
 // Methods / 方法
@@ -631,13 +652,13 @@ const cancelEditing = () => {
 }
 
 const increaseRaceTo = () => {
-  if (editForm.value.raceToScore < 15) {
+  if (editForm.value.raceToScore < 21) {
     editForm.value.raceToScore++
   }
 }
 
 const decreaseRaceTo = () => {
-  if (editForm.value.raceToScore > 4) {
+  if (editForm.value.raceToScore > 2) {
     editForm.value.raceToScore--
   }
 }
@@ -696,6 +717,32 @@ const handleCancelRoom = async () => {
   }
 }
 
+const handleRemovePlayer = async (playerToRemove) => {
+  const playerName = playerToRemove === 'player1' 
+    ? props.room.player1?.name 
+    : props.room.player2?.name
+  
+  if (!confirm(`Are you sure you want to remove ${playerName} from this room?`)) {
+    return
+  }
+
+  error.value = ''
+  loading.value = true
+
+  try {
+    const result = await battleStore.removePlayer(props.room.id, playerToRemove)
+    if (result.success) {
+      emit('refresh')
+    } else {
+      error.value = result.error || 'Failed to remove player'
+    }
+  } catch (err) {
+    error.value = err.message || 'An error occurred'
+  } finally {
+    loading.value = false
+  }
+}
+
 // Load player statistics
 const loadPlayerStats = async () => {
   if (!props.room || !props.room.player2_id) {
@@ -740,15 +787,33 @@ const loadPlayerStats = async () => {
   }
 }
 
-// Watch room changes
+// Watch room changes from props
 watch(() => props.room, (newRoom) => {
   if (newRoom) {
     // Load player stats when both players are in room
     if (newRoom.player2_id) {
       loadPlayerStats()
     }
+    // Ensure we're subscribed to this room's updates
+    battleStore.setCurrentRoom(newRoom.id)
   }
 }, { immediate: true })
+
+// Watch battleStore.currentRoom for real-time updates
+watch(() => battleStore.currentRoom, (updatedRoom) => {
+  if (updatedRoom && updatedRoom.id === props.room?.id) {
+    // Emit refresh to update parent component
+    emit('refresh')
+  }
+}, { deep: true })
+
+// Lifecycle hooks
+onMounted(() => {
+  // Ensure we're subscribed to this room's updates
+  if (props.room?.id) {
+    battleStore.setCurrentRoom(props.room.id)
+  }
+})
 </script>
 
 <style scoped>
@@ -886,6 +951,7 @@ watch(() => props.room, (newRoom) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  gap: 0.5rem;
 }
 
 .player-label {
@@ -900,6 +966,28 @@ watch(() => props.room, (newRoom) => {
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.btn-remove-player {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-player:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: scale(1.1);
 }
 
 .player-name {

@@ -91,7 +91,7 @@
             <button 
               class="wheel-btn wheel-up"
               @click="decreaseRaceTo"
-              :disabled="formData.raceToScore <= 4"
+              :disabled="formData.raceToScore <= 2"
             >
               ▲
             </button>
@@ -101,7 +101,7 @@
             <button 
               class="wheel-btn wheel-down"
               @click="increaseRaceTo"
-              :disabled="formData.raceToScore >= 15"
+              :disabled="formData.raceToScore >= 21"
             >
               ▼
             </button>
@@ -254,13 +254,13 @@ const selectPlayer2 = (player) => {
 }
 
 const decreaseRaceTo = () => {
-  if (formData.value.raceToScore > 4) {
+  if (formData.value.raceToScore > 2) {
     formData.value.raceToScore--
   }
 }
 
 const increaseRaceTo = () => {
-  if (formData.value.raceToScore < 15) {
+  if (formData.value.raceToScore < 21) {
     formData.value.raceToScore++
   }
 }
