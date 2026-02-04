@@ -305,14 +305,22 @@ const handleAvatarUpload = async (event) => {
   error.value = ''
 
   try {
+    // Get auth.uid() for Storage RLS policy (not users.id)
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) {
+      throw new Error('User not authenticated')
+    }
+
     const userId = battleStore.currentUser?.id
     if (!userId) {
       throw new Error('User not found')
     }
 
-    // Create a unique file name
+    // Use auth.uid() as folder name for RLS policy compatibility
+    // RLS policy checks: (storage.foldername(name))[1] = auth.uid()::text
+    const authUserId = authUser.id
     const fileExt = file.name.split('.').pop()
-    const fileName = `${userId}/${Date.now()}.${fileExt}`
+    const fileName = `${authUserId}/${Date.now()}.${fileExt}`
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage

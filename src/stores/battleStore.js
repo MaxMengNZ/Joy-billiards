@@ -146,8 +146,8 @@ export const useBattleStore = defineStore('battle', {
           })
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -199,8 +199,8 @@ export const useBattleStore = defineStore('battle', {
           })
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -245,8 +245,8 @@ export const useBattleStore = defineStore('battle', {
           .is('player2_id', null)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -321,8 +321,8 @@ export const useBattleStore = defineStore('battle', {
           .eq('id', roomId)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -421,8 +421,8 @@ export const useBattleStore = defineStore('battle', {
           .eq('id', roomId)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -582,8 +582,8 @@ export const useBattleStore = defineStore('battle', {
           .eq('id', roomId)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -635,18 +635,57 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data, error } = await supabase
-          .from('battle_rooms')
-          .select(`
-            *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
-            created_by_user:users!battle_rooms_created_by_fkey(id, name)
-          `)
-          .order('created_at', { ascending: false })
+        // Get today's date range (start and end of day in UTC)
+        const now = new Date()
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const todayEnd = new Date(todayStart)
+        todayEnd.setDate(todayEnd.getDate() + 1)
+        const todayStartISO = todayStart.toISOString()
+        const todayEndISO = todayEnd.toISOString()
 
-        if (error) throw error
-        this.rooms = data || []
+        // Load rooms: all active rooms (waiting, ready, in_progress) + today's completed rooms
+        // Use separate queries and combine them
+        const [activeRoomsResult, completedRoomsResult] = await Promise.all([
+          // Active rooms
+          supabase
+            .from('battle_rooms')
+            .select(`
+              *,
+              player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+              player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+              created_by_user:users!battle_rooms_created_by_fkey(id, name)
+            `)
+            .in('status', ['waiting', 'ready', 'in_progress'])
+            .order('created_at', { ascending: false }),
+          
+          // Today's completed rooms - check both completed_at and created_at
+          supabase
+            .from('battle_rooms')
+            .select(`
+              *,
+              player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+              player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+              created_by_user:users!battle_rooms_created_by_fkey(id, name)
+            `)
+            .eq('status', 'completed')
+            .gte('created_at', todayStartISO)
+            .lt('created_at', todayEndISO)
+            .order('completed_at', { ascending: false, nullsFirst: false })
+        ])
+
+        if (activeRoomsResult.error) throw activeRoomsResult.error
+        if (completedRoomsResult.error) throw completedRoomsResult.error
+
+        // Combine results and sort by created_at (most recent first)
+        this.rooms = [
+          ...(activeRoomsResult.data || []),
+          ...(completedRoomsResult.data || [])
+        ].sort((a, b) => {
+          // Sort by completed_at if available, otherwise created_at
+          const dateA = new Date(a.completed_at || a.created_at)
+          const dateB = new Date(b.completed_at || b.created_at)
+          return dateB - dateA
+        })
       } catch (err) {
         this.error = err.message
         console.error('Error loading rooms:', err)
@@ -687,8 +726,8 @@ export const useBattleStore = defineStore('battle', {
           .from('battle_rooms')
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .eq('id', roomId)
@@ -777,8 +816,8 @@ export const useBattleStore = defineStore('battle', {
           .eq('id', roomId)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()
@@ -850,8 +889,8 @@ export const useBattleStore = defineStore('battle', {
           .eq('id', roomId)
           .select(`
             *,
-            player1:users!battle_rooms_player1_id_fkey(id, name, email),
-            player2:users!battle_rooms_player2_id_fkey(id, name, email),
+            player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+            player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
             created_by_user:users!battle_rooms_created_by_fkey(id, name)
           `)
           .single()

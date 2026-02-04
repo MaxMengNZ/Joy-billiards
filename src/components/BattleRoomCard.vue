@@ -8,12 +8,30 @@
     </div>
 
     <div class="room-players">
-      <div class="player-info">
+      <div class="player-info player-left">
+        <div class="player-avatar">
+          <img
+            v-if="room.player1?.avatar_url"
+            :src="room.player1.avatar_url"
+            :alt="room.player1?.name"
+            class="avatar-image"
+          />
+          <span v-else class="avatar-icon">🎱</span>
+        </div>
         <div class="player-label">Player 1</div>
         <div class="player-name">{{ room.player1?.name || 'Loading...' }}</div>
       </div>
       <div class="vs-divider">VS</div>
-      <div class="player-info">
+      <div class="player-info player-right">
+        <div class="player-avatar">
+          <img
+            v-if="room.player2?.avatar_url"
+            :src="room.player2.avatar_url"
+            :alt="room.player2?.name"
+            class="avatar-image"
+          />
+          <span v-else class="avatar-icon">🎱</span>
+        </div>
         <div class="player-label">Player 2</div>
         <div class="player-name">
           {{ room.player2?.name || 'Waiting...' }}
@@ -180,12 +198,39 @@ const canJoin = computed(() => {
 .player-info {
   flex: 1;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-icon {
+  font-size: 2rem;
 }
 
 .player-label {
   font-size: 0.85rem;
   opacity: 0.8;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .player-name {
@@ -198,6 +243,8 @@ const canJoin = computed(() => {
   font-size: 1.5rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+  padding: 0 0.5rem;
 }
 
 .room-info {
@@ -321,18 +368,52 @@ const canJoin = computed(() => {
   }
 
   .room-players {
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.875rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .player-info {
+    flex: 1;
+    min-width: 0; /* Allow text truncation */
+  }
+
+  .player-left {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .player-right {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .player-avatar {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.25rem;
+  }
+
+  .avatar-icon {
+    font-size: 1.5rem;
   }
 
   .vs-divider {
     font-size: 1.25rem;
-    transform: rotate(90deg);
+    flex-shrink: 0;
+    padding: 0 0.25rem;
+  }
+
+  .player-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.125rem;
   }
 
   .player-name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    word-break: break-word;
   }
 
   .room-info {
@@ -388,8 +469,30 @@ const canJoin = computed(() => {
     font-size: 1rem;
   }
 
+  .room-players {
+    padding: 0.875rem;
+    gap: 0.375rem;
+  }
+
+  .player-avatar {
+    width: 45px;
+    height: 45px;
+  }
+
+  .avatar-icon {
+    font-size: 1.25rem;
+  }
+
+  .vs-divider {
+    font-size: 1.1rem;
+  }
+
+  .player-label {
+    font-size: 0.7rem;
+  }
+
   .player-name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .score-value {

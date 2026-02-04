@@ -113,6 +113,23 @@
           </div>
         </div>
 
+        <!-- Completed Rooms (Today) -->
+        <div v-if="completedRooms.length > 0" class="room-section">
+          <h2 class="section-title">
+            <span class="status-badge completed">✅</span>
+            Completed (Today)
+          </h2>
+          <div class="rooms-grid">
+            <RoomCard
+              v-for="room in completedRooms"
+              :key="room.id"
+              :room="room"
+              :current-user="battleStore.currentUser"
+              @enter-room="enterRoom"
+            />
+          </div>
+        </div>
+
         <!-- Empty State -->
         <div v-if="battleStore.rooms.length === 0" class="empty-state">
           <div class="empty-icon">🎱</div>
@@ -190,6 +207,22 @@ const waitingRooms = computed(() => {
 
 const readyRooms = computed(() => {
   return battleStore.rooms.filter(r => r.status === 'ready')
+})
+
+const completedRooms = computed(() => {
+  // Filter completed rooms from today only
+  // Use completed_at if available, otherwise use created_at
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  return battleStore.rooms.filter(r => {
+    if (r.status !== 'completed') return false
+    // Use completed_at if available, otherwise fall back to created_at
+    const roomDate = new Date(r.completed_at || r.created_at)
+    return roomDate >= today && roomDate < tomorrow
+  })
 })
 
 // Methods
