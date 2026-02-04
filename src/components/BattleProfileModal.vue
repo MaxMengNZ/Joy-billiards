@@ -285,6 +285,25 @@ const triggerAvatarUpload = () => {
   avatarInput.value?.click()
 }
 
+// Helper function to extract file path from Supabase Storage public URL
+const extractFilePathFromUrl = (url) => {
+  if (!url) return null
+  try {
+    // Supabase Storage public URL format:
+    // https://[project-ref].supabase.co/storage/v1/object/public/avatars/[authUserId]/[filename]
+    const urlObj = new URL(url)
+    const pathParts = urlObj.pathname.split('/')
+    const avatarsIndex = pathParts.indexOf('avatars')
+    if (avatarsIndex !== -1 && pathParts.length > avatarsIndex + 2) {
+      // Extract path after 'avatars': [authUserId]/[filename]
+      return pathParts.slice(avatarsIndex + 1).join('/')
+    }
+  } catch (e) {
+    console.warn('[BattleProfile] Failed to extract file path from URL:', e)
+  }
+  return null
+}
+
 const handleAvatarUpload = async (event) => {
   const file = event.target.files?.[0]
   if (!file) return
@@ -314,6 +333,24 @@ const handleAvatarUpload = async (event) => {
     const userId = battleStore.currentUser?.id
     if (!userId) {
       throw new Error('User not found')
+    }
+
+    // Delete old avatar if exists (before uploading new one)
+    if (userData.value?.avatar_url) {
+      const oldFilePath = extractFilePathFromUrl(userData.value.avatar_url)
+      if (oldFilePath) {
+        // Delete old file (ignore errors - file might not exist)
+        const { error: deleteError } = await supabase.storage
+          .from('avatars')
+          .remove([oldFilePath])
+        
+        if (deleteError) {
+          // Log but don't throw - old file might not exist or already deleted
+          console.warn('[BattleProfile] Failed to delete old avatar:', deleteError)
+        } else {
+          console.log('[BattleProfile] Old avatar deleted:', oldFilePath)
+        }
+      }
     }
 
     // Use auth.uid() as folder name for RLS policy compatibility
