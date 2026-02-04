@@ -348,9 +348,11 @@ const handleCreateAndStart = async () => {
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   color: white;
+  overflow: hidden; /* Prevent double scrollbars */
 }
 
 .modal-header {
@@ -359,6 +361,7 @@ const handleCreateAndStart = async () => {
   align-items: center;
   padding: 1.5rem;
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .modal-header h2 {
@@ -387,6 +390,9 @@ const handleCreateAndStart = async () => {
 
 .modal-body {
   padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0; /* Important for flex scrolling */
 }
 
 .form-group {
@@ -609,6 +615,8 @@ const handleCreateAndStart = async () => {
   gap: 1rem;
   padding: 1.5rem;
   border-top: 2px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0; /* Prevent footer from shrinking */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Match modal background */
 }
 
 .btn-cancel,
@@ -653,13 +661,20 @@ const handleCreateAndStart = async () => {
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 0.5rem;
+    padding-bottom: calc(80px + 0.5rem + env(safe-area-inset-bottom)); /* Space for bottom nav */
+    align-items: flex-start;
+    overflow-y: auto;
   }
 
   .modal-content {
     width: 95vw;
     max-width: 95vw;
-    max-height: 95vh;
+    max-height: calc(100vh - 80px - 1rem - env(safe-area-inset-bottom)); /* Account for bottom nav */
     border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: auto 0; /* Center vertically in available space */
   }
 
   .modal-header {
@@ -760,6 +775,7 @@ const handleCreateAndStart = async () => {
     padding: 1.25rem;
     flex-direction: column;
     gap: 0.75rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); /* Extra padding for safe area */
   }
 
   .btn-cancel,
@@ -777,11 +793,20 @@ const handleCreateAndStart = async () => {
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+  }
+
   .modal-content {
     width: 100vw;
     max-width: 100vw;
-    max-height: 100vh;
+    max-height: calc(100vh - 80px - env(safe-area-inset-bottom)); /* Account for bottom nav */
     border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0; /* Full height minus nav */
   }
 
   .modal-header {

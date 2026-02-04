@@ -502,7 +502,7 @@ onMounted(async () => {
     border: 3px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(240, 147, 251, 0.2);
     cursor: pointer;
-    z-index: 999;
+    z-index: 1001; /* Higher than social button (1000) and bottom nav (1000) */
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;

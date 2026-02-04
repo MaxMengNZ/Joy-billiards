@@ -135,7 +135,7 @@
       <MobileBottomNav v-if="!isAuthPage && !isTVDisplayPage" />
       
       <!-- Floating Social Media Button (Mobile Only) -->
-      <TestFloatingButton v-if="!isAuthPage" />
+      <TestFloatingButton v-if="!isAuthPage && !isBattlePage" />
     </div>
   </ErrorBoundary>
 </template>
@@ -172,6 +172,10 @@ export default {
     
     const isTVDisplayPage = computed(() => {
       return route.path === '/tv-display'
+    })
+    
+    const isBattlePage = computed(() => {
+      return route.path === '/battle'
     })
 
     onMounted(async () => {
@@ -232,6 +236,7 @@ export default {
       currentYear,
       isAuthPage,
       isTVDisplayPage,
+      isBattlePage,
       toggleMobileMenu,
       closeMobileMenu,
       handleLogout

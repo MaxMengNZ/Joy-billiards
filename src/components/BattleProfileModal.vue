@@ -19,8 +19,27 @@
         <div v-else-if="userData" class="profile-content">
           <!-- User Info -->
           <div class="profile-header">
-            <div class="user-avatar">
-              <span class="avatar-icon">🎱</span>
+            <div class="user-avatar" @click="triggerAvatarUpload" :class="{ 'clickable': !uploadingAvatar }">
+              <input
+                ref="avatarInput"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleAvatarUpload"
+              />
+              <img
+                v-if="userData.avatar_url"
+                :src="userData.avatar_url"
+                alt="Avatar"
+                class="avatar-image"
+              />
+              <span v-else class="avatar-icon">🎱</span>
+              <div v-if="uploadingAvatar" class="avatar-upload-overlay">
+                <div class="upload-spinner"></div>
+              </div>
+              <div v-else-if="!userData.avatar_url" class="avatar-upload-hint">
+                <span class="upload-icon">📷</span>
+              </div>
             </div>
             <div class="user-info">
               <h3>{{ userData.name }}</h3>
@@ -168,6 +187,8 @@ const loading = ref(false)
 const error = ref('')
 const userData = ref(null)
 const recentMatches = ref([])
+const avatarInput = ref(null)
+const uploadingAvatar = ref(false)
 
 // Methods
 const formatRankLevel = (level) => {
@@ -258,6 +279,91 @@ const formatDate = (timestamp) => {
   })
 }
 
+// Avatar upload methods
+const triggerAvatarUpload = () => {
+  if (uploadingAvatar.value) return
+  avatarInput.value?.click()
+}
+
+const handleAvatarUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    error.value = 'Please select an image file'
+    return
+  }
+
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = 'Image size must be less than 5MB'
+    return
+  }
+
+  uploadingAvatar.value = true
+  error.value = ''
+
+  try {
+    const userId = battleStore.currentUser?.id
+    if (!userId) {
+      throw new Error('User not found')
+    }
+
+    // Create a unique file name
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${userId}/${Date.now()}.${fileExt}`
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (uploadError) {
+      // If bucket doesn't exist, create it
+      if (uploadError.message.includes('Bucket not found')) {
+        throw new Error('Avatar storage not configured. Please contact administrator.')
+      }
+      throw uploadError
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName)
+
+    const avatarUrl = urlData.publicUrl
+
+    // Update user's avatar_url in database
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', userId)
+
+    if (updateError) {
+      throw updateError
+    }
+
+    // Update local userData
+    if (userData.value) {
+      userData.value.avatar_url = avatarUrl
+    }
+
+    // Clear file input
+    if (avatarInput.value) {
+      avatarInput.value.value = ''
+    }
+  } catch (err) {
+    console.error('[BattleProfile] Avatar upload error:', err)
+    error.value = err.message || 'Failed to upload avatar. Please try again.'
+  } finally {
+    uploadingAvatar.value = false
+  }
+}
+
 const loadUserData = async () => {
   console.log('[BattleProfile] loadUserData called')
   console.log('[BattleProfile] battleStore.currentUser:', battleStore.currentUser)
@@ -289,6 +395,7 @@ const loadUserData = async () => {
       .select(`
         id,
         name,
+        avatar_url,
         battle_elo_rating,
         battle_tier,
         battle_stars,
@@ -549,6 +656,68 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-avatar.clickable:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.user-avatar.clickable:hover .avatar-upload-hint {
+  opacity: 1;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-icon {
+  font-size: 2.5rem;
+}
+
+.avatar-upload-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 1rem;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.upload-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .user-info {
