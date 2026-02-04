@@ -410,29 +410,32 @@ const handleAvatarUpload = async (event) => {
 }
 
 const loadUserData = async () => {
-  console.log('[BattleProfile] loadUserData called')
-  console.log('[BattleProfile] battleStore.currentUser:', battleStore.currentUser)
+  // Security: Don't log sensitive user information in production
+  if (import.meta.env.DEV) {
+    console.log('[BattleProfile] loadUserData called')
+  }
   
   // Ensure current user is initialized
   if (!battleStore.currentUser) {
-    console.log('[BattleProfile] No currentUser, initializing...')
+    if (import.meta.env.DEV) {
+      console.log('[BattleProfile] No currentUser, initializing...')
+    }
     await battleStore.initCurrentUser()
-    console.log('[BattleProfile] After init, currentUser:', battleStore.currentUser)
   }
 
   if (!battleStore.currentUser) {
-    console.error('[BattleProfile] Still no currentUser after init')
+    if (import.meta.env.DEV) {
+      console.error('[BattleProfile] Still no currentUser after init')
+    }
     error.value = 'User not found. Please try refreshing the page.'
     loading.value = false
     return
   }
 
-  console.log('[BattleProfile] Starting to load data for user:', battleStore.currentUser.id)
   loading.value = true
   error.value = ''
 
   try {
-    console.log('[BattleProfile] Loading data for user:', battleStore.currentUser.id)
 
     // Load user data (only Battle-related fields - unified, no pro/student)
     const { data: user, error: userError } = await supabase
@@ -455,16 +458,16 @@ const loadUserData = async () => {
       .single()
 
     if (userError) {
-      console.error('[BattleProfile] Error loading user data:', userError)
+      if (import.meta.env.DEV) {
+        console.error('[BattleProfile] Error loading user data:', userError)
+      }
       throw userError
     }
     
-    console.log('[BattleProfile] User data loaded:', user)
     userData.value = user
 
     // Load recent 10 matches
     const userId = battleStore.currentUser.id
-    console.log('[BattleProfile] Loading matches for user:', userId)
     
     const { data: matches, error: matchesError } = await supabase
       .from('battle_match_history')
@@ -487,11 +490,11 @@ const loadUserData = async () => {
       .limit(10)
 
     if (matchesError) {
-      console.error('[BattleProfile] Error loading matches:', matchesError)
+      if (import.meta.env.DEV) {
+        console.error('[BattleProfile] Error loading matches:', matchesError)
+      }
       throw matchesError
     }
-    
-    console.log('[BattleProfile] Matches loaded:', matches)
 
     // Get all unique opponent IDs
     const opponentIds = [...new Set(
@@ -500,8 +503,6 @@ const loadUserData = async () => {
         return isPlayer1 ? match.player2_id : match.player1_id
       })
     )]
-
-    console.log('[BattleProfile] Opponent IDs:', opponentIds)
 
     // Batch fetch opponent names (only if there are opponents)
     let opponentMap = new Map()
@@ -512,12 +513,13 @@ const loadUserData = async () => {
         .in('id', opponentIds)
 
       if (opponentsError) {
-        console.error('[BattleProfile] Error loading opponents:', opponentsError)
+        if (import.meta.env.DEV) {
+          console.error('[BattleProfile] Error loading opponents:', opponentsError)
+        }
       } else {
         opponentMap = new Map(
           (opponents || []).map(opp => [opp.id, opp.name])
         )
-        console.log('[BattleProfile] Opponents loaded:', opponentMap)
       }
     }
 
@@ -542,11 +544,12 @@ const loadUserData = async () => {
       }
     })
 
-    console.log('[BattleProfile] Processed matches:', processedMatches)
     recentMatches.value = processedMatches
   } catch (err) {
     error.value = err.message || 'Failed to load user data'
-    console.error('[BattleProfile] Error loading user data:', err)
+    if (import.meta.env.DEV) {
+      console.error('[BattleProfile] Error loading user data:', err)
+    }
   } finally {
     loading.value = false
   }
@@ -554,16 +557,11 @@ const loadUserData = async () => {
 
 // Watch for modal open
 watch(() => props.show, async (newValue) => {
-  console.log('[BattleProfile] Modal show changed:', newValue)
   if (newValue) {
-    console.log('[BattleProfile] Modal opened, currentUser:', battleStore.currentUser)
     // Ensure user is initialized before loading data
     if (!battleStore.currentUser) {
-      console.log('[BattleProfile] Initializing current user...')
       await battleStore.initCurrentUser()
-      console.log('[BattleProfile] After init, currentUser:', battleStore.currentUser)
     }
-    console.log('[BattleProfile] Calling loadUserData...')
     await loadUserData()
   } else {
     // Reset data when modal closes
@@ -575,7 +573,6 @@ watch(() => props.show, async (newValue) => {
 
 // Also load data when component is mounted and show is true
 onMounted(() => {
-  console.log('[BattleProfile] Component mounted, show:', props.show)
   if (props.show) {
     loadUserData()
   }

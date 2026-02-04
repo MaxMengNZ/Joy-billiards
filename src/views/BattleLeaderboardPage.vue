@@ -335,12 +335,14 @@ const filteredAndSortedPlayers = computed(() => {
   // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim()
-    const beforeCount = filtered.length
     filtered = filtered.filter(p => {
       const name = (p.name || '').toLowerCase()
       return name.includes(query)
     })
-    console.log(`[BattleLeaderboard] Search "${searchQuery.value}": ${beforeCount} → ${filtered.length} players`)
+    // Only log in development mode
+    if (import.meta.env.DEV) {
+      console.log(`[BattleLeaderboard] Search "${searchQuery.value}": ${filtered.length} results`)
+    }
   }
 
   // Filter by tier
@@ -491,7 +493,10 @@ const loadLeaderboard = async () => {
       // This indicates data inconsistency - if they lost, their Elo should be < 1000
       // (Even with tier protection, the Elo value should change, just not below tier minimum)
       if (elo === 1000 && player.battle_wins === 0 && player.battle_losses > 0) {
-        console.warn(`[BattleLeaderboard] Excluding ${player.name}: Elo=1000 (initial) but has ${player.battle_losses} loss(es) - data inconsistency`)
+        // Only log in development mode
+        if (import.meta.env.DEV) {
+          console.warn(`[BattleLeaderboard] Excluding ${player.name}: Elo=1000 (initial) but has ${player.battle_losses} loss(es) - data inconsistency`)
+        }
         return false
       }
       
@@ -529,7 +534,10 @@ const loadLeaderboard = async () => {
     
     players.value = filteredPlayers
     
-    console.log(`[BattleLeaderboard] Loaded ${players.value.length} players (positions recalculated by Elo):`, players.value.map(p => `${p.name} (Position: ${p.battle_position}, Elo: ${p.battle_elo_rating}, W: ${p.battle_wins}, L: ${p.battle_losses})`))
+    // Only log in development mode (security: don't expose user data in production)
+    if (import.meta.env.DEV) {
+      console.log(`[BattleLeaderboard] Loaded ${players.value.length} players (positions recalculated by Elo):`, players.value.map(p => `${p.name} (Position: ${p.battle_position}, Elo: ${p.battle_elo_rating}, W: ${p.battle_wins}, L: ${p.battle_losses})`))
+    }
   } catch (err) {
     console.error('[BattleLeaderboard] Error loading leaderboard:', err)
   } finally {
@@ -554,7 +562,10 @@ const subscribeToUpdates = () => {
         filter: 'status=eq.completed'
       },
       (payload) => {
-        console.log('[BattleLeaderboard] Battle room completed:', payload)
+        // Only log in development mode
+        if (import.meta.env.DEV) {
+          console.log('[BattleLeaderboard] Battle room completed')
+        }
         // Reload leaderboard when a match completes
         loadLeaderboard()
       }
@@ -584,7 +595,10 @@ const subscribeToUpdates = () => {
           oldData?.battle_tier !== newData?.battle_tier
         
         if (battleFieldsChanged) {
-          console.log('[BattleLeaderboard] User battle data updated:', newData?.name, payload)
+          // Only log in development mode (security: don't expose user data)
+          if (import.meta.env.DEV) {
+            console.log('[BattleLeaderboard] User battle data updated:', newData?.name)
+          }
           loadLeaderboard()
         }
       }
