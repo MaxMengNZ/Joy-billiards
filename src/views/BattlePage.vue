@@ -16,6 +16,13 @@
             Battle Rooms
           </h1>
           <div class="header-actions">
+            <router-link 
+              to="/battle/leaderboard"
+              class="btn-leaderboard"
+            >
+              <span class="btn-icon">🏆</span>
+              <span class="btn-text">Leaderboard</span>
+            </router-link>
             <button 
               v-if="battleStore.currentUser"
               class="btn-profile"
@@ -345,6 +352,28 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
+.btn-leaderboard {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.btn-leaderboard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
 .btn-profile {
   background: rgba(255, 255, 255, 0.2);
   color: white;
@@ -615,6 +644,7 @@ onUnmounted(() => {
     font-size: 1.75rem;
   }
 
+  .btn-leaderboard,
   .btn-profile,
   .btn-admin-quick-match {
     padding: 0.75rem 1.25rem;

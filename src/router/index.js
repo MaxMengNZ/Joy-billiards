@@ -82,6 +82,12 @@ const routes = [
     meta: { title: 'Battle / 对战', requiresAuth: true }
   },
   {
+    path: '/battle/leaderboard',
+    name: 'BattleLeaderboard',
+    component: () => import('../views/BattleLeaderboardPage.vue'),
+    meta: { title: 'Battle Tier Leaderboard' }
+  },
+  {
     path: '/membership',
     name: 'Membership',
     component: () => import('../views/MembershipPage.vue'),
