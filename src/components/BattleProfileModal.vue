@@ -92,12 +92,30 @@
                   <div class="stat-value-large">{{ totalMatches }}</div>
                 </div>
               </div>
-              <div v-if="userData.battle_streak !== 0" class="stat-card">
-                <div class="stat-icon">{{ userData.battle_streak > 0 ? '🔥' : '❄️' }}</div>
+              <div v-if="userData.current_win_streak > 0" class="stat-card">
+                <div class="stat-icon">{{ getStreakIcon(userData.current_win_streak) }}</div>
                 <div class="stat-info">
-                  <div class="stat-label">Streak</div>
-                  <div class="stat-value-large" :class="{ positive: userData.battle_streak > 0, negative: userData.battle_streak < 0 }">
-                    {{ userData.battle_streak > 0 ? '+' : '' }}{{ userData.battle_streak }}
+                  <div class="stat-label">Win Streak</div>
+                  <div class="stat-value-large positive">
+                    {{ getStreakLabel(userData.current_win_streak) }} x{{ userData.current_win_streak }}
+                  </div>
+                </div>
+              </div>
+              <div v-if="userData.season_best_win_streak > 0" class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-info">
+                  <div class="stat-label">Season Best</div>
+                  <div class="stat-value-large positive">
+                    x{{ userData.season_best_win_streak }}
+                  </div>
+                </div>
+              </div>
+              <div v-if="userData.battle_tokens > 0" class="stat-card">
+                <div class="stat-icon">🪙</div>
+                <div class="stat-info">
+                  <div class="stat-label">Battle Tokens</div>
+                  <div class="stat-value-large positive">
+                    {{ userData.battle_tokens }}
                   </div>
                 </div>
               </div>
@@ -224,6 +242,23 @@ const totalLosses = computed(() => {
   if (!userData.value) return 0
   return userData.value.battle_losses || 0
 })
+
+// Streak display functions
+const getStreakIcon = (streak) => {
+  if (streak >= 10) return '👑'
+  if (streak >= 7) return '🔥🔥🔥'
+  if (streak >= 5) return '🔥🔥'
+  if (streak >= 3) return '🔥'
+  return ''
+}
+
+const getStreakLabel = (streak) => {
+  if (streak >= 10) return '👑 Legendary'
+  if (streak >= 7) return '🔥🔥🔥 Dominating'
+  if (streak >= 5) return '🔥🔥 On Fire'
+  if (streak >= 3) return '🔥 Hot Streak'
+  return 'Normal'
+}
 
 const totalMatches = computed(() => {
   return totalWins.value + totalLosses.value
@@ -450,7 +485,9 @@ const loadUserData = async () => {
         battle_wins,
         battle_losses,
         battle_position,
-        battle_streak,
+        current_win_streak,
+        season_best_win_streak,
+        battle_tokens,
         battle_break_and_run_count,
         battle_rack_run_count
       `)

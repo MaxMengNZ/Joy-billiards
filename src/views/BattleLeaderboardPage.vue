@@ -185,15 +185,13 @@
               </td>
               <td class="col-streak">
                 <span 
-                  class="streak-value"
-                  :class="{ 
-                    'streak-positive': player.battle_streak > 0,
-                    'streak-negative': player.battle_streak < 0
-                  }"
+                  v-if="player.current_win_streak > 0"
+                  class="streak-value streak-positive"
+                  :title="getStreakLabel(player.current_win_streak)"
                 >
-                  {{ player.battle_streak > 0 ? '🔥' : player.battle_streak < 0 ? '❄️' : '' }}
-                  {{ player.battle_streak > 0 ? '+' : '' }}{{ player.battle_streak || 0 }}
+                  {{ getStreakIcon(player.current_win_streak) }} x{{ player.current_win_streak }}
                 </span>
+                <span v-else class="streak-value">-</span>
               </td>
             </tr>
           </tbody>
@@ -242,19 +240,24 @@
                   <span class="stat-value">{{ calculateWinRate(player) }}%</span>
                 </div>
                 <div 
-                  v-if="player.battle_streak !== 0"
+                  v-if="player.current_win_streak > 0"
                   class="card-stat-item"
                 >
-                  <span class="stat-label">Streak:</span>
+                  <span class="stat-label">Win Streak:</span>
                   <span 
-                    class="stat-value"
-                    :class="{ 
-                      'streak-positive': player.battle_streak > 0,
-                      'streak-negative': player.battle_streak < 0
-                    }"
+                    class="stat-value streak-positive"
+                    :title="getStreakLabel(player.current_win_streak)"
                   >
-                    {{ player.battle_streak > 0 ? '🔥' : '❄️' }}
-                    {{ player.battle_streak > 0 ? '+' : '' }}{{ player.battle_streak }}
+                    {{ getStreakIcon(player.current_win_streak) }} x{{ player.current_win_streak }}
+                  </span>
+                </div>
+                <div 
+                  v-if="player.season_best_win_streak > 0"
+                  class="card-stat-item"
+                >
+                  <span class="stat-label">Season Best:</span>
+                  <span class="stat-value streak-positive">
+                    🏆 x{{ player.season_best_win_streak }}
                   </span>
                 </div>
               </div>
@@ -401,6 +404,23 @@ const filteredAndSortedPlayers = computed(() => {
   return filtered
 })
 
+// Streak display functions
+const getStreakIcon = (streak) => {
+  if (streak >= 10) return '👑'
+  if (streak >= 7) return '🔥🔥🔥'
+  if (streak >= 5) return '🔥🔥'
+  if (streak >= 3) return '🔥'
+  return ''
+}
+
+const getStreakLabel = (streak) => {
+  if (streak >= 10) return '👑 Legendary'
+  if (streak >= 7) return '🔥🔥🔥 Dominating'
+  if (streak >= 5) return '🔥🔥 On Fire'
+  if (streak >= 3) return '🔥 Hot Streak'
+  return 'Normal'
+}
+
 // Methods
 const formatTierName = (tier) => {
   if (!tier) return 'Unranked'
@@ -471,7 +491,8 @@ const loadLeaderboard = async () => {
         battle_stars,
         battle_wins,
         battle_losses,
-        battle_streak
+        current_win_streak,
+        season_best_win_streak
       `)
       .not('battle_elo_rating', 'is', null)
       .or('battle_wins.gt.0,battle_losses.gt.0') // Only show players who have played at least one match
