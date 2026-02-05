@@ -4,10 +4,16 @@
     <div v-if="loading && !players.length" class="loading-container">
       <div class="spinner"></div>
       <p>Loading rankings...</p>
+      <p v-if="loadError" class="load-error-hint">{{ loadError }}</p>
     </div>
 
     <!-- Main Content -->
     <template v-else>
+      <!-- Load error banner (timeout or network error; does not hide list) -->
+      <div v-if="loadError" class="load-error-banner">
+        <span>{{ loadError }}</span>
+        <button type="button" class="btn-retry" @click="loadError = null; loadLeaderboard()">Retry</button>
+      </div>
       <!-- Hero Section -->
       <section class="battle-leaderboard-hero">
         <div class="hero-background">
@@ -291,6 +297,7 @@ const battleStore = useBattleStore()
 
 // State
 const loading = ref(true)
+const loadError = ref(null)
 const players = ref([])
 const searchQuery = ref('')
 const sortBy = ref('position')
@@ -474,10 +481,31 @@ const viewPlayerProfile = (player) => {
   }
 }
 
+// Timeout so loading never sticks forever (network/Supabase hang)
+const LOAD_TIMEOUT_MS = 15000
+const withTimeout = (promise, ms) => {
+  let timeoutId
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('Request timeout')), ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
+// Debounce to avoid many concurrent loads when realtime fires repeatedly
+let loadLeaderboardDebounceTimer = null
+const loadLeaderboardDebounced = () => {
+  if (loadLeaderboardDebounceTimer) clearTimeout(loadLeaderboardDebounceTimer)
+  loadLeaderboardDebounceTimer = setTimeout(() => {
+    loadLeaderboardDebounceTimer = null
+    loadLeaderboard()
+  }, 800)
+}
+
 const loadLeaderboard = async () => {
   loading.value = true
+  loadError.value = null
   try {
-    const { data, error } = await supabase
+    const queryPromise = supabase
       .from('users')
       .select(`
         id,
@@ -495,6 +523,8 @@ const loadLeaderboard = async () => {
       .not('battle_elo_rating', 'is', null)
       .or('battle_wins.gt.0,battle_losses.gt.0') // Only show players who have played at least one match
       // Note: We'll sort by Elo in the frontend, not by battle_position from database
+
+    const { data, error } = await withTimeout(queryPromise, LOAD_TIMEOUT_MS)
 
     if (error) throw error
 
@@ -552,13 +582,17 @@ const loadLeaderboard = async () => {
     })
     
     players.value = filteredPlayers
-    
+    loadError.value = null
+
     // Only log in development mode (security: don't expose user data in production)
     if (import.meta.env.DEV) {
       console.log(`[BattleLeaderboard] Loaded ${players.value.length} players (positions recalculated by Elo):`, players.value.map(p => `${p.name} (Position: ${p.battle_position}, Elo: ${p.battle_elo_rating}, W: ${p.battle_wins}, L: ${p.battle_losses})`))
     }
   } catch (err) {
     console.error('[BattleLeaderboard] Error loading leaderboard:', err)
+    loadError.value = err?.message === 'Request timeout'
+      ? 'Load timed out. Please refresh the page.'
+      : (err?.message || 'Failed to load. Please refresh.')
   } finally {
     loading.value = false
   }
@@ -585,8 +619,8 @@ const subscribeToUpdates = () => {
         if (import.meta.env.DEV) {
           console.log('[BattleLeaderboard] Battle room completed')
         }
-        // Reload leaderboard when a match completes
-        loadLeaderboard()
+        // Reload leaderboard when a match completes (debounced)
+        loadLeaderboardDebounced()
       }
     )
     .subscribe()
@@ -618,7 +652,7 @@ const subscribeToUpdates = () => {
           if (import.meta.env.DEV) {
             console.log('[BattleLeaderboard] User battle data updated:', newData?.name)
           }
-          loadLeaderboard()
+          loadLeaderboardDebounced()
         }
       }
     )
@@ -667,6 +701,41 @@ onUnmounted(() => {
   border-top-color: white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.load-error-hint {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.load-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin: 1rem auto;
+  max-width: 90%;
+  background: rgba(220, 53, 69, 0.2);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  border-radius: 8px;
+  color: #ffb3b3;
+  font-size: 0.9rem;
+}
+
+.btn-retry {
+  padding: 0.4rem 0.9rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-retry:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 @keyframes spin {

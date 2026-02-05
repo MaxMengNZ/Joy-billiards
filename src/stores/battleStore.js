@@ -1,6 +1,16 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../config/supabase'
 
+// Timeout so loading never sticks forever on slow/hung requests
+const REQUEST_TIMEOUT_MS = 15000
+const withTimeout = (promise, ms = REQUEST_TIMEOUT_MS) => {
+  let timeoutId
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('Request timeout')), ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
 export const useBattleStore = defineStore('battle', {
   state: () => ({
     rooms: [],
@@ -38,14 +48,16 @@ export const useBattleStore = defineStore('battle', {
     // Initialize current user
     async initCurrentUser() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user } } = await withTimeout(supabase.auth.getUser(), 10000)
         if (user) {
-          const { data } = await supabase
-            .from('users')
-            .select('id, name, email, role')
-            .eq('auth_id', user.id)
-            .single()
-          
+          const { data } = await withTimeout(
+            supabase
+              .from('users')
+              .select('id, name, email, role')
+              .eq('auth_id', user.id)
+              .single(),
+            10000
+          )
           if (data) {
             this.currentUser = data
           }
@@ -658,34 +670,36 @@ export const useBattleStore = defineStore('battle', {
         const todayEndISO = todayEnd.toISOString()
 
         // Load rooms: all active rooms (waiting, ready, in_progress) + today's completed rooms
-        // Use separate queries and combine them
-        const [activeRoomsResult, completedRoomsResult] = await Promise.all([
-          // Active rooms
-          supabase
-            .from('battle_rooms')
-            .select(`
-              *,
-              player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
-              player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
-              created_by_user:users!battle_rooms_created_by_fkey(id, name)
-            `)
-            .in('status', ['waiting', 'ready', 'in_progress'])
-            .order('created_at', { ascending: false }),
-          
-          // Today's completed rooms - check both completed_at and created_at
-          supabase
-            .from('battle_rooms')
-            .select(`
-              *,
-              player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
-              player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
-              created_by_user:users!battle_rooms_created_by_fkey(id, name)
-            `)
-            .eq('status', 'completed')
-            .gte('created_at', todayStartISO)
-            .lt('created_at', todayEndISO)
-            .order('completed_at', { ascending: false, nullsFirst: false })
-        ])
+        // Use separate queries and combine them; wrap in timeout so loading never sticks
+        const [activeRoomsResult, completedRoomsResult] = await withTimeout(
+          Promise.all([
+            // Active rooms
+            supabase
+              .from('battle_rooms')
+              .select(`
+                *,
+                player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+                player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+                created_by_user:users!battle_rooms_created_by_fkey(id, name)
+              `)
+              .in('status', ['waiting', 'ready', 'in_progress'])
+              .order('created_at', { ascending: false }),
+            
+            // Today's completed rooms - check both completed_at and created_at
+            supabase
+              .from('battle_rooms')
+              .select(`
+                *,
+                player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+                player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+                created_by_user:users!battle_rooms_created_by_fkey(id, name)
+              `)
+              .eq('status', 'completed')
+              .gte('created_at', todayStartISO)
+              .lt('created_at', todayEndISO)
+              .order('completed_at', { ascending: false, nullsFirst: false })
+          ])
+        )
 
         if (activeRoomsResult.error) throw activeRoomsResult.error
         if (completedRoomsResult.error) throw completedRoomsResult.error
@@ -701,7 +715,9 @@ export const useBattleStore = defineStore('battle', {
           return dateB - dateA
         })
       } catch (err) {
-        this.error = err.message
+        this.error = err?.message === 'Request timeout'
+          ? 'Load timed out. Please refresh the page.'
+          : (err?.message || 'Failed to load rooms.')
         console.error('Error loading rooms:', err)
       } finally {
         this.loading = false
