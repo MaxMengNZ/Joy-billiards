@@ -104,7 +104,7 @@ export const useBattleStore = defineStore('battle', {
     },
 
     // Create a new battle room (admin can create with any players)
-    async createRoomAsAdmin({ roomName, player1Id, player2Id, raceToScore, breakOption, roomNotes }) {
+    async createRoomAsAdmin({ roomName, player1Id, player2Id, raceToScore, breakOption, roomNotes, tableNumber }) {
       this.loading = true
       this.error = null
 
@@ -142,6 +142,7 @@ export const useBattleStore = defineStore('battle', {
             race_to_score: raceToScore,
             break_option: breakOption || 'alternating',
             room_notes: roomNotes || null,
+            table_number: tableNumber || null,
             status: 'waiting',
             player1_ready: false,
             player2_ready: false
@@ -168,7 +169,7 @@ export const useBattleStore = defineStore('battle', {
     },
 
     // Create a new battle room
-    async createRoom({ roomName, player2Id, raceToScore, scheduledStartTime, breakOption, roomNotes }) {
+    async createRoom({ roomName, player2Id, raceToScore, scheduledStartTime, breakOption, roomNotes, tableNumber }) {
       this.loading = true
       this.error = null
 
@@ -196,6 +197,7 @@ export const useBattleStore = defineStore('battle', {
             scheduled_start_time: scheduledStartTime || null,
             break_option: breakOption || 'alternating',
             room_notes: roomNotes || null,
+            table_number: tableNumber || null,
             status: player2Id ? 'waiting' : 'waiting',
             match_type: 'matchmaking' // Will be set by trigger
           })

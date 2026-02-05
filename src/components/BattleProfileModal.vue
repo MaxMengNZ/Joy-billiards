@@ -44,12 +44,11 @@
             <div class="user-info">
               <h3>{{ userData.name }}</h3>
               <div class="user-badges">
-                <div class="tier-badge" :class="`tier-${userData.battle_tier}`">
-                  <span class="tier-name">{{ formatTierName(userData.battle_tier) }}</span>
-                  <span v-if="userData.battle_stars > 0" class="tier-stars">
-                    {{ userData.battle_stars }}⭐
-                  </span>
-                </div>
+                <TierBadge 
+                  :tier="userData.battle_tier" 
+                  :stars="userData.battle_stars || 0"
+                  size="large"
+                />
                 <div class="elo-badge">
                   Elo: {{ userData.battle_elo_rating || 1000 }}
                 </div>
@@ -188,6 +187,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
 import { supabase } from '../config/supabase'
+import TierBadge from './TierBadge.vue'
 
 const props = defineProps({
   show: {

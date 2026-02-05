@@ -67,12 +67,11 @@
               <span v-else class="avatar-default">🎱</span>
             </div>
             <h3 class="podium-name">{{ player.name }}</h3>
-            <div class="podium-tier-badge" :class="`tier-${player.battle_tier}`">
-              <span class="tier-name">{{ formatTierName(player.battle_tier) }}</span>
-              <span v-if="player.battle_stars > 0" class="tier-stars">
-                {{ '⭐'.repeat(Math.min(player.battle_stars, 5)) }}
-              </span>
-            </div>
+            <TierBadge 
+              :tier="player.battle_tier" 
+              :stars="player.battle_stars || 0"
+              size="large"
+            />
             <div class="podium-stats">
               <div class="stat-item">
                 <span class="stat-label">Elo:</span>
@@ -167,12 +166,11 @@
                 <span class="player-name">{{ player.name }}</span>
               </td>
               <td class="col-tier">
-                <div class="tier-badge-small" :class="`tier-${player.battle_tier}`">
-                  <span class="tier-name-small">{{ formatTierName(player.battle_tier) }}</span>
-                  <span v-if="player.battle_stars > 0" class="tier-stars-small">
-                    {{ '⭐'.repeat(Math.min(player.battle_stars, 5)) }}
-                  </span>
-                </div>
+                <TierBadge 
+                  :tier="player.battle_tier" 
+                  :stars="player.battle_stars || 0"
+                  size="small"
+                />
               </td>
               <td class="col-elo">
                 <span class="elo-value">{{ player.battle_elo_rating || 1000 }}</span>
@@ -220,12 +218,11 @@
             </div>
             <div class="card-info">
               <h3 class="card-name">{{ player.name }}</h3>
-              <div class="card-tier-badge" :class="`tier-${player.battle_tier}`">
-                <span class="tier-name-card">{{ formatTierName(player.battle_tier) }}</span>
-                <span v-if="player.battle_stars > 0" class="tier-stars-card">
-                  {{ '⭐'.repeat(Math.min(player.battle_stars, 5)) }}
-                </span>
-              </div>
+              <TierBadge 
+                :tier="player.battle_tier" 
+                :stars="player.battle_stars || 0"
+                size="medium"
+              />
               <div class="card-stats">
                 <div class="card-stat-item">
                   <span class="stat-label">Elo:</span>
@@ -288,6 +285,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
 import { supabase } from '../config/supabase'
 import BattleProfileModal from '../components/BattleProfileModal.vue'
+import TierBadge from '../components/TierBadge.vue'
 
 const battleStore = useBattleStore()
 

@@ -34,8 +34,8 @@
           <div class="wheel-selector">
             <button 
               class="wheel-btn wheel-up"
-              @click="decreaseRaceTo"
-              :disabled="formData.raceToScore <= 2"
+              @click="increaseRaceTo"
+              :disabled="formData.raceToScore >= 21"
             >
               ▲
             </button>
@@ -44,11 +44,28 @@
             </div>
             <button 
               class="wheel-btn wheel-down"
-              @click="increaseRaceTo"
-              :disabled="formData.raceToScore >= 21"
+              @click="decreaseRaceTo"
+              :disabled="formData.raceToScore <= 2"
             >
               ▼
             </button>
+          </div>
+        </div>
+
+        <!-- Table Number -->
+        <div class="form-group">
+          <label>Table Number <span class="required">*</span></label>
+          <div class="table-selector">
+            <select
+              v-model="formData.tableNumber"
+              class="form-select"
+              required
+            >
+              <option :value="null" disabled>Select a table</option>
+              <option v-for="tableNum in availableTables" :key="tableNum" :value="tableNum">
+                Table {{ tableNum }}
+              </option>
+            </select>
           </div>
         </div>
 
@@ -161,8 +178,12 @@ const formData = ref({
   raceToScore: 5,
   scheduledStartTime: null,
   breakOption: 'alternating', // 'alternating' or 'winner'
-  roomNotes: ''
+  roomNotes: '',
+  tableNumber: 3 // 3-12, required (default to 3)
 })
+
+// Available tables: 3-12 (10 tables)
+const availableTables = ref([3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
 const searchQuery = ref('')
 const searchResults = ref([])
@@ -172,7 +193,10 @@ const loading = ref(false)
 
 // Computed
 const canCreate = computed(() => {
-  return formData.value.roomName.trim().length > 0
+  return formData.value.roomName.trim().length > 0 && 
+         formData.value.tableNumber !== null &&
+         formData.value.tableNumber >= 3 &&
+         formData.value.tableNumber <= 12
 })
 
 // Methods
@@ -218,10 +242,15 @@ const selectPlayer = (player) => {
 }
 
 const handleCreate = async () => {
-  error.value = ''
+      error.value = ''
   
     if (!formData.value.roomName.trim()) {
       error.value = 'Room name is required'
+      return
+    }
+
+    if (!formData.value.tableNumber || formData.value.tableNumber < 3 || formData.value.tableNumber > 12) {
+      error.value = 'Please select a table number (3-12)'
       return
     }
 
@@ -234,7 +263,8 @@ const handleCreate = async () => {
       raceToScore: formData.value.raceToScore,
       scheduledStartTime: formData.value.scheduledStartTime || null,
       breakOption: formData.value.breakOption,
-      roomNotes: formData.value.roomNotes || null
+      roomNotes: formData.value.roomNotes || null,
+      tableNumber: formData.value.tableNumber
     })
 
     if (result.success) {
@@ -244,7 +274,8 @@ const handleCreate = async () => {
         raceToScore: 5,
         scheduledStartTime: null,
         breakOption: 'alternating',
-        roomNotes: ''
+        roomNotes: '',
+        tableNumber: 3
       }
       searchQuery.value = ''
       searchResults.value = []
@@ -339,6 +370,11 @@ const handleCreate = async () => {
   margin-bottom: 0.5rem;
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+.required {
+  color: #ff6b6b;
+  margin-left: 0.25rem;
 }
 
 .form-input {
@@ -590,6 +626,40 @@ const handleCreate = async () => {
 
 .form-textarea::placeholder {
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* Table Selector */
+.table-selector {
+  width: 100%;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-select option {
+  background: #667eea;
+  color: white;
 }
 
 /* Mobile Responsive */

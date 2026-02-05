@@ -40,6 +40,10 @@
     </div>
 
     <div class="room-info">
+      <div v-if="room.table_number" class="info-item">
+        <span class="info-label">Table:</span>
+        <span class="info-value table-number">Table {{ room.table_number }}</span>
+      </div>
       <div class="info-item">
         <span class="info-label">Race to:</span>
         <span class="info-value">{{ room.race_to_score }}</span>
