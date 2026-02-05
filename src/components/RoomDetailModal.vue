@@ -393,16 +393,20 @@
             <button 
               class="btn-complete"
               @click="handleCompleteMatch"
-              :disabled="!canSubmitComplete"
+              :disabled="!canSubmitComplete || loading"
             >
-              Complete Match
+              {{ loading ? 'Submitting...' : 'Complete Match' }}
             </button>
           </div>
         </div>
 
-        <!-- Error Message -->
-        <div v-if="error" class="error-message">
-          ⚠️ {{ error }}
+        <!-- Success Message -->
+        <div v-if="successMessage" class="success-message">
+          ✅ {{ successMessage }}
+        </div>
+        <!-- Error Message (local or from store) -->
+        <div v-if="error || battleStore.error" class="error-message">
+          ⚠️ {{ error || battleStore.error }}
         </div>
       </div>
     </div>
@@ -435,6 +439,7 @@ const battleStore = useBattleStore()
 // State
 const error = ref('')
 const loading = ref(false)
+const successMessage = ref('')
 const isEditing = ref(false)
 const player1Stats = ref(null)
 const player2Stats = ref(null)
@@ -573,9 +578,9 @@ const handleStartMatch = async () => {
 
 const handleCompleteMatch = async () => {
   error.value = ''
-  
+  successMessage.value = ''
   if (!canSubmitComplete.value) {
-    error.value = 'Please fill in all required fields'
+    error.value = 'Please fill in all required fields (Winner and both scores).'
     return
   }
 
@@ -593,7 +598,6 @@ const handleCompleteMatch = async () => {
     })
 
     if (result.success) {
-      // Reset form
       completeForm.value = {
         winnerId: null,
         finalPlayer1Score: 0,
@@ -603,7 +607,9 @@ const handleCompleteMatch = async () => {
         player2BreakAndRun: 0,
         player2RackRun: 0
       }
+      successMessage.value = 'Match completed successfully! Rankings will update shortly.'
       emit('refresh')
+      setTimeout(() => { successMessage.value = '' }, 4000)
     } else {
       error.value = result.error || 'Failed to complete match'
     }
@@ -1099,6 +1105,15 @@ onMounted(() => {
 .btn-complete:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.success-message {
+  background: rgba(40, 167, 69, 0.25);
+  border: 2px solid rgba(40, 167, 69, 0.5);
+  color: #b8f0c4;
+  padding: 0.75rem;
+  border-radius: 10px;
+  margin-top: 1rem;
 }
 
 .error-message {

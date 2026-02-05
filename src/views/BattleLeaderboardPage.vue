@@ -619,8 +619,8 @@ const subscribeToUpdates = () => {
         if (import.meta.env.DEV) {
           console.log('[BattleLeaderboard] Battle room completed')
         }
-        // Reload leaderboard when a match completes (debounced)
-        loadLeaderboardDebounced()
+        // Reload leaderboard immediately when a match completes (trigger has already run)
+        loadLeaderboard()
       }
     )
     .subscribe()
@@ -659,14 +659,23 @@ const subscribeToUpdates = () => {
     .subscribe()
 }
 
+// Refresh when user returns to this tab (e.g. after submitting result on another device)
+const onVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    loadLeaderboard()
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   await battleStore.initCurrentUser()
   await loadLeaderboard()
   subscribeToUpdates()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
 onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
   if (roomsSubscription) {
     supabase.removeChannel(roomsSubscription)
   }

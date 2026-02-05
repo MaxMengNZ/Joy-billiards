@@ -562,7 +562,7 @@ export const useBattleStore = defineStore('battle', {
       this.loading = true
       this.error = null
 
-      try {
+      const completePromise = (async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
@@ -574,7 +574,6 @@ export const useBattleStore = defineStore('battle', {
 
         if (!userData) throw new Error('User not found')
 
-        // Get room
         const { data: room } = await supabase
           .from('battle_rooms')
           .select('*')
@@ -583,19 +582,11 @@ export const useBattleStore = defineStore('battle', {
 
         if (!room) throw new Error('Room not found')
 
-        // Check permission
         const isPlayer = room.player1_id === userData.id || room.player2_id === userData.id
         const isAdmin = userData.role === 'admin'
+        if (!isPlayer && !isAdmin) throw new Error('Permission denied')
+        if (room.status !== 'in_progress') throw new Error('Match is not in progress')
 
-        if (!isPlayer && !isAdmin) {
-          throw new Error('Permission denied')
-        }
-
-        if (room.status !== 'in_progress') {
-          throw new Error('Match is not in progress')
-        }
-
-        // Update room status
         const { data, error } = await supabase
           .from('battle_rooms')
           .update({
@@ -616,40 +607,37 @@ export const useBattleStore = defineStore('battle', {
 
         if (error) throw error
 
-        // Update player statistics (Break & Run and Rack Run)
         if (player1BreakAndRun > 0 || player1RackRun > 0) {
           const { error: statsError1 } = await supabase.rpc('update_player_battle_stats', {
             p_user_id: room.player1_id,
             p_break_and_run: player1BreakAndRun || 0,
             p_rack_run: player1RackRun || 0
           })
-          if (statsError1) {
-            console.error('Error updating player1 stats:', statsError1)
-            // Don't throw, just log - match completion should still succeed
-          }
+          if (statsError1) console.error('Error updating player1 stats:', statsError1)
         }
-
         if (player2BreakAndRun > 0 || player2RackRun > 0) {
           const { error: statsError2 } = await supabase.rpc('update_player_battle_stats', {
             p_user_id: room.player2_id,
             p_break_and_run: player2BreakAndRun || 0,
             p_rack_run: player2RackRun || 0
           })
-          if (statsError2) {
-            console.error('Error updating player2 stats:', statsError2)
-            // Don't throw, just log - match completion should still succeed
-          }
+          if (statsError2) console.error('Error updating player2 stats:', statsError2)
         }
 
-        // Update battle positions
         await supabase.rpc('update_battle_positions')
-
         await this.loadRooms()
+        return data
+      })()
+
+      try {
+        const data = await withTimeout(completePromise, 20000)
         return { success: true, data }
       } catch (err) {
-        this.error = err.message
+        this.error = err?.message === 'Request timeout'
+          ? 'Request timed out. Please check your connection and try again.'
+          : (err?.message || 'Failed to complete match')
         console.error('Error completing match:', err)
-        return { success: false, error: err.message }
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
