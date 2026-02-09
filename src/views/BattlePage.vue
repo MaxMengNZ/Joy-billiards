@@ -184,6 +184,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
+import { getTodayNZStartEnd } from '../utils/timezone'
 import RoomCard from '../components/BattleRoomCard.vue'
 import CreateRoomModal from '../components/CreateRoomModal.vue'
 import RoomDetailModal from '../components/RoomDetailModal.vue'
@@ -217,18 +218,14 @@ const readyRooms = computed(() => {
 })
 
 const completedRooms = computed(() => {
-  // Filter completed rooms from today only
-  // Use completed_at if available, otherwise use created_at
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
+  // Filter completed rooms from today only (New Zealand time)
+  const { startISO, endISO } = getTodayNZStartEnd()
+  const start = new Date(startISO).getTime()
+  const end = new Date(endISO).getTime()
   return battleStore.rooms.filter(r => {
     if (r.status !== 'completed') return false
-    // Use completed_at if available, otherwise fall back to created_at
-    const roomDate = new Date(r.completed_at || r.created_at)
-    return roomDate >= today && roomDate < tomorrow
+    const roomDate = new Date(r.completed_at || r.created_at).getTime()
+    return roomDate >= start && roomDate <= end
   })
 })
 

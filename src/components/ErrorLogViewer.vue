@@ -154,7 +154,7 @@ const toggleExpand = (index) => {
 }
 
 const formatTime = (timestamp) => {
-  return new Date(timestamp).toLocaleString()
+  return new Date(timestamp).toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland', hour12: false })
 }
 
 // Refresh log when panel opens

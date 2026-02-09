@@ -305,7 +305,7 @@ export default {
     }
 
     const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleString()
+      return new Date(dateString).toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland', hour12: false })
     }
 
     onMounted(async () => {

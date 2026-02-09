@@ -120,6 +120,28 @@ export function getNZMonthName() {
 }
 
 /**
+ * 获取新西兰「今天」的起止时间（UTC ISO 字符串，用于筛选「今日完成」等）
+ * @returns {{ startISO: string, endISO: string }}
+ */
+export function getTodayNZStartEnd() {
+  const nzDateStr = new Date().toLocaleDateString('en-CA', { timeZone: NZ_TIMEZONE })
+  const [y, m, d] = nzDateStr.split('-').map(Number)
+  const noonUTC = new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0))
+  const aucklandHour = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: NZ_TIMEZONE, hour: '2-digit', hour12: false }).format(noonUTC),
+    10
+  )
+  const aucklandDay = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: NZ_TIMEZONE, day: 'numeric' }).format(noonUTC),
+    10
+  )
+  const offsetHours = (aucklandDay - d) * 24 + aucklandHour - 12
+  const startUTC = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0) - offsetHours * 60 * 60 * 1000)
+  const endUTC = new Date(startUTC.getTime() + 24 * 60 * 60 * 1000 - 1)
+  return { startISO: startUTC.toISOString(), endISO: endUTC.toISOString() }
+}
+
+/**
  * 创建新西兰时区的日期选择器值
  * @param {Date|string} date
  * @returns {string} ISO格式字符串（用于 input[type="datetime-local"]）

@@ -407,6 +407,13 @@
         <!-- Error Message (local or from store) -->
         <div v-if="error || battleStore.error" class="error-message">
           ⚠️ {{ error || battleStore.error }}
+          <router-link
+            v-if="(error || battleStore.error || '').includes('log in')"
+            to="/login"
+            class="auth-error-link"
+          >
+            Go to Login →
+          </router-link>
         </div>
       </div>
     </div>
@@ -623,12 +630,14 @@ const handleCompleteMatch = async () => {
 const formatDateTime = (timestamp) => {
   if (!timestamp) return ''
   const date = new Date(timestamp)
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString('en-NZ', {
+    timeZone: 'Pacific/Auckland',
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false
   })
 }
 
@@ -1123,6 +1132,18 @@ onMounted(() => {
   padding: 0.75rem;
   border-radius: 10px;
   margin-top: 1rem;
+}
+
+.auth-error-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #7dd3fc;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.auth-error-link:hover {
+  color: #bae6fd;
 }
 
 .final-score-inputs {

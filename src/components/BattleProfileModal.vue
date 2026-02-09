@@ -307,7 +307,8 @@ const formatTierName = (tier) => {
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
   const date = new Date(timestamp)
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-NZ', {
+    timeZone: 'Pacific/Auckland',
     month: 'short',
     day: 'numeric',
     year: 'numeric'

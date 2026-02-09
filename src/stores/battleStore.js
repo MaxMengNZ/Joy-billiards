@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../config/supabase'
+import { getTodayNZStartEnd } from '../utils/timezone'
 
 // Timeout so loading never sticks forever on slow/hung requests
 const REQUEST_TIMEOUT_MS = 15000
@@ -9,6 +10,29 @@ const withTimeout = (promise, ms = REQUEST_TIMEOUT_MS) => {
     timeoutId = setTimeout(() => reject(new Error('Request timeout')), ms)
   })
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
+// User-friendly message when auth fails (e.g. on mobile: session expired or not restored)
+const AUTH_REQUIRED_MSG = 'Please log in again to continue. If you are already logged in, try closing the tab/app and opening the Battle page again, or log in again from the login page.'
+
+/**
+ * Get current auth user. Tries getSession() when getUser() returns null (helps on mobile when session exists in storage but getUser() failed).
+ * @returns {Promise<import('@supabase/supabase-js').User | null>}
+ */
+async function getCurrentAuthUser() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) return user
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user) {
+    try {
+      const { data } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token })
+      if (data?.user) return data.user
+    } catch (_) {
+      // ignore refresh error
+    }
+    return session.user
+  }
+  return null
 }
 
 export const useBattleStore = defineStore('battle', {
@@ -45,10 +69,10 @@ export const useBattleStore = defineStore('battle', {
   },
 
   actions: {
-    // Initialize current user
+    // Initialize current user (uses session + refresh fallback for mobile)
     async initCurrentUser() {
       try {
-        const { data: { user } } = await withTimeout(supabase.auth.getUser(), 10000)
+        const user = await withTimeout(getCurrentAuthUser(), 10000)
         if (user) {
           const { data } = await withTimeout(
             supabase
@@ -121,8 +145,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         // Get user ID and role from users table
         const { data: userData } = await supabase
@@ -186,8 +210,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         // Get user ID from users table
         const { data: userData } = await supabase
@@ -240,8 +264,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -297,8 +321,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -393,8 +417,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -475,8 +499,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -563,8 +587,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       const completePromise = (async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -649,15 +673,10 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        // Get today's date range (start and end of day in UTC)
-        const now = new Date()
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const todayEnd = new Date(todayStart)
-        todayEnd.setDate(todayEnd.getDate() + 1)
-        const todayStartISO = todayStart.toISOString()
-        const todayEndISO = todayEnd.toISOString()
+        // Today's date range in New Zealand time (for "today's completed" filter)
+        const { startISO: todayStartISO, endISO: todayEndISO } = getTodayNZStartEnd()
 
-        // Load rooms: all active rooms (waiting, ready, in_progress) + today's completed rooms
+        // Load rooms: all active rooms (waiting, ready, in_progress) + today's completed rooms (NZ day)
         // Use separate queries and combine them; wrap in timeout so loading never sticks
         const [activeRoomsResult, completedRoomsResult] = await withTimeout(
           Promise.all([
@@ -673,7 +692,7 @@ export const useBattleStore = defineStore('battle', {
               .in('status', ['waiting', 'ready', 'in_progress'])
               .order('created_at', { ascending: false }),
             
-            // Today's completed rooms - check both completed_at and created_at
+            // Today's completed rooms (NZ day) - filter by completed_at in NZ today range
             supabase
               .from('battle_rooms')
               .select(`
@@ -683,8 +702,8 @@ export const useBattleStore = defineStore('battle', {
                 created_by_user:users!battle_rooms_created_by_fkey(id, name)
               `)
               .eq('status', 'completed')
-              .gte('created_at', todayStartISO)
-              .lt('created_at', todayEndISO)
+              .gte('completed_at', todayStartISO)
+              .lte('completed_at', todayEndISO)
               .order('completed_at', { ascending: false, nullsFirst: false })
           ])
         )
@@ -878,8 +897,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -952,8 +971,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
@@ -1025,8 +1044,8 @@ export const useBattleStore = defineStore('battle', {
       this.error = null
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const user = await getCurrentAuthUser()
+        if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
         const { data: userData } = await supabase
           .from('users')
