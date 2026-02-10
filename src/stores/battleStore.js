@@ -590,21 +590,31 @@ export const useBattleStore = defineStore('battle', {
         const user = await getCurrentAuthUser()
         if (!user) throw new Error(AUTH_REQUIRED_MSG)
 
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from('users')
           .select('id, role')
           .eq('auth_id', user.id)
           .single()
 
-        if (!userData) throw new Error('User not found')
+        if (!userData) {
+          const msg = userError?.code === 'PGRST116'
+            ? 'Your login is not linked to a player account. Please use the same email you registered with, or contact staff to link your account.'
+            : (userError?.message || 'User not found. Please try logging out and back in, or contact staff.')
+          throw new Error(msg)
+        }
 
-        const { data: room } = await supabase
+        const { data: room, error: roomErr } = await supabase
           .from('battle_rooms')
           .select('*')
           .eq('id', roomId)
           .single()
 
-        if (!room) throw new Error('Room not found')
+        if (!room) {
+          const msg = roomErr?.code === 'PGRST116'
+            ? 'Room not found. It may have been completed or removed. Please close this window and refresh the room list.'
+            : (roomErr?.message || 'Could not load room. Please refresh the page and try again.')
+          throw new Error(msg)
+        }
 
         const isPlayer = room.player1_id === userData.id || room.player2_id === userData.id
         const isAdmin = userData.role === 'admin'
@@ -631,30 +641,28 @@ export const useBattleStore = defineStore('battle', {
 
         if (error) throw error
 
+        // Run stats and position updates in background so user sees success immediately
         if (player1BreakAndRun > 0 || player1RackRun > 0) {
-          const { error: statsError1 } = await supabase.rpc('update_player_battle_stats', {
+          supabase.rpc('update_player_battle_stats', {
             p_user_id: room.player1_id,
             p_break_and_run: player1BreakAndRun || 0,
             p_rack_run: player1RackRun || 0
-          })
-          if (statsError1) console.error('Error updating player1 stats:', statsError1)
+          }).then(() => {}).catch(e => console.error('Error updating player1 stats:', e))
         }
         if (player2BreakAndRun > 0 || player2RackRun > 0) {
-          const { error: statsError2 } = await supabase.rpc('update_player_battle_stats', {
+          supabase.rpc('update_player_battle_stats', {
             p_user_id: room.player2_id,
             p_break_and_run: player2BreakAndRun || 0,
             p_rack_run: player2RackRun || 0
-          })
-          if (statsError2) console.error('Error updating player2 stats:', statsError2)
+          }).then(() => {}).catch(e => console.error('Error updating player2 stats:', e))
         }
-
-        await supabase.rpc('update_battle_positions')
-        await this.loadRooms()
+        supabase.rpc('update_battle_positions').then(() => {}).catch(() => {})
+        this.loadRooms() // refresh list in background
         return data
       })()
 
       try {
-        const data = await withTimeout(completePromise, 20000)
+        const data = await withTimeout(completePromise, 60000)
         return { success: true, data }
       } catch (err) {
         this.error = err?.message === 'Request timeout'
@@ -676,9 +684,12 @@ export const useBattleStore = defineStore('battle', {
         // Today's date range in New Zealand time (for "today's completed" filter)
         const { startISO: todayStartISO, endISO: todayEndISO } = getTodayNZStartEnd()
 
-        // Load rooms: all active rooms (waiting, ready, in_progress) + today's completed rooms (NZ day)
+        // Load rooms:
+        // - all active rooms (waiting, ready, in_progress)
+        // - today's completed rooms (NZ day)
+        // Some older rows may have status=completed but completed_at is NULL; include those using updated_at as fallback.
         // Use separate queries and combine them; wrap in timeout so loading never sticks
-        const [activeRoomsResult, completedRoomsResult] = await withTimeout(
+        const [activeRoomsResult, completedRoomsWithTsResult, completedRoomsNoTsResult] = await withTimeout(
           Promise.all([
             // Active rooms
             supabase
@@ -704,21 +715,40 @@ export const useBattleStore = defineStore('battle', {
               .eq('status', 'completed')
               .gte('completed_at', todayStartISO)
               .lte('completed_at', todayEndISO)
-              .order('completed_at', { ascending: false, nullsFirst: false })
+              .order('completed_at', { ascending: false, nullsFirst: false }),
+
+            // Fallback: completed_at is NULL, use updated_at to decide "today"
+            supabase
+              .from('battle_rooms')
+              .select(`
+                *,
+                player1:users!battle_rooms_player1_id_fkey(id, name, email, avatar_url),
+                player2:users!battle_rooms_player2_id_fkey(id, name, email, avatar_url),
+                created_by_user:users!battle_rooms_created_by_fkey(id, name)
+              `)
+              .eq('status', 'completed')
+              .is('completed_at', null)
+              .gte('updated_at', todayStartISO)
+              .lte('updated_at', todayEndISO)
+              .order('updated_at', { ascending: false, nullsFirst: false })
           ])
         )
 
         if (activeRoomsResult.error) throw activeRoomsResult.error
-        if (completedRoomsResult.error) throw completedRoomsResult.error
+        if (completedRoomsWithTsResult.error) throw completedRoomsWithTsResult.error
+        if (completedRoomsNoTsResult.error) throw completedRoomsNoTsResult.error
+
+        // Combine results and de-dup by id
+        const byId = new Map()
+        for (const r of (activeRoomsResult.data || [])) byId.set(r.id, r)
+        for (const r of (completedRoomsWithTsResult.data || [])) byId.set(r.id, r)
+        for (const r of (completedRoomsNoTsResult.data || [])) byId.set(r.id, r)
 
         // Combine results and sort by created_at (most recent first)
-        this.rooms = [
-          ...(activeRoomsResult.data || []),
-          ...(completedRoomsResult.data || [])
-        ].sort((a, b) => {
+        this.rooms = Array.from(byId.values()).sort((a, b) => {
           // Sort by completed_at if available, otherwise created_at
-          const dateA = new Date(a.completed_at || a.created_at)
-          const dateB = new Date(b.completed_at || b.created_at)
+          const dateA = new Date(a.completed_at || a.updated_at || a.created_at)
+          const dateB = new Date(b.completed_at || b.updated_at || b.created_at)
           return dateB - dateA
         })
       } catch (err) {

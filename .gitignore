@@ -15,9 +15,13 @@ dist/
 # IDE
 .vscode/
 .idea/
+
+# Cursor MCP config (may contain Stitch API token)
+.cursor/mcp.json
 *.swp
 *.swo
 *~
+*.backup
 
 # OS
 .DS_Store

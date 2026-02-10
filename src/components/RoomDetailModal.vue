@@ -393,10 +393,11 @@
             <button 
               class="btn-complete"
               @click="handleCompleteMatch"
-              :disabled="!canSubmitComplete || loading"
+              :disabled="!canSubmitComplete || loading || justCompleted"
             >
-              {{ loading ? 'Submitting...' : 'Complete Match' }}
+              {{ completingMatch ? `Submitting result… (${completeElapsedSeconds}s)` : (loading ? 'Submitting...' : 'Complete Match') }}
             </button>
+            <p v-if="completingMatch" class="complete-hint">Submitting result and updating Elo — usually a few seconds. Please wait.</p>
           </div>
         </div>
 
@@ -469,6 +470,11 @@ const editForm = ref({
   breakOption: 'alternating',
   roomNotes: ''
 })
+
+const completingMatch = ref(false)
+const completeElapsedSeconds = ref(0)
+const justCompleted = ref(false)
+let completeTimerId = null
 
 // Computed / 计算属性
 const statusText = computed(() => {
@@ -592,6 +598,11 @@ const handleCompleteMatch = async () => {
   }
 
   loading.value = true
+  completingMatch.value = true
+  completeElapsedSeconds.value = 0
+  completeTimerId = setInterval(() => {
+    completeElapsedSeconds.value += 1
+  }, 1000)
 
   try {
     const result = await battleStore.completeMatch(props.room.id, {
@@ -605,6 +616,7 @@ const handleCompleteMatch = async () => {
     })
 
     if (result.success) {
+      justCompleted.value = true
       completeForm.value = {
         winnerId: null,
         finalPlayer1Score: 0,
@@ -614,9 +626,12 @@ const handleCompleteMatch = async () => {
         player2BreakAndRun: 0,
         player2RackRun: 0
       }
-      successMessage.value = 'Match completed successfully! Rankings will update shortly.'
+      successMessage.value = 'Match completed successfully! Closing…'
       emit('refresh')
-      setTimeout(() => { successMessage.value = '' }, 4000)
+      setTimeout(() => {
+        successMessage.value = ''
+        emit('close')
+      }, 1500)
     } else {
       error.value = result.error || 'Failed to complete match'
     }
@@ -624,6 +639,12 @@ const handleCompleteMatch = async () => {
     error.value = err.message || 'An error occurred'
   } finally {
     loading.value = false
+    completingMatch.value = false
+    completeElapsedSeconds.value = 0
+    if (completeTimerId) {
+      clearInterval(completeTimerId)
+      completeTimerId = null
+    }
   }
 }
 
@@ -805,6 +826,7 @@ const loadPlayerStats = async () => {
 // Watch room changes from props
 watch(() => props.room, (newRoom) => {
   if (newRoom) {
+    justCompleted.value = false
     // Load player stats when both players are in room
     if (newRoom.player2_id) {
       loadPlayerStats()
@@ -1114,6 +1136,12 @@ onMounted(() => {
 .btn-complete:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.complete-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .success-message {

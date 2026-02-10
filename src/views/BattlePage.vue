@@ -224,7 +224,8 @@ const completedRooms = computed(() => {
   const end = new Date(endISO).getTime()
   return battleStore.rooms.filter(r => {
     if (r.status !== 'completed') return false
-    const roomDate = new Date(r.completed_at || r.created_at).getTime()
+    // completed_at might be NULL for some older rows; fallback to updated_at
+    const roomDate = new Date(r.completed_at || r.updated_at || r.created_at).getTime()
     return roomDate >= start && roomDate <= end
   })
 })

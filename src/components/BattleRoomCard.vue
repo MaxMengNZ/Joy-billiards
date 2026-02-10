@@ -253,7 +253,9 @@ const canJoin = computed(() => {
 
 .room-info {
   display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
+  row-gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: rgba(0, 0, 0, 0.1);
@@ -263,6 +265,8 @@ const canJoin = computed(() => {
 .info-item {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  min-width: 140px;
 }
 
 .info-label {
@@ -274,12 +278,17 @@ const canJoin = computed(() => {
   font-size: 0.9rem;
   font-weight: 600;
   color: white;
+  min-width: 0;
 }
 
 .match-type {
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
   font-size: 0.85rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .match-type.matchmaking {
