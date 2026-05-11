@@ -1061,7 +1061,9 @@ export default {
           entry_fee: parseFloat(eventForm.value.entry_fee) || 20,
           max_players: eventForm.value.max_players ? parseInt(eventForm.value.max_players) : null,
           min_players: eventForm.value.min_players ? parseInt(eventForm.value.min_players) : 8,
-          status: eventForm.value.status || 'registration'
+          status: eventForm.value.status || 'registration',
+          event_type: eventForm.value.event_type || 'custom',
+          participant_category: eventForm.value.participant_category || 'adult'
         }
         
         // Optional: prize_pool (can be added later)
@@ -1343,19 +1345,50 @@ export default {
         return
       }
 
+      /** Load canonical start_date before confirm so month on leaderboard matches NZ calendar of the event */
+      let awardAt = null
+      try {
+        const { data: tRow, error: tErr } = await supabase
+          .from('tournaments')
+          .select('start_date')
+          .eq('id', selectedEvent.value.id)
+          .single()
+        if (tErr) throw tErr
+        awardAt = tRow?.start_date || null
+      } catch (e) {
+        console.error('Could not load tournament start_date:', e)
+        alert('无法读取比赛开赛时间，请刷新页面后重试。')
+        return
+      }
+      if (!awardAt) {
+        alert('该比赛在数据库中没有 start_date，无法记入正确月份。请先在比赛详情里编辑并保存日期，再提交成绩。')
+        return
+      }
+
+      const nzAwardLabel = new Intl.DateTimeFormat('en-NZ', {
+        timeZone: 'Pacific/Auckland',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(new Date(awardAt))
+
       const confirmMsg = `Submit tournament results for "${selectedEvent.value.name}"?\n\n` +
+        `Points will count toward leaderboard month (NZ): ${nzAwardLabel}\n\n` +
         `This will:\n` +
         `- Add points to ${resultEntryList.value.length} players\n` +
         `- Update wins/losses statistics\n` +
         `- Record Break & Run counts\n\n` +
         `Division: ${selectedEvent.value.participant_category === 'adult' ? 'Pro' : 'Student'}\n\n` +
         `Continue?`
-      
+
       if (!confirm(confirmMsg)) return
 
       isSubmittingResults.value = true
+
       const division = selectedEvent.value.participant_category === 'adult' ? 'pro' : 'student'
       const tournamentName = selectedEvent.value.name
+      /** DB prefixes "Pro: " / "Student: " — omit duplicate prefix in p_reason */
+      const pointsReasonBody = `${tournamentName} - Rank `
       let successCount = 0
       let errorCount = 0
       const errors = []
@@ -1374,14 +1407,15 @@ export default {
             const losses = participant.losses || 0
             const breakAndRun = participant.break_and_run || 0
 
-            // Add points with timeout
+            // Add points with timeout (p_award_at = tournament start → correct month on leaderboard)
             const pointsFunction = division === 'pro' ? 'admin_add_pro_points' : 'admin_add_student_points'
-            const reason = `${division === 'pro' ? 'Pro:' : 'Student:'} ${tournamentName} - Rank ${participant.ranking}`
-            
+            const reasonForPoints = `${pointsReasonBody}${participant.ranking}`
+
             const pointsPromise = supabase.rpc(pointsFunction, {
               p_user_id: participant.user_id,
               p_points_change: points,
-              p_reason: reason
+              p_reason: reasonForPoints,
+              p_award_at: awardAt
             })
 
             const pointsTimeout = new Promise((_, reject) => 
@@ -1405,7 +1439,8 @@ export default {
               p_wins: wins,
               p_losses: losses,
               p_break_and_run: breakAndRun,
-              p_reason: `${division === 'pro' ? 'Pro:' : 'Student:'} ${tournamentName} - Rank ${participant.ranking}`
+              p_reason: `${division === 'pro' ? 'Pro:' : 'Student:'} ${tournamentName} - Rank ${participant.ranking}`,
+              p_award_at: awardAt
             })
 
             const statsTimeout = new Promise((_, reject) => 

@@ -29,6 +29,59 @@
   
   <!-- Manifest -->
   <link rel="manifest" href="/manifest.json">
+
+  <!-- Battle UI fonts and icons (from Stitch design) -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN (for new Battle UI only; safe for local testing) -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#135bec",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+            "neon-green": "#39ff14",
+            "neon-blue": "#00f3ff"
+          },
+          fontFamily: {
+            "display": ["Space Grotesk", "system-ui", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Global styles for Battle UI glassmorphism -->
+  <style>
+    body {
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      min-height: max(884px, 100dvh);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .streak-glow {
+      filter: drop-shadow(0 0 8px rgba(255, 100, 0, 0.6));
+    }
+    .active-glow {
+      box-shadow: 0 0 15px rgba(19, 91, 236, 0.4);
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>

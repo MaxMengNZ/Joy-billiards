@@ -1,150 +1,453 @@
 <template>
   <div class="battle-rooms-page">
-    <!-- Loading State -->
-    <div v-if="battleStore.loading && !battleStore.rooms.length" class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading...</p>
+    <!-- Desktop / Web layout (unchanged) -->
+    <div class="hidden md:block">
+      <!-- Loading State -->
+      <div v-if="battleStore.loading && !battleStore.rooms.length" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+
+      <!-- Main Content / 主要内容 -->
+      <template v-else>
+        <!-- Header -->
+        <div class="battle-header">
+          <div class="header-content">
+            <h1 class="battle-title">
+              <span class="title-icon">🎱</span>
+              Battle Rooms
+            </h1>
+            <div class="header-actions">
+              <router-link 
+                to="/battle/leaderboard"
+                class="btn-leaderboard"
+              >
+                <span class="btn-icon">🏆</span>
+                <span class="btn-text">Leaderboard</span>
+              </router-link>
+              <button 
+                v-if="battleStore.currentUser"
+                class="btn-profile"
+                @click="showProfileModal = true"
+              >
+                <span class="btn-icon">👤</span>
+                <span class="btn-text">My Profile</span>
+              </button>
+              <button 
+                v-if="isAdmin"
+                class="btn-admin-quick-match"
+                @click="showAdminQuickMatchModal = true"
+              >
+                <span class="btn-icon">⚡</span>
+                <span class="btn-text">Admin: Quick Start</span>
+              </button>
+              <!-- Desktop Create Room Button -->
+              <button 
+                class="btn-create-room btn-create-room-desktop"
+                @click="showCreateRoomModal = true"
+              >
+                <span class="btn-icon">➕</span>
+                <span class="btn-text">Create Room</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Create Room Button (Mobile Only, hidden on desktop) -->
+        <button 
+          class="btn-create-room-floating"
+          @click="showCreateRoomModal = true"
+          aria-label="Create Room"
+          title="Create Room"
+        >
+          <span class="floating-icon">➕</span>
+        </button>
+
+        <!-- Error Message -->
+        <div v-if="battleStore.error" class="error-message">
+          ⚠️ {{ battleStore.error }}
+        </div>
+
+        <!-- Rooms Grid -->
+        <div class="rooms-container">
+          <!-- In Progress Rooms -->
+          <div v-if="inProgressRooms.length > 0" class="room-section">
+            <h2 class="section-title">
+              <span class="status-badge in-progress">🟢</span>
+              In Progress
+            </h2>
+            <div class="rooms-grid">
+              <RoomCard
+                v-for="room in inProgressRooms"
+                :key="room.id"
+                :room="room"
+                :current-user="battleStore.currentUser"
+                @enter-room="enterRoom"
+              />
+            </div>
+          </div>
+
+          <!-- Waiting Rooms -->
+          <div v-if="waitingRooms.length > 0" class="room-section">
+            <h2 class="section-title">
+              <span class="status-badge waiting">🟡</span>
+              Waiting
+            </h2>
+            <div class="rooms-grid">
+              <RoomCard
+                v-for="room in waitingRooms"
+                :key="room.id"
+                :room="room"
+                :current-user="battleStore.currentUser"
+                @enter-room="enterRoom"
+                @join-room="joinRoom"
+              />
+            </div>
+          </div>
+
+          <!-- Ready Rooms -->
+          <div v-if="readyRooms.length > 0" class="room-section">
+            <h2 class="section-title">
+              <span class="status-badge ready">🔵</span>
+              Ready
+            </h2>
+            <div class="rooms-grid">
+              <RoomCard
+                v-for="room in readyRooms"
+                :key="room.id"
+                :room="room"
+                :current-user="battleStore.currentUser"
+                @enter-room="enterRoom"
+              />
+            </div>
+          </div>
+
+          <!-- Completed Rooms (Today) -->
+          <div v-if="completedRooms.length > 0" class="room-section">
+            <h2 class="section-title">
+              <span class="status-badge completed">✅</span>
+              Completed (Today)
+            </h2>
+            <div class="rooms-grid">
+              <RoomCard
+                v-for="room in completedRooms"
+                :key="room.id"
+                :room="room"
+                :current-user="battleStore.currentUser"
+                @enter-room="enterRoom"
+              />
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-if="battleStore.rooms.length === 0" class="empty-state">
+            <div class="empty-icon">🎱</div>
+            <p class="empty-text">No rooms available</p>
+            <p class="empty-hint">Create a new room to start a battle!</p>
+          </div>
+        </div>
+      </template>
     </div>
 
-    <!-- Main Content / 主要内容 -->
-    <template v-else>
-      <!-- Header -->
-      <div class="battle-header">
-        <div class="header-content">
-          <h1 class="battle-title">
-            <span class="title-icon">🎱</span>
-            Battle Rooms
-          </h1>
-          <div class="header-actions">
-            <router-link 
-              to="/battle/leaderboard"
-              class="btn-leaderboard"
-            >
-              <span class="btn-icon">🏆</span>
-              <span class="btn-text">Leaderboard</span>
-            </router-link>
-            <button 
-              v-if="battleStore.currentUser"
-              class="btn-profile"
+    <!-- Mobile layout (Stitch-style Battle UI) -->
+    <div class="block md:hidden min-h-screen flex justify-center items-stretch">
+      <!-- Mobile container (phone-style card on gradient background) -->
+      <div
+        class="w-full max-w-[430px] bg-background-light dark:bg-background-dark relative overflow-hidden flex flex-col rounded-[2rem] my-4 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+      >
+      <!-- Status bar spacer -->
+      <div class="h-12 w-full"></div>
+
+      <!-- Loading State -->
+      <div v-if="battleStore.loading && !battleStore.rooms.length" class="flex-1 flex flex-col items-center justify-center gap-4">
+        <div class="spinner"></div>
+        <p class="text-sm text-slate-200">Loading Battle rooms...</p>
+      </div>
+
+      <!-- Main Content -->
+      <template v-else>
+        <!-- Header Profile Card Section -->
+        <header class="px-6 pt-2 pb-6">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden bg-slate-700 flex items-center justify-center">
+                <img
+                  v-if="heroStats?.avatar_url"
+                  :src="heroStats.avatar_url"
+                  :alt="heroStats.name"
+                  class="w-full h-full object-cover"
+                >
+                <span v-else class="material-icons text-primary">sports_esports</span>
+              </div>
+              <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Competitor</p>
+                <h1 class="text-lg font-bold">
+                  {{ heroStats?.name || battleStore.currentUser?.name || 'Joy Billiards Player' }}
+                </h1>
+              </div>
+            </div>
+            <button
+              class="w-10 h-10 rounded-full glass-card flex items-center justify-center"
               @click="showProfileModal = true"
             >
-              <span class="btn-icon">👤</span>
-              <span class="btn-text">My Profile</span>
+              <span class="material-icons text-primary">person</span>
             </button>
-            <button 
-              v-if="isAdmin"
-              class="btn-admin-quick-match"
-              @click="showAdminQuickMatchModal = true"
+          </div>
+
+          <!-- Stats Hero Card (placeholder values for now) -->
+          <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary/80 to-blue-900 p-6 shadow-2xl active-glow">
+            <div class="absolute top-0 right-0 p-4 opacity-20">
+              <span class="material-icons text-8xl rotate-12">sports_handball</span>
+            </div>
+            <div class="relative z-10 flex justify-between items-start">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs font-bold uppercase tracking-widest text-blue-100">Battle Elo</span>
+                  <span class="material-icons text-[14px] text-orange-400 streak-glow">local_fire_department</span>
+                </div>
+                <div class="text-5xl font-bold tracking-tight mb-4">
+                  {{ battleEloLabel }}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="inline-flex items-center px-2 py-1 bg-white/20 rounded-lg backdrop-blur-sm mb-2">
+                  <span class="material-icons text-sm mr-1 text-yellow-400">workspace_premium</span>
+                  <span class="text-xs font-bold">{{ tierLabel }}</span>
+                </div>
+                <div class="flex gap-1 justify-end">
+                  <span
+                    v-for="n in 3"
+                    :key="n"
+                    class="material-icons text-xs"
+                    :class="n <= tierStars ? 'text-yellow-300' : 'text-slate-400'"
+                  >
+                    {{ n <= tierStars ? 'star' : 'star_outline' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="relative z-10 mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase font-bold text-blue-200">Win Streak</span>
+                <div class="flex flex-col gap-1 mt-1">
+                  <div class="flex gap-1">
+                    <div
+                      v-for="n in 5"
+                      :key="`streak-top-${n}`"
+                      class="w-6 h-1 rounded-full"
+                      :class="n <= winStreakBars ? 'bg-neon-green' : 'bg-white/30'"
+                    ></div>
+                  </div>
+                  <div class="flex gap-1">
+                    <div
+                      v-for="n in 5"
+                      :key="`streak-bottom-${n}`"
+                      class="w-6 h-1 rounded-full"
+                      :class="(n + 5) <= winStreakBars ? 'bg-neon-green' : 'bg-white/30'"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col text-right">
+                <span class="text-[10px] uppercase font-bold text-blue-200">Hot Streak</span>
+                <span class="text-sm font-bold flex items-center justify-end gap-1">
+                  {{ winStreakLabel }}
+                  <span class="material-icons text-[14px] text-orange-400">auto_awesome</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="px-6 mb-6">
+          <div class="bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-xl flex">
+            <button class="flex-1 py-2 px-4 rounded-lg bg-white dark:bg-primary text-slate-900 dark:text-white font-bold text-sm shadow-sm">
+              Join Room
+            </button>
+            <router-link
+              to="/battle/leaderboard"
+              class="flex-1 py-2 px-4 rounded-lg text-center text-slate-500 dark:text-slate-400 font-bold text-sm"
             >
-              <span class="btn-icon">⚡</span>
-              <span class="btn-text">Admin: Quick Start</span>
-            </button>
-            <!-- Desktop Create Room Button -->
-            <button 
-              class="btn-create-room btn-create-room-desktop"
-              @click="showCreateRoomModal = true"
+              Leaderboard
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div v-if="battleStore.error" class="mx-6 mb-4 text-xs text-red-300 bg-red-900/40 border border-red-500/40 px-3 py-2 rounded-lg">
+          ⚠️ {{ battleStore.error }}
+        </div>
+
+        <!-- Room List Section -->
+        <div class="flex-1 px-6 overflow-y-auto pb-24">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Active Rooms</h2>
+            <span class="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+              {{ activeRooms.length }} Live
+            </span>
+          </div>
+
+          <div class="space-y-4">
+            <div
+              v-for="room in activeRooms"
+              :key="room.id"
+              :class="[
+                'glass-card rounded-xl p-4 flex flex-col gap-4 border',
+                room.status === 'waiting' || room.status === 'ready'
+                  ? 'border-l-4 border-l-neon-green bg-white/90 text-slate-900'
+                  : 'border-slate-700 bg-slate-900/85 text-slate-50'
+              ]"
             >
-              <span class="btn-icon">➕</span>
-              <span class="btn-text">Create Room</span>
-            </button>
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-lg truncate text-slate-900 dark:text-slate-50">
+                    {{ room.room_name || 'Battle Room' }}
+                  </h3>
+                  <div class="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-300">
+                    <span class="flex items-center gap-1">
+                      <span class="material-icons text-xs">adjust</span>
+                      9-Ball
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <span class="material-icons text-xs">format_list_numbered</span>
+                      Race to {{ room.race_to_score || 5 }}
+                    </span>
+                    <span
+                      v-if="room.table_number"
+                      class="hidden sm:inline-flex items-center gap-1"
+                    >
+                      <span class="material-icons text-xs">table_bar</span>
+                      Table {{ room.table_number }}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  class="text-[10px] font-black px-2 py-1 rounded-lg uppercase"
+                  :class="{
+                    'bg-neon-green/10 text-neon-green': room.status === 'waiting' || room.status === 'ready',
+                    'bg-slate-700 text-slate-300': room.status === 'in_progress'
+                  }"
+                >
+                  {{ statusLabel(room.status) }}
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <div class="flex -space-x-3">
+                  <div class="w-8 h-8 rounded-full border-2 border-background-dark overflow-hidden bg-slate-700 flex items-center justify-center">
+                    <img
+                      v-if="room.player1?.avatar_url"
+                      :src="room.player1.avatar_url"
+                      :alt="room.player1?.name"
+                      class="w-full h-full object-cover"
+                    >
+                    <span v-else class="material-icons text-xs text-slate-300">person</span>
+                  </div>
+                  <div
+                    v-if="room.player2_id"
+                    class="w-8 h-8 rounded-full border-2 border-background-dark overflow-hidden bg-slate-700 flex items-center justify-center"
+                  >
+                    <img
+                      v-if="room.player2?.avatar_url"
+                      :src="room.player2.avatar_url"
+                      :alt="room.player2?.name"
+                      class="w-full h-full object-cover"
+                    >
+                    <span v-else class="material-icons text-xs text-slate-300">person</span>
+                  </div>
+                  <div
+                    v-else
+                    class="w-8 h-8 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center bg-background-dark/50"
+                  >
+                    <span class="material-icons text-xs text-slate-400">person_add</span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <button
+                  v-if="room.status === 'waiting' || room.status === 'ready'"
+                  class="px-5 py-2 bg-primary text-white text-xs font-bold rounded-lg uppercase tracking-wide disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="!canJoinRoom(room)"
+                  @click="joinRoom(room)"
+                >
+                  Join Game
+                </button>
+                <button
+                  v-else
+                  class="px-5 py-2 bg-white/10 text-slate-200 text-xs font-bold rounded-lg uppercase tracking-wide"
+                  @click="enterRoom(room)"
+                >
+                  View Room
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completed Rooms (Today) -->
+          <div v-if="completedRooms.length" class="mt-8">
+            <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-3">
+              Completed (Today)
+            </h2>
+            <div class="space-y-3">
+              <RoomCard
+                v-for="room in completedRooms"
+                :key="room.id"
+                :room="room"
+                :current-user="battleStore.currentUser"
+                @enter-room="enterRoom"
+              />
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            v-if="!activeRooms.length && !completedRooms.length && !battleStore.loading"
+            class="mt-10 text-center text-slate-400 text-sm"
+          >
+            <div class="text-4xl mb-2">🎱</div>
+            <p class="font-semibold">No Battle rooms yet</p>
+            <p class="text-xs mt-1">Tap the + button to create a new match.</p>
           </div>
         </div>
-      </div>
 
-      <!-- Floating Create Room Button (Mobile Only) -->
-      <button 
-        class="btn-create-room-floating"
-        @click="showCreateRoomModal = true"
-        aria-label="Create Room"
-        title="Create Room"
-      >
-        <span class="floating-icon">➕</span>
-      </button>
+        <!-- Floating Action Button -->
+        <button
+          class="absolute bottom-24 right-6 w-14 h-14 bg-primary rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform active:scale-90 z-20"
+          @click="showCreateRoomModal = true"
+          aria-label="Create Battle Room"
+        >
+          <span class="material-icons text-3xl text-white">add</span>
+        </button>
 
-      <!-- Error Message -->
-      <div v-if="battleStore.error" class="error-message">
-        ⚠️ {{ battleStore.error }}
-      </div>
-
-      <!-- Rooms Grid -->
-      <div class="rooms-container">
-        <!-- In Progress Rooms -->
-        <div v-if="inProgressRooms.length > 0" class="room-section">
-          <h2 class="section-title">
-            <span class="status-badge in-progress">🟢</span>
-            In Progress
-          </h2>
-          <div class="rooms-grid">
-            <RoomCard
-              v-for="room in inProgressRooms"
-              :key="room.id"
-              :room="room"
-              :current-user="battleStore.currentUser"
-              @enter-room="enterRoom"
-            />
+        <!-- Bottom Navigation -->
+        <nav class="absolute bottom-0 left-0 right-0 h-20 bg-background-dark/80 backdrop-blur-xl border-t border-white/5 flex items-center justify-around px-4 pb-2 z-10 text-slate-500">
+          <div class="flex flex-col items-center gap-1 text-primary">
+            <span class="material-icons">sports_esports</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Battle</span>
           </div>
-        </div>
-
-        <!-- Waiting Rooms -->
-        <div v-if="waitingRooms.length > 0" class="room-section">
-          <h2 class="section-title">
-            <span class="status-badge waiting">🟡</span>
-            Waiting
-          </h2>
-          <div class="rooms-grid">
-            <RoomCard
-              v-for="room in waitingRooms"
-              :key="room.id"
-              :room="room"
-              :current-user="battleStore.currentUser"
-              @enter-room="enterRoom"
-              @join-room="joinRoom"
-            />
+          <div class="flex flex-col items-center gap-1">
+            <span class="material-icons">history</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">History</span>
           </div>
-        </div>
-
-        <!-- Ready Rooms -->
-        <div v-if="readyRooms.length > 0" class="room-section">
-          <h2 class="section-title">
-            <span class="status-badge ready">🔵</span>
-            Ready
-          </h2>
-          <div class="rooms-grid">
-            <RoomCard
-              v-for="room in readyRooms"
-              :key="room.id"
-              :room="room"
-              :current-user="battleStore.currentUser"
-              @enter-room="enterRoom"
-            />
-          </div>
-        </div>
-
-        <!-- Completed Rooms (Today) -->
-        <div v-if="completedRooms.length > 0" class="room-section">
-          <h2 class="section-title">
-            <span class="status-badge completed">✅</span>
-            Completed (Today)
-          </h2>
-          <div class="rooms-grid">
-            <RoomCard
-              v-for="room in completedRooms"
-              :key="room.id"
-              :room="room"
-              :current-user="battleStore.currentUser"
-              @enter-room="enterRoom"
-            />
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-if="battleStore.rooms.length === 0" class="empty-state">
-          <div class="empty-icon">🎱</div>
-          <p class="empty-text">No rooms available</p>
-          <p class="empty-hint">Create a new room to start a battle!</p>
-        </div>
-      </div>
-    </template>
+          <router-link
+            to="/battle/leaderboard"
+            class="flex flex-col items-center gap-1"
+          >
+            <span class="material-icons">emoji_events</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Ranks</span>
+          </router-link>
+          <button
+            class="flex flex-col items-center gap-1"
+            @click="showProfileModal = true"
+          >
+            <span class="material-icons">person_outline</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+          </button>
+        </nav>
+      </template>
+      </div> <!-- end mobile container -->
+    </div> <!-- end mobile wrapper -->
 
     <!-- Admin Quick Match Modal -->
     <AdminQuickMatchModal
@@ -184,6 +487,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useBattleStore } from '../stores/battleStore'
+import { supabase } from '../config/supabase'
 import { getTodayNZStartEnd } from '../utils/timezone'
 import RoomCard from '../components/BattleRoomCard.vue'
 import CreateRoomModal from '../components/CreateRoomModal.vue'
@@ -198,6 +502,8 @@ const showCreateRoomModal = ref(false)
 const showAdminQuickMatchModal = ref(false)
 const showProfileModal = ref(false)
 const selectedRoom = ref(null)
+const heroStats = ref(null)
+const heroStatsLoading = ref(false)
 
 // Computed
 const isAdmin = computed(() => {
@@ -205,6 +511,10 @@ const isAdmin = computed(() => {
 })
 
 // Computed
+const activeRooms = computed(() => {
+  return battleStore.rooms.filter(r => ['waiting', 'ready', 'in_progress'].includes(r.status))
+})
+
 const inProgressRooms = computed(() => {
   return battleStore.rooms.filter(r => r.status === 'in_progress')
 })
@@ -230,6 +540,86 @@ const completedRooms = computed(() => {
   })
 })
 
+// Map internal tier value to human-readable name
+const formatTierName = (tier) => {
+  if (!tier) return 'Unranked'
+  const tierMap = {
+    bronze_iii: 'Bronze III',
+    bronze_ii: 'Bronze II',
+    bronze_i: 'Bronze I',
+    silver_iii: 'Silver III',
+    silver_ii: 'Silver II',
+    silver_i: 'Silver I',
+    gold_iv: 'Gold IV',
+    gold_iii: 'Gold III',
+    gold_ii: 'Gold II',
+    gold_i: 'Gold I',
+    platinum_iv: 'Platinum IV',
+    platinum_iii: 'Platinum III',
+    platinum_ii: 'Platinum II',
+    platinum_i: 'Platinum I',
+    diamond_v: 'Diamond V',
+    diamond_iv: 'Diamond IV',
+    diamond_iii: 'Diamond III',
+    diamond_ii: 'Diamond II',
+    diamond_i: 'Diamond I',
+    star_glory_v: 'Master V',
+    star_glory_iv: 'Master IV',
+    star_glory_iii: 'Master III',
+    star_glory_ii: 'Master II',
+    star_glory_i: 'Master I',
+    king_strongest: 'Grand Master',
+    king_peerless: 'The King',
+    king_glory: 'Legend',
+    king_legendary: 'Hall of Fame'
+  }
+  return tierMap[tier] || tier
+}
+
+// Stats for hero card (from users table Battle fields)
+const battleEloLabel = computed(() => {
+  if (heroStats.value?.battle_elo_rating) {
+    return Math.round(heroStats.value.battle_elo_rating)
+  }
+  return 1000
+})
+
+const tierLabel = computed(() => {
+  return formatTierName(heroStats.value?.battle_tier)
+})
+
+const tierStars = computed(() => {
+  return heroStats.value?.battle_stars || 0
+})
+
+const currentStreak = computed(() => {
+  return heroStats.value?.current_win_streak || 0
+})
+
+const winStreakBars = computed(() => {
+  // Show up to 10 bars (2 rows of 5)
+  const streak = currentStreak.value
+  if (!streak) return 0
+  return Math.min(10, streak)
+})
+
+const winStreakLabel = computed(() => {
+  const streak = currentStreak.value
+  if (!streak) return 'No streak yet'
+  return `${streak} WINS`
+})
+
+const statusLabel = (status) => {
+  const map = {
+    waiting: 'Waiting',
+    ready: 'Ready',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+    cancelled: 'Cancelled'
+  }
+  return map[status] || status
+}
+
 // Methods
 const loadRooms = async () => {
   await battleStore.loadRooms()
@@ -244,6 +634,52 @@ const joinRoom = async (room) => {
   const result = await battleStore.joinRoom(room.id)
   if (result.success) {
     await loadRooms()
+  }
+}
+
+const canJoinRoom = (room) => {
+  const user = battleStore.currentUser
+  if (!user) return false
+  if (room.status !== 'waiting') return false
+  if (room.player2_id) return false
+  if (room.player1_id === user.id) return false
+  return true
+}
+
+// Load hero stats for current user (Battle Elo, tier, streak)
+const loadHeroStats = async () => {
+  try {
+    heroStatsLoading.value = true
+    // Ensure we have currentUser
+    if (!battleStore.currentUser) {
+      await battleStore.initCurrentUser()
+    }
+    if (!battleStore.currentUser?.id) return
+
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        name,
+        avatar_url,
+        battle_elo_rating,
+        battle_tier,
+        battle_stars,
+        current_win_streak,
+        season_best_win_streak,
+        battle_wins,
+        battle_losses
+      `)
+      .eq('id', battleStore.currentUser.id)
+      .single()
+
+    if (!error && data) {
+      heroStats.value = data
+    }
+  } catch (err) {
+    console.error('[BattlePage] Failed to load hero stats:', err)
+  } finally {
+    heroStatsLoading.value = false
   }
 }
 
@@ -269,6 +705,7 @@ const refreshRooms = async () => {
 onMounted(async () => {
   await battleStore.initCurrentUser()
   await loadRooms()
+  await loadHeroStats()
   
   // Subscribe to real-time updates for all rooms
   battleStore.subscribeToRooms()
