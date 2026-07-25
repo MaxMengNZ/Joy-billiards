@@ -23,14 +23,73 @@
     </section>
 
     <div class="song-content">
-      <!-- Live queue: visible to everyone (guests + members) -->
+      <!-- Real Spotify player: currently playing + Spotify queue (public) -->
+      <div class="panel spotify-panel">
+        <div class="panel-header-row">
+          <h2 class="panel-title">On Spotify</h2>
+          <span class="spotify-live-hint" v-if="songStore.spotifyPlayer.updated_at">
+            Live · updates ~10s
+          </span>
+        </div>
+        <p class="hint">
+          What the venue Spotify is actually playing and what is already queued there.
+          Website requests only appear here after staff uses Play / Queue on Spotify.
+        </p>
+
+        <div v-if="songStore.spotifyNowPlaying" class="now-playing spotify-now">
+          <span class="badge playing">{{ songStore.spotifyPlayer.is_playing ? 'Playing now' : 'Paused' }}</span>
+          <div class="queue-row">
+            <img
+              v-if="songStore.spotifyNowPlaying.album_art_url"
+              :src="songStore.spotifyNowPlaying.album_art_url"
+              alt=""
+              class="album-art"
+            />
+            <div class="result-meta">
+              <div class="track-name">{{ songStore.spotifyNowPlaying.track_name }}</div>
+              <div class="artist-name">{{ songStore.spotifyNowPlaying.artist_name }}</div>
+              <div v-if="playbackProgress" class="playback-progress">
+                <div class="progress-track">
+                  <div class="progress-fill" :style="{ width: playbackProgress.percent + '%' }"></div>
+                </div>
+                <span class="progress-time">{{ playbackProgress.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p v-else class="empty-inline">Nothing playing on the venue Spotify right now.</p>
+
+        <p v-if="songStore.spotifyQueue.length" class="queue-count-hint">
+          {{ songStore.spotifyQueue.length }} in Spotify queue
+        </p>
+        <ol class="queue-list" v-if="songStore.spotifyQueue.length">
+          <li
+            v-for="(item, index) in songStore.spotifyQueue"
+            :key="(item.spotify_track_id || item.track_name) + '-' + index"
+            class="queue-item"
+          >
+            <span class="pos">#{{ index + 1 }}</span>
+            <img v-if="item.album_art_url" :src="item.album_art_url" alt="" class="album-art" />
+            <div class="result-meta">
+              <div class="track-name">{{ item.track_name }}</div>
+              <div class="artist-name">{{ item.artist_name }}</div>
+            </div>
+          </li>
+        </ol>
+        <p v-else class="empty-inline">Spotify queue is empty.</p>
+      </div>
+
+      <!-- Website Live queue: member requests -->
       <div class="panel">
         <div class="panel-header-row">
-          <h2 class="panel-title">Live queue</h2>
+          <h2 class="panel-title">Website live queue</h2>
           <button class="btn btn-ghost btn-sm" type="button" @click="refreshQueue" :disabled="songStore.loading">
             Refresh
           </button>
         </div>
+        <p class="hint">
+          Songs requested on this website (waiting for staff to play or queue them on Spotify).
+        </p>
 
         <p v-if="actionMessage" class="inline-toast" :class="actionMessageType" role="status">
           {{ actionMessage }}
@@ -312,22 +371,23 @@ export default {
       return `#${pos} in line · ${pos - 1} ahead`
     }
 
-    // Real Spotify progress for the Now playing card (only when the synced
-    // Spotify track matches the website's now-playing row)
+    // Real Spotify progress for the On Spotify card
     const playbackProgress = computed(() => {
-      const now = songStore.nowPlaying
+      const now = songStore.spotifyNowPlaying
       const pb = songStore.playback
       if (!now || !pb.synced || !pb.is_playing) return null
-      if (pb.track_id !== now.spotify_track_id) return null
-      if (pb.progress_ms == null || !pb.duration_ms) return null
+      if (pb.track_id && now.spotify_track_id && pb.track_id !== now.spotify_track_id) return null
+      const progress = pb.progress_ms ?? now.progress_ms
+      const duration = pb.duration_ms ?? now.duration_ms
+      if (progress == null || !duration) return null
 
       const fmt = (ms) => {
         const s = Math.max(0, Math.floor(ms / 1000))
         return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
       }
       return {
-        percent: Math.min(100, Math.round((pb.progress_ms / pb.duration_ms) * 100)),
-        label: `${fmt(pb.progress_ms)} / ${fmt(pb.duration_ms)}`
+        percent: Math.min(100, Math.round((progress / duration) * 100)),
+        label: `${fmt(progress)} / ${fmt(duration)}`
       }
     })
 
@@ -367,8 +427,11 @@ export default {
     }
 
     const refreshQueue = async () => {
-      await songStore.fetchQueue()
-      if (authStore.isMember) await songStore.fetchPriorityQuota()
+      await Promise.all([
+        songStore.fetchQueue(),
+        songStore.syncPlayback(),
+        authStore.isMember ? songStore.fetchPriorityQuota() : Promise.resolve()
+      ])
     }
 
     const refreshAll = refreshQueue
@@ -910,6 +973,19 @@ export default {
   font-weight: 700;
   color: #94a3b8;
   font-variant-numeric: tabular-nums;
+}
+
+.spotify-panel {
+  border-color: rgba(29, 185, 84, 0.25);
+}
+
+.spotify-live-hint {
+  font-size: 0.8rem;
+  color: #86efac;
+}
+
+.spotify-now {
+  margin-top: 0.75rem;
 }
 
 .now-playing {

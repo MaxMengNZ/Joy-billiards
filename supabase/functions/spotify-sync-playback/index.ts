@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MIN_SYNC_INTERVAL_MS = 8000;
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -14,14 +16,25 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function mapTrack(item: Record<string, unknown> | null | undefined) {
+  if (!item || typeof item !== "object") return null;
+  const album = item.album as { name?: string; images?: Array<{ url?: string }> } | undefined;
+  const artists = (item.artists as Array<{ name: string }> | undefined) || [];
+  return {
+    spotify_track_id: (item.id as string) || null,
+    track_name: (item.name as string) || null,
+    artist_name: artists.map((a) => a.name).filter(Boolean).join(", ") || null,
+    album_name: album?.name || null,
+    album_art_url: album?.images?.[0]?.url || null,
+    duration_ms: typeof item.duration_ms === "number" ? item.duration_ms : null,
+  };
+}
+
 async function refreshVenueAccessToken() {
   const clientId = Deno.env.get("SPOTIFY_CLIENT_ID");
   const clientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET");
   const refreshToken = Deno.env.get("SPOTIFY_REFRESH_TOKEN");
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    return null;
-  }
+  if (!clientId || !clientSecret || !refreshToken) return null;
 
   const basic = btoa(`${clientId}:${clientSecret}`);
   const res = await fetch("https://accounts.spotify.com/api/token", {
@@ -35,7 +48,6 @@ async function refreshVenueAccessToken() {
       refresh_token: refreshToken,
     }),
   });
-
   if (!res.ok) return null;
   const data = await res.json();
   return (data.access_token as string) || null;
@@ -53,70 +65,123 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // Rate-limit: reuse fresh snapshot instead of hammering Spotify
+    const { data: existing } = await adminClient
+      .from("spotify_player_snapshot")
+      .select("currently_playing, queue, is_playing, updated_at")
+      .eq("id", 1)
+      .maybeSingle();
+
+    const updatedAt = existing?.updated_at ? new Date(existing.updated_at).getTime() : 0;
+    let bodyForce = false;
+    if (req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      bodyForce = !!body?.force;
+    }
+
+    if (!bodyForce && existing && Date.now() - updatedAt < MIN_SYNC_INTERVAL_MS) {
+      const cp = existing.currently_playing as Record<string, unknown> | null;
+      return json({
+        success: true,
+        cached: true,
+        spotify: {
+          track_id: (cp?.spotify_track_id as string) || null,
+          track_name: (cp?.track_name as string) || null,
+          artist_name: (cp?.artist_name as string) || null,
+          is_playing: !!existing.is_playing,
+          progress_ms: (cp?.progress_ms as number) ?? null,
+          duration_ms: (cp?.duration_ms as number) ?? null,
+        },
+        currently_playing: existing.currently_playing,
+        queue: existing.queue || [],
+        is_playing: !!existing.is_playing,
+        updated_at: existing.updated_at,
+        changes: [],
+      });
+    }
+
     const accessToken = await refreshVenueAccessToken();
     if (!accessToken) {
       return json({
         success: false,
         skipped: true,
         message: "Spotify venue token not configured.",
+        currently_playing: existing?.currently_playing ?? null,
+        queue: existing?.queue ?? [],
+        is_playing: false,
       });
     }
 
-    // What is Spotify actually playing right now?
-    const nowRes = await fetch(
-      "https://api.spotify.com/v1/me/player/currently-playing",
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
+    // Fetch currently-playing (includes progress) + queue in parallel
+    const [nowRes, queueRes] = await Promise.all([
+      fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+      fetch("https://api.spotify.com/v1/me/player/queue", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+    ]);
 
-    let spotify: {
-      track_id: string | null;
-      track_name: string | null;
-      artist_name: string | null;
-      is_playing: boolean;
-      progress_ms: number | null;
-      duration_ms: number | null;
-    } = {
-      track_id: null,
-      track_name: null,
-      artist_name: null,
-      is_playing: false,
-      progress_ms: null,
-      duration_ms: null,
-    };
+    let currentlyPlaying: Record<string, unknown> | null = null;
+    let isPlaying = false;
+    let progressMs: number | null = null;
 
     if (nowRes.status === 200) {
       const data = await nowRes.json();
-      const item = data?.item;
-      spotify = {
-        track_id: item?.id ?? null,
-        track_name: item?.name ?? null,
-        artist_name: (item?.artists || [])
-          .map((a: { name: string }) => a.name)
-          .join(", ") || null,
-        is_playing: !!data?.is_playing,
-        progress_ms: typeof data?.progress_ms === "number" ? data.progress_ms : null,
-        duration_ms: typeof item?.duration_ms === "number" ? item.duration_ms : null,
-      };
+      const mapped = mapTrack(data?.item);
+      isPlaying = !!data?.is_playing;
+      progressMs = typeof data?.progress_ms === "number" ? data.progress_ms : null;
+      currentlyPlaying = mapped
+        ? { ...mapped, progress_ms: progressMs, is_playing: isPlaying }
+        : null;
     }
-    // 204 = nothing playing / no active device → spotify stays "not playing"
 
-    // Website's current "playing" row
+    let queueTracks: Array<Record<string, unknown>> = [];
+    let queueCurrently = currentlyPlaying;
+
+    if (queueRes.ok) {
+      const qData = await queueRes.json();
+      // Prefer queue endpoint's currently_playing if we didn't get one
+      if (!queueCurrently && qData?.currently_playing) {
+        queueCurrently = mapTrack(qData.currently_playing);
+        if (queueCurrently) {
+          currentlyPlaying = {
+            ...queueCurrently,
+            progress_ms: progressMs,
+            is_playing: isPlaying,
+          };
+        }
+      }
+      queueTracks = ((qData?.queue as unknown[]) || [])
+        .map((t) => mapTrack(t as Record<string, unknown>))
+        .filter(Boolean) as Array<Record<string, unknown>>;
+    }
+
+    await adminClient.from("spotify_player_snapshot").upsert({
+      id: 1,
+      currently_playing: currentlyPlaying,
+      queue: queueTracks,
+      is_playing: isPlaying,
+      updated_at: new Date().toISOString(),
+    });
+
+    // Align website song_requests with real Spotify playback
+    const changes: string[] = [];
+    const playingTrackId = (currentlyPlaying?.spotify_track_id as string) || null;
+
     const { data: playingRow } = await adminClient
       .from("song_requests")
-      .select("id, spotify_track_id, track_name")
+      .select("id, spotify_track_id")
       .eq("status", "playing")
       .maybeSingle();
 
-    const changes: string[] = [];
-
     if (playingRow) {
       const stillPlayingSame =
-        spotify.track_id &&
-        spotify.track_id === playingRow.spotify_track_id &&
-        spotify.is_playing;
+        playingTrackId &&
+        playingTrackId === playingRow.spotify_track_id &&
+        isPlaying;
 
       if (!stillPlayingSame) {
-        // Spotify moved on (finished, skipped, or different track) → finish it
         await adminClient
           .from("song_requests")
           .update({
@@ -130,18 +195,28 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // If Spotify is playing a track that matches a pending request, promote it.
-    if (spotify.track_id && spotify.is_playing) {
+    if (playingTrackId && isPlaying) {
       const { data: pendingMatch } = await adminClient
         .from("song_requests")
         .select("id")
         .eq("status", "pending")
-        .eq("spotify_track_id", spotify.track_id)
+        .eq("spotify_track_id", playingTrackId)
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
 
       if (pendingMatch) {
+        // Demote any other playing first
+        await adminClient
+          .from("song_requests")
+          .update({
+            status: "played",
+            played_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("status", "playing")
+          .neq("id", pendingMatch.id);
+
         await adminClient
           .from("song_requests")
           .update({
@@ -157,7 +232,19 @@ Deno.serve(async (req: Request) => {
 
     return json({
       success: true,
-      spotify,
+      cached: false,
+      spotify: {
+        track_id: playingTrackId,
+        track_name: (currentlyPlaying?.track_name as string) || null,
+        artist_name: (currentlyPlaying?.artist_name as string) || null,
+        is_playing: isPlaying,
+        progress_ms: progressMs,
+        duration_ms: (currentlyPlaying?.duration_ms as number) ?? null,
+      },
+      currently_playing: currentlyPlaying,
+      queue: queueTracks,
+      is_playing: isPlaying,
+      updated_at: new Date().toISOString(),
       changes,
     });
   } catch (err) {

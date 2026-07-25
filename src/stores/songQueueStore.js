@@ -45,6 +45,13 @@ export const useSongQueueStore = defineStore('songQueue', {
       artist_name: null,
       progress_ms: null,
       duration_ms: null
+    },
+    // Venue Spotify player snapshot (public: currently playing + Spotify queue)
+    spotifyPlayer: {
+      currently_playing: null,
+      queue: [],
+      is_playing: false,
+      updated_at: null
     }
   }),
 
@@ -56,7 +63,10 @@ export const useSongQueueStore = defineStore('songQueue', {
       return pending[0] || null
     },
     myPending: (state) => state.queue.filter((r) => r.status === 'pending' && r.is_mine),
-    pendingCount: (state) => state.queue.filter((r) => r.status === 'pending').length
+    pendingCount: (state) => state.queue.filter((r) => r.status === 'pending').length,
+    spotifyNowPlaying: (state) => state.spotifyPlayer.currently_playing || null,
+    spotifyQueue: (state) =>
+      Array.isArray(state.spotifyPlayer.queue) ? state.spotifyPlayer.queue : []
   },
 
   actions: {
@@ -67,14 +77,45 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
+    async fetchSpotifyPlayerSnapshot() {
+      try {
+        const { data, error } = await supabase.rpc('get_spotify_player_snapshot')
+        if (error) throw error
+        if (!data) return
+        this.spotifyPlayer = {
+          currently_playing: data.currently_playing || null,
+          queue: Array.isArray(data.queue) ? data.queue : [],
+          is_playing: !!data.is_playing,
+          updated_at: data.updated_at || null
+        }
+        const cp = data.currently_playing
+        if (cp) {
+          this.playback = {
+            synced: true,
+            is_playing: !!data.is_playing,
+            track_id: cp.spotify_track_id || null,
+            track_name: cp.track_name || null,
+            artist_name: cp.artist_name || null,
+            progress_ms: cp.progress_ms ?? null,
+            duration_ms: cp.duration_ms ?? null
+          }
+        }
+      } catch (err) {
+        console.warn('fetchSpotifyPlayerSnapshot', err?.message || err)
+      }
+    },
+
     async syncPlayback() {
       try {
         const { data, error } = await supabase.functions.invoke('spotify-sync-playback', {
           body: {}
         })
         if (error || !data?.success) {
-          // Venue token missing or Spotify unreachable — duration fallback still applies
-          this.playback = { ...this.playback, synced: false }
+          // Fall back to last public snapshot so guests still see Spotify queue
+          await this.fetchSpotifyPlayerSnapshot()
+          if (!data?.success) {
+            this.playback = { ...this.playback, synced: !!this.spotifyPlayer.currently_playing }
+          }
           return
         }
         const s = data.spotify || {}
@@ -87,13 +128,19 @@ export const useSongQueueStore = defineStore('songQueue', {
           progress_ms: s.progress_ms ?? null,
           duration_ms: s.duration_ms ?? null
         }
-        // If the sync changed any request statuses, refresh the queue view
+        this.spotifyPlayer = {
+          currently_playing: data.currently_playing || null,
+          queue: Array.isArray(data.queue) ? data.queue : [],
+          is_playing: !!data.is_playing,
+          updated_at: data.updated_at || null
+        }
         if (Array.isArray(data.changes) && data.changes.length) {
           await this.fetchQueue({ silent: true })
         }
       } catch (err) {
         console.warn('syncPlayback failed:', err?.message || err)
-        this.playback = { ...this.playback, synced: false }
+        await this.fetchSpotifyPlayerSnapshot()
+        this.playback = { ...this.playback, synced: !!this.spotifyPlayer.currently_playing }
       }
     },
 
