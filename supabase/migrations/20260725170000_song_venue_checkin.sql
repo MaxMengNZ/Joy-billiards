@@ -39,20 +39,19 @@ GRANT ALL ON TABLE public.song_venue_presence TO service_role;
 CREATE OR REPLACE FUNCTION public._song_checkin_code_token()
 RETURNS text
 LANGUAGE plpgsql
+SET search_path TO 'public', 'pg_temp'
 AS $$
 DECLARE
   v_raw text;
 BEGIN
-  v_raw := translate(
-    encode(gen_random_bytes(18), 'base64'),
-    '+/',
-    '-_'
-  );
-  RETURN rtrim(v_raw, '=');
+  -- gen_random_uuid() is always available (no pgcrypto/search_path dependency).
+  v_raw := replace(gen_random_uuid()::text, '-', '')
+        || replace(gen_random_uuid()::text, '-', '');
+  RETURN substr(v_raw, 1, 24);
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public._song_checkin_code_token() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._song_checkin_code_token() FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.has_song_venue_presence()
 RETURNS boolean
