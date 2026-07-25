@@ -92,9 +92,58 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json().catch(() => ({}));
+    const action = body.action as string | undefined;
     let uri = body.uri as string | undefined;
     const trackId = body.spotify_track_id as string | undefined;
     const requestId = body.request_id as string | undefined;
+
+    if (action === "skip_current") {
+      const { accessToken, missing } = await refreshVenueAccessToken();
+      if (!accessToken) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            skipped: true,
+            missing_secrets: missing,
+            message: "Spotify venue token is not configured.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const nextRes = await fetch("https://api.spotify.com/v1/me/player/next", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!nextRes.ok) {
+        const text = await nextRes.text();
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Spotify skip failed: ${nextRes.status} ${text}`,
+            hint: "Ensure the venue Premium account has an active playback device.",
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (requestId) {
+        await adminClient
+          .from("song_requests")
+          .update({ status: "skipped", played_at: new Date().toISOString() })
+          .eq("id", requestId);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "skip_current",
+          message: "Skipped the track currently playing on Spotify.",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     if (!uri && trackId) {
       if (String(trackId).startsWith("mock_track_")) {

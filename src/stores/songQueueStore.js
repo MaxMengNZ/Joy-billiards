@@ -348,6 +348,41 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
+    async skipCurrentOnSpotify(requestId) {
+      this.actionBusyId = requestId
+      try {
+        const { data, error } = await supabase.functions.invoke('spotify-push-queue', {
+          body: {
+            action: 'skip_current',
+            request_id: requestId
+          }
+        })
+
+        let payload = data
+        if (!payload && error?.context && typeof error.context.json === 'function') {
+          try {
+            payload = await error.context.json()
+          } catch {
+            payload = null
+          }
+        }
+
+        if (error && !payload) throw error
+        if (!payload?.success) {
+          const message = payload?.hint
+            ? `${payload.error || payload.message} ${payload.hint}`
+            : payload?.error || payload?.message || 'Spotify skip failed.'
+          throw new Error(message)
+        }
+
+        this.queue = this.queue.filter((r) => r.id !== requestId)
+        await this.fetchQueue({ silent: true })
+        return payload
+      } finally {
+        this.actionBusyId = null
+      }
+    },
+
     subscribeRealtime() {
       if (this.channel) return
       this.channel = supabase

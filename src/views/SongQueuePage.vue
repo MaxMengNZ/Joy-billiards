@@ -71,9 +71,9 @@
               <button
                 class="btn btn-ghost btn-sm"
                 :disabled="songStore.actionBusyId === songStore.nowPlaying.id"
-                @click="setStatus(songStore.nowPlaying.id, 'skipped')"
+                @click="skipCurrentSpotify(songStore.nowPlaying.id)"
               >
-                Skip
+                {{ songStore.actionBusyId === songStore.nowPlaying.id ? 'Skipping…' : 'Skip current on Spotify' }}
               </button>
             </div>
           </div>
@@ -133,7 +133,7 @@
                   :disabled="!!songStore.actionBusyId"
                   @click="pushSpotify(item)"
                 >
-                  {{ songStore.actionBusyId === item.id ? 'Sending…' : 'Send to Spotify' }}
+                  {{ songStore.actionBusyId === item.id ? 'Sending…' : 'Queue on Spotify' }}
                 </button>
                 <button
                   class="btn btn-ghost btn-sm"
@@ -230,9 +230,10 @@
         <div v-if="authStore.isAdmin" class="panel admin-panel">
           <h2 class="panel-title">Staff controls</h2>
           <p class="hint">
-            Play / Skip updates the website Live queue only. “Send to Spotify” adds the track to the
-            <strong>venue Premium</strong> Spotify app Queue — open that account on a playing device,
-            then check Queue (not Home / Liked Songs).
+            “Queue on Spotify” adds the track to the venue Premium queue. Spotify does not provide an
+            API to remove one specific queued track, so this cannot be undone from the website. Remove
+            it manually in the Spotify app if needed. “Skip current on Spotify” only advances the track
+            that is currently playing.
           </p>
           <button
             v-if="songStore.nextUp"
@@ -413,6 +414,11 @@ export default {
     }
 
     const pushSpotify = async (item) => {
+      const confirmed = window.confirm(
+        'Queue this track on Spotify?\n\nSpotify does not let websites remove one specific queued track. If you change your mind after sending, remove it manually in the Spotify app.'
+      )
+      if (!confirmed) return
+
       try {
         const data = await songStore.pushToSpotify(item)
         if (data?.skipped) {
@@ -424,7 +430,7 @@ export default {
         } else if (data?.success) {
           const device = data.device_name ? ` on “${data.device_name}”` : ''
           flash(
-            `Added to venue Spotify Queue${device}. Open the venue Premium Spotify app → Queue to verify.`,
+            `Added to venue Spotify Queue${device}. Spotify does not support undoing this from the website.`,
             'ok'
           )
         } else {
@@ -432,6 +438,15 @@ export default {
         }
       } catch (err) {
         flash(err.message || 'Spotify push failed', 'error')
+      }
+    }
+
+    const skipCurrentSpotify = async (id) => {
+      try {
+        const data = await songStore.skipCurrentOnSpotify(id)
+        flash(data?.message || 'Skipped the track currently playing on Spotify.')
+      } catch (err) {
+        flash(err.message || 'Spotify skip failed', 'error')
       }
     }
 
@@ -498,6 +513,7 @@ export default {
       cancelMine,
       setStatus,
       pushSpotify,
+      skipCurrentSpotify,
       playNext
     }
   }
