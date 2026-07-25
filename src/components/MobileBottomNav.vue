@@ -20,12 +20,12 @@
     </router-link>
 
     <router-link 
-      to="/battle" 
+      to="/songs" 
       class="nav-item"
-      :class="{ active: isActive('/battle') }"
+      :class="{ active: isActive('/songs') }"
     >
-      <span class="nav-icon">⚔️</span>
-      <span class="nav-label">Battle</span>
+      <span class="nav-icon">🎵</span>
+      <span class="nav-label">Songs</span>
     </router-link>
 
     <router-link 
@@ -61,13 +61,13 @@
       </router-link>
 
       <router-link 
-        to="/songs" 
+        to="/battle" 
         class="more-menu-item"
-        :class="{ active: isActive('/songs') }"
-        @click="handleMoreNavClick('/songs')"
+        :class="{ active: isActive('/battle') }"
+        @click="handleMoreNavClick('/battle')"
       >
-        <span class="more-icon">🎵</span>
-        <span class="more-label">Songs</span>
+        <span class="more-icon">⚔️</span>
+        <span class="more-label">Battle</span>
       </router-link>
 
       <router-link 
