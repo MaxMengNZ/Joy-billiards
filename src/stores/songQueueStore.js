@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../config/supabase'
+import { useAuthStore } from './authStore'
 
 function sortQueue(rows) {
   return [...(rows || [])].sort((a, b) => {
@@ -12,6 +13,13 @@ function sortQueue(rows) {
 
 function isMockTrackId(id) {
   return !id || String(id).startsWith('mock_track_')
+}
+
+function requireAdmin() {
+  const auth = useAuthStore()
+  if (!auth.isAdmin) {
+    throw new Error('Admin access required for playback controls.')
+  }
 }
 
 export const useSongQueueStore = defineStore('songQueue', {
@@ -163,6 +171,14 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     async submitRequest(track, { isPriority = false } = {}) {
+      const auth = useAuthStore()
+      if (!auth.isMember) {
+        throw new Error('Active membership required to request songs.')
+      }
+      if (isPriority && !auth.isProMax) {
+        throw new Error('Priority queue is for Pro Max members only.')
+      }
+
       this.submitting = true
       this.error = null
       try {
@@ -174,7 +190,7 @@ export const useSongQueueStore = defineStore('songQueue', {
           p_album_art_url: track.album_art_url || null,
           p_duration_ms: track.duration_ms || null,
           p_preview_url: track.preview_url || null,
-          p_is_priority: !!isPriority
+          p_is_priority: !!isPriority && auth.isProMax
         })
 
         if (error) throw error
@@ -222,6 +238,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     async adminUpdateStatus(requestId, status) {
+      requireAdmin()
       const prev = this.queue.map((r) => ({ ...r }))
       this.actionBusyId = requestId
 
@@ -254,6 +271,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     async pushToSpotify(request) {
+      requireAdmin()
       if (isMockTrackId(request.spotify_track_id)) {
         throw new Error(
           'This track is a mock/demo ID and cannot be sent to Spotify. Search again and add a real Spotify track.'
@@ -349,6 +367,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     async playNowOnSpotify(request) {
+      requireAdmin()
       if (isMockTrackId(request.spotify_track_id)) {
         throw new Error(
           'This track is a mock/demo ID and cannot be played on Spotify. Add a real Spotify track.'
@@ -405,6 +424,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     async skipCurrentOnSpotify(requestId) {
+      requireAdmin()
       this.actionBusyId = requestId
       try {
         const { data, error } = await supabase.functions.invoke('spotify-push-queue', {

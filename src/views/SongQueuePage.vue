@@ -5,7 +5,8 @@
         <p class="eyebrow">Member Jukebox</p>
         <h1>Song Queue</h1>
         <p class="subtitle">
-          Watch the live venue queue. Members can search and add Spotify tracks. Pro Max gets priority jumps (5 per NZ day).
+          Anyone can watch the live queue. Members add songs in order. Pro Max can use priority jumps
+          (5 per NZ day). Only staff can play, queue, or skip on Spotify.
         </p>
         <div class="hero-chips" v-if="authStore.isAuthenticated">
           <span class="chip" v-if="authStore.isMember">
