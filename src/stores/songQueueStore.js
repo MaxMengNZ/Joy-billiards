@@ -2,6 +2,15 @@ import { defineStore } from 'pinia'
 import { supabase } from '../config/supabase'
 import { useAuthStore } from './authStore'
 
+/**
+ * Live-queue order (must match get_live_song_queue + auto-push):
+ * 1) currently playing
+ * 2) priority (Pro Max cut-in) before normal
+ * 3) within the same tier: first-come, first-served by created_at
+ *
+ * So a later Pro Max priority song jumps ahead of regular guests only —
+ * never ahead of an earlier Pro Max priority song already waiting.
+ */
 function sortQueue(rows) {
   return [...(rows || [])].sort((a, b) => {
     if (a.status === 'playing' && b.status !== 'playing') return -1

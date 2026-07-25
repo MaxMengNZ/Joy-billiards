@@ -21,7 +21,11 @@
           <span class="chip chip-warn" v-else-if="authStore.isMember">
             Scan venue QR to request songs
           </span>
-          <span class="chip chip-priority" v-if="authStore.isProMax && songStore.canRequestSongs">
+          <span
+            class="chip chip-priority"
+            v-if="authStore.isProMax && songStore.canRequestSongs"
+            title="Priority jumps regular guests only — later Pro Max cannot cut ahead of an earlier Pro Max priority song"
+          >
             Priority left today: {{ songStore.priorityQuota.remaining }}/{{ songStore.priorityQuota.limit }}
           </span>
           <span class="chip chip-warn" v-else-if="authStore.isProMax && !songStore.canRequestSongs">
@@ -168,7 +172,7 @@
         <p class="hint">
           <template v-if="songStore.autoQueueEnabled">
             Songs requested on this website. They’re sent to Spotify automatically in priority order —
-            Pro Max requests jump ahead. 自动送入 Spotify，无需管理员审核。
+            Pro Max「优先」只插普通用户的队，不会插到更早的 Pro Max 优先歌前面。
           </template>
           <template v-else>
             Songs requested on this website (waiting for staff to play or queue them on Spotify).
@@ -380,7 +384,11 @@
                   v-if="authStore.isProMax"
                   class="btn btn-priority btn-sm"
                   :disabled="songStore.submitting || songStore.priorityQuota.remaining <= 0"
-                  :title="songStore.priorityQuota.remaining <= 0 ? 'Daily priority limit reached' : 'Jump ahead of normal requests'"
+                  :title="
+                    songStore.priorityQuota.remaining <= 0
+                      ? 'Daily priority limit reached'
+                      : 'Jump ahead of regular guests only — not ahead of earlier Pro Max priority songs'
+                  "
                   @click="addTrack(track, true)"
                 >
                   Priority queue
@@ -673,7 +681,7 @@ export default {
         const pos = data?.queue_position_estimate
         flash(
           isPriority
-            ? `Added with priority${pos ? ` — you are #${pos} in line` : ''}.`
+            ? `Priority added${pos ? ` — #${pos}` : ''}. Jumps regular guests only; keeps order behind earlier Pro Max priority songs.`
             : `Added to queue${pos ? ` — you are #${pos} in line` : ''}.`
         )
       } catch (err) {
