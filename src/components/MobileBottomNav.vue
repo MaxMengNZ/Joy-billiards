@@ -61,6 +61,16 @@
       </router-link>
 
       <router-link 
+        to="/songs" 
+        class="more-menu-item"
+        :class="{ active: isActive('/songs') }"
+        @click="handleMoreNavClick('/songs')"
+      >
+        <span class="more-icon">🎵</span>
+        <span class="more-label">Songs</span>
+      </router-link>
+
+      <router-link 
         v-if="authStore.isAdmin"
         to="/admin" 
         class="more-menu-item"

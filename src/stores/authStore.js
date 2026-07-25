@@ -16,7 +16,15 @@ export const useAuthStore = defineStore('auth', {
     isPlayer: (state) => state.profile?.role === 'player',
     userRole: (state) => state.profile?.role,
     userEmail: (state) => state.user?.email,
-    userName: (state) => state.profile?.full_name || state.user?.email
+    userName: (state) => state.profile?.name || state.profile?.full_name || state.user?.email,
+    membershipLevel: (state) => state.profile?.membership_level || null,
+    isMember: (state) => {
+      const level = state.profile?.membership_level
+      const active = state.profile?.is_active !== false
+      return active && ['lite', 'plus', 'pro', 'pro_max'].includes(level)
+    },
+    isProMax: (state) =>
+      state.profile?.is_active !== false && state.profile?.membership_level === 'pro_max'
   },
 
   actions: {

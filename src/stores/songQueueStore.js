@@ -1,0 +1,363 @@
+import { defineStore } from 'pinia'
+import { supabase } from '../config/supabase'
+
+function sortQueue(rows) {
+  return [...(rows || [])].sort((a, b) => {
+    if (a.status === 'playing' && b.status !== 'playing') return -1
+    if (b.status === 'playing' && a.status !== 'playing') return 1
+    if (a.is_priority !== b.is_priority) return a.is_priority ? -1 : 1
+    return new Date(a.created_at) - new Date(b.created_at)
+  })
+}
+
+function isMockTrackId(id) {
+  return !id || String(id).startsWith('mock_track_')
+}
+
+export const useSongQueueStore = defineStore('songQueue', {
+  state: () => ({
+    queue: [],
+    searchResults: [],
+    searchMock: false,
+    searchMessage: null,
+    priorityQuota: { used: 0, limit: 5, remaining: 5, is_pro_max: false },
+    loading: false,
+    searching: false,
+    submitting: false,
+    actionBusyId: null,
+    error: null,
+    channel: null
+  }),
+
+  getters: {
+    nowPlaying: (state) => state.queue.find((r) => r.status === 'playing') || null,
+    pendingQueue: (state) => state.queue.filter((r) => r.status === 'pending'),
+    nextUp: (state) => {
+      const pending = state.queue.filter((r) => r.status === 'pending')
+      return pending[0] || null
+    },
+    myPending: (state) => state.queue.filter((r) => r.status === 'pending' && r.is_mine),
+    pendingCount: (state) => state.queue.filter((r) => r.status === 'pending').length
+  },
+
+  actions: {
+    async fetchQueue({ silent = false } = {}) {
+      if (!silent) {
+        this.loading = true
+      }
+      this.error = null
+      try {
+        // Sanitized public RPC — no emails / membership / raw user ids
+        const { data, error } = await supabase.rpc('get_live_song_queue')
+        if (error) throw error
+        const rows = Array.isArray(data) ? data : []
+        this.queue = sortQueue(
+          rows.map((r) => ({
+            ...r,
+            // Compatibility aliases for older UI helpers
+            user: { name: r.requester_label || 'Member' },
+            user_id: r.is_mine ? '__mine__' : null
+          }))
+        )
+      } catch (err) {
+        console.error('fetchQueue', err)
+        this.error = err.message || String(err)
+      } finally {
+        if (!silent) this.loading = false
+      }
+    },
+
+    async fetchPriorityQuota() {
+      try {
+        const { data, error } = await supabase.rpc('get_song_priority_quota')
+        if (error) throw error
+        if (data) {
+          this.priorityQuota = {
+            used: data.used ?? 0,
+            limit: data.limit ?? 5,
+            remaining: data.remaining ?? 0,
+            is_pro_max: !!data.is_pro_max
+          }
+        }
+      } catch (err) {
+        console.error('fetchPriorityQuota', err)
+      }
+    },
+
+    async searchTracks(query) {
+      const q = (query || '').trim()
+      if (!q) {
+        this.searchResults = []
+        this.searchMock = false
+        this.searchMessage = null
+        return
+      }
+
+      this.searching = true
+      this.error = null
+      try {
+        if (import.meta.env.DEV) {
+          const localRes = await fetch(
+            `/api/spotify-search?q=${encodeURIComponent(q)}&limit=10`
+          )
+          const localPayload = await localRes.json().catch(() => null)
+          if (localRes.ok && localPayload && Array.isArray(localPayload.tracks) && !localPayload.mock) {
+            this.searchResults = localPayload.tracks
+            this.searchMock = false
+            this.searchMessage = null
+            return
+          }
+          if (localPayload?.missing_secrets?.length) {
+            this.searchResults = []
+            this.searchMock = true
+            this.searchMessage = localPayload.message || 'Spotify secrets missing in .env.local'
+            return
+          }
+          if (localPayload?.error) {
+            this.searchResults = []
+            this.searchMock = false
+            this.searchMessage = localPayload.error
+            return
+          }
+        }
+
+        const { data, error } = await supabase.functions.invoke('spotify-search', {
+          body: { q, limit: 10 }
+        })
+
+        let payload = data
+        if (!payload && error?.context && typeof error.context.json === 'function') {
+          try {
+            payload = await error.context.json()
+          } catch {
+            payload = null
+          }
+        }
+
+        if (payload && (Array.isArray(payload.tracks) || payload.error || payload.message || payload.missing_secrets)) {
+          this.searchResults = payload.tracks || []
+          this.searchMock = !!payload.mock
+          this.searchMessage = payload.message || payload.error || null
+          if (Array.isArray(payload.missing_secrets) && payload.missing_secrets.length) {
+            this.searchMessage =
+              (payload.message || 'Spotify secrets missing.') +
+              ` Missing: ${payload.missing_secrets.join(', ')}`
+          }
+          return
+        }
+
+        if (error) throw error
+        this.searchResults = []
+        this.searchMock = false
+        this.searchMessage = null
+      } catch (err) {
+        console.warn('spotify-search unavailable:', err.message || err)
+        this.searchResults = []
+        this.searchMock = false
+        this.searchMessage =
+          `Spotify search failed: ${err.message || err}. ` +
+          'Put SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local and restart npm run dev.'
+      } finally {
+        this.searching = false
+      }
+    },
+
+    async submitRequest(track, { isPriority = false } = {}) {
+      this.submitting = true
+      this.error = null
+      try {
+        const { data, error } = await supabase.rpc('submit_song_request', {
+          p_spotify_track_id: track.spotify_track_id,
+          p_track_name: track.track_name,
+          p_artist_name: track.artist_name,
+          p_album_name: track.album_name || null,
+          p_album_art_url: track.album_art_url || null,
+          p_duration_ms: track.duration_ms || null,
+          p_preview_url: track.preview_url || null,
+          p_is_priority: !!isPriority
+        })
+
+        if (error) throw error
+        if (data?.priority_left_today != null) {
+          this.priorityQuota.remaining = data.priority_left_today
+          this.priorityQuota.used = this.priorityQuota.limit - data.priority_left_today
+        }
+        // Optimistic insert if RPC returned the row
+        if (data?.request) {
+          const exists = this.queue.some((r) => r.id === data.request.id)
+          if (!exists) {
+            this.queue = sortQueue([...this.queue, data.request])
+          }
+        }
+        await this.fetchQueue({ silent: true })
+        await this.fetchPriorityQuota()
+        return data
+      } catch (err) {
+        const msg = err.message || String(err)
+        this.error = msg
+        throw new Error(msg)
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    async cancelMyRequest(requestId) {
+      const prev = this.queue
+      this.actionBusyId = requestId
+      // Optimistic remove
+      this.queue = this.queue.filter((r) => r.id !== requestId)
+      try {
+        const { error } = await supabase.rpc('cancel_my_song_request', {
+          p_request_id: requestId
+        })
+        if (error) throw error
+        await this.fetchQueue({ silent: true })
+        await this.fetchPriorityQuota()
+      } catch (err) {
+        this.queue = prev
+        throw err
+      } finally {
+        this.actionBusyId = null
+      }
+    },
+
+    async adminUpdateStatus(requestId, status) {
+      const prev = this.queue.map((r) => ({ ...r }))
+      this.actionBusyId = requestId
+
+      // Optimistic UI so staff see instant feedback
+      if (status === 'playing') {
+        this.queue = sortQueue(
+          this.queue.map((r) => {
+            if (r.id === requestId) return { ...r, status: 'playing' }
+            if (r.status === 'playing') return { ...r, status: 'played' }
+            return r
+          }).filter((r) => r.status === 'pending' || r.status === 'playing')
+        )
+      } else if (['played', 'skipped', 'cancelled'].includes(status)) {
+        this.queue = this.queue.filter((r) => r.id !== requestId)
+      }
+
+      try {
+        const { error } = await supabase.rpc('admin_update_song_request_status', {
+          p_request_id: requestId,
+          p_status: status
+        })
+        if (error) throw error
+        await this.fetchQueue({ silent: true })
+      } catch (err) {
+        this.queue = prev
+        throw err
+      } finally {
+        this.actionBusyId = null
+      }
+    },
+
+    async pushToSpotify(request) {
+      if (isMockTrackId(request.spotify_track_id)) {
+        throw new Error(
+          'This track is a mock/demo ID and cannot be sent to Spotify. Search again and add a real Spotify track.'
+        )
+      }
+
+      this.actionBusyId = request.id
+      try {
+        // Prefer local Vite proxy in development (uses .env.local refresh token)
+        if (import.meta.env.DEV) {
+          const localRes = await fetch('/api/spotify-push-queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              request_id: request.id,
+              spotify_track_id: request.spotify_track_id
+            })
+          })
+          const localPayload = await localRes.json().catch(() => null)
+          if (localPayload) {
+            if (localPayload.skipped) return localPayload
+            if (localPayload.success) {
+              this.actionBusyId = null
+              await this.adminUpdateStatus(request.id, 'playing')
+              return localPayload
+            }
+            if (localPayload.error) {
+              throw new Error(
+                localPayload.hint
+                  ? `${localPayload.error} ${localPayload.hint}`
+                  : localPayload.error
+              )
+            }
+          }
+        }
+
+        const { data, error } = await supabase.functions.invoke('spotify-push-queue', {
+          body: {
+            request_id: request.id,
+            spotify_track_id: request.spotify_track_id
+          }
+        })
+
+        let payload = data
+        if (!payload && error?.context && typeof error.context.json === 'function') {
+          try {
+            payload = await error.context.json()
+          } catch {
+            payload = null
+          }
+        }
+
+        if (error && !payload) throw error
+        if (payload?.error && !payload?.skipped) {
+          throw new Error(
+            payload.hint ? `${payload.error} ${payload.hint}` : payload.error
+          )
+        }
+        if (payload?.success) {
+          // Edge may mark playing; refresh silently. Also optimistic.
+          this.queue = sortQueue(
+            this.queue
+              .map((r) => {
+                if (r.id === request.id) return { ...r, status: 'playing' }
+                if (r.status === 'playing') return { ...r, status: 'played' }
+                return r
+              })
+              .filter((r) => r.status === 'pending' || r.status === 'playing')
+          )
+          await this.fetchQueue({ silent: true })
+          return payload
+        }
+        return (
+          payload || {
+            skipped: true,
+            message: 'No response from Spotify push function.'
+          }
+        )
+      } finally {
+        this.actionBusyId = null
+      }
+    },
+
+    subscribeRealtime() {
+      if (this.channel) return
+      this.channel = supabase
+        .channel('song_requests_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'song_requests' },
+          () => {
+            this.fetchQueue({ silent: true })
+            // Quota is member-only; ignore failures for guests
+            this.fetchPriorityQuota()
+          }
+        )
+        .subscribe()
+    },
+
+    unsubscribeRealtime() {
+      if (this.channel) {
+        supabase.removeChannel(this.channel)
+        this.channel = null
+      }
+    }
+  }
+})

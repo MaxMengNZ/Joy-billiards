@@ -82,6 +82,12 @@ const routes = [
     meta: { title: 'Battle / 对战', requiresAuth: true }
   },
   {
+    path: '/songs',
+    name: 'SongQueue',
+    component: () => import('../views/SongQueuePage.vue'),
+    meta: { title: 'Song Queue', requiresAuth: true }
+  },
+  {
     path: '/battle/leaderboard',
     name: 'BattleLeaderboard',
     component: () => import('../views/BattleLeaderboardPage.vue'),

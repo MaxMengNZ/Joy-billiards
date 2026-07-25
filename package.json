@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "db:apply:calendar": "node scripts/apply-calendar-migration.mjs"
+    "db:apply:calendar": "node scripts/apply-calendar-migration.mjs",
+    "db:apply:song-queue": "node scripts/apply-song-queue-migration.mjs",
+    "spotify:refresh-token": "node scripts/spotify-get-refresh-token.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
