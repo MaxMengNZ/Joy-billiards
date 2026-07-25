@@ -262,31 +262,42 @@ export const useSongQueueStore = defineStore('songQueue', {
 
       this.actionBusyId = request.id
       try {
-        // Prefer local Vite proxy in development (uses .env.local refresh token)
+        // Prefer local Vite proxy in development (uses .env.local refresh token).
+        // If local token is bad, fall through to Edge Function instead of hard-failing.
         if (import.meta.env.DEV) {
-          const localRes = await fetch('/api/spotify-push-queue', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              request_id: request.id,
-              spotify_track_id: request.spotify_track_id
+          try {
+            const localRes = await fetch('/api/spotify-push-queue', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                request_id: request.id,
+                spotify_track_id: request.spotify_track_id
+              })
             })
-          })
-          const localPayload = await localRes.json().catch(() => null)
-          if (localPayload) {
-            if (localPayload.skipped) return localPayload
-            if (localPayload.success) {
+            const localPayload = await localRes.json().catch(() => null)
+            if (localPayload?.skipped) {
+              // Missing local refresh token — try Edge next
+            } else if (localPayload?.success) {
               this.actionBusyId = null
               await this.adminUpdateStatus(request.id, 'playing')
               return localPayload
+            } else if (localPayload?.error) {
+              const msg = String(localPayload.error)
+              const canFallback =
+                /invalid_grant|refresh failed|Invalid refresh token|missing/i.test(msg)
+              if (!canFallback) {
+                throw new Error(
+                  localPayload.hint ? `${msg} ${localPayload.hint}` : msg
+                )
+              }
+              console.warn('Local Spotify push failed, trying Edge Function:', msg)
             }
-            if (localPayload.error) {
-              throw new Error(
-                localPayload.hint
-                  ? `${localPayload.error} ${localPayload.hint}`
-                  : localPayload.error
-              )
+          } catch (localErr) {
+            const msg = localErr?.message || String(localErr)
+            if (!/invalid_grant|refresh failed|Invalid refresh token|Failed to fetch/i.test(msg)) {
+              throw localErr
             }
+            console.warn('Local Spotify push error, trying Edge Function:', msg)
           }
         }
 
