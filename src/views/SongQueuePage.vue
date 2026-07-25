@@ -5,18 +5,27 @@
         <p class="eyebrow">Member Jukebox</p>
         <h1>Song Queue</h1>
         <p class="subtitle">
-          Anyone can watch the live queue. Members add songs in order. Pro Max can use priority jumps
-          (5 per NZ day). Only staff can play, queue, or skip on Spotify.
+          Anyone can watch the live queue. Members must scan the in-store QR to request songs
+          (valid 4 hours). Pro Max priority also requires venue check-in. Staff controls Spotify.
         </p>
         <div class="hero-chips" v-if="authStore.isAuthenticated">
           <span class="chip" v-if="authStore.isMember">
             {{ membershipLabel }}
           </span>
-          <span class="chip chip-priority" v-if="authStore.isProMax">
-            Priority left today: {{ songStore.priorityQuota.remaining }}/{{ songStore.priorityQuota.limit }}
+          <span class="chip chip-ok" v-if="songStore.canRequestSongs && !songStore.venuePresence.bypass">
+            Checked in{{ songStore.venueExpiresLabel ? ` · until ${songStore.venueExpiresLabel}` : '' }}
+          </span>
+          <span class="chip chip-ok" v-else-if="songStore.venuePresence.bypass">
+            Staff · no check-in needed
           </span>
           <span class="chip chip-warn" v-else-if="authStore.isMember">
-            Upgrade to Pro Max for priority queue
+            Scan venue QR to request songs
+          </span>
+          <span class="chip chip-priority" v-if="authStore.isProMax && songStore.canRequestSongs">
+            Priority left today: {{ songStore.priorityQuota.remaining }}/{{ songStore.priorityQuota.limit }}
+          </span>
+          <span class="chip chip-warn" v-else-if="authStore.isProMax && !songStore.canRequestSongs">
+            Priority unlocks after venue check-in
           </span>
         </div>
       </div>
@@ -238,6 +247,34 @@
         <router-link to="/membership" class="btn btn-primary">View Membership</router-link>
       </div>
 
+      <div v-else-if="!songStore.canRequestSongs" class="gate-card">
+        <h2>In-store check-in required</h2>
+        <p>
+          To keep the queue fair for guests who are here, song requests only work after you scan the
+          QR code displayed at Joy Billiards. Check-in lasts 4 hours.
+        </p>
+        <p class="hint">
+          Ask staff for the Song Queue QR on the counter / TV. If you just scanned, wait a moment or
+          tap refresh below.
+        </p>
+        <button
+          class="btn btn-secondary"
+          type="button"
+          :disabled="songStore.venuePresence.loading"
+          @click="refreshPresence"
+        >
+          {{ songStore.venuePresence.loading ? 'Checking…' : 'I’ve scanned — refresh' }}
+        </button>
+        <router-link
+          v-if="authStore.isAdmin"
+          to="/songs/venue-qr"
+          class="btn btn-primary"
+          style="margin-left: 0.5rem"
+        >
+          Open staff QR
+        </router-link>
+      </div>
+
       <template v-else>
         <!-- Search (members only) -->
         <div class="panel">
@@ -331,15 +368,20 @@
 
 <script>
 import { ref, computed, watch, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useSongQueueStore } from '../stores/songQueueStore'
 import { formatMembershipLevel } from '../utils/membershipDisplay'
+
+const PENDING_CHECKIN_KEY = 'song_venue_checkin_code'
 
 export default {
   name: 'SongQueuePage',
   setup() {
     const authStore = useAuthStore()
     const songStore = useSongQueueStore()
+    const route = useRoute()
+    const router = useRouter()
     const searchQuery = ref('')
     const searched = ref(false)
     const actionMessage = ref('')
@@ -348,6 +390,7 @@ export default {
     let searchSeq = 0
     let flashTimer = null
     let queueBooted = false
+    let checkinBusy = false
 
     const membershipLabel = computed(() =>
       formatMembershipLevel(authStore.membershipLevel || 'lite')
@@ -429,11 +472,63 @@ export default {
       }
     }
 
+    const refreshPresence = async () => {
+      await songStore.fetchVenuePresence()
+      if (songStore.canRequestSongs) {
+        flash(
+          songStore.venuePresence.bypass
+            ? 'Staff access — you can request songs.'
+            : `Checked in${songStore.venueExpiresLabel ? ` until ${songStore.venueExpiresLabel}` : ''}.`
+        )
+      } else {
+        flash('Not checked in yet. Scan the venue QR, then try again.', 'warn')
+      }
+    }
+
+    const clearCheckinQuery = async () => {
+      if (!route.query.checkin) return
+      const nextQuery = { ...route.query }
+      delete nextQuery.checkin
+      await router.replace({ path: '/songs', query: nextQuery })
+    }
+
+    const redeemCheckinCode = async (rawCode) => {
+      const token = String(rawCode || '').trim()
+      if (!token || checkinBusy) return
+      checkinBusy = true
+      try {
+        if (!authStore.isAuthenticated) {
+          try {
+            sessionStorage.setItem(PENDING_CHECKIN_KEY, token)
+          } catch {
+            /* ignore */
+          }
+          flash('Sign in to complete venue check-in…', 'warn')
+          await router.push({ path: '/login', query: { redirect: `/songs?checkin=${encodeURIComponent(token)}` } })
+          return
+        }
+        const data = await songStore.redeemVenueCheckin(token)
+        try {
+          sessionStorage.removeItem(PENDING_CHECKIN_KEY)
+        } catch {
+          /* ignore */
+        }
+        await clearCheckinQuery()
+        flash(data?.message || 'Checked in. You can request songs for 4 hours.')
+        if (authStore.isMember) await songStore.fetchPriorityQuota()
+      } catch (err) {
+        flash(err.message || 'Check-in failed', 'error')
+      } finally {
+        checkinBusy = false
+      }
+    }
+
     const refreshQueue = async () => {
       await Promise.all([
         songStore.fetchQueue(),
         songStore.syncPlayback({ force: true }),
-        authStore.isMember ? songStore.fetchPriorityQuota() : Promise.resolve()
+        authStore.isMember ? songStore.fetchPriorityQuota() : Promise.resolve(),
+        authStore.isAuthenticated ? songStore.fetchVenuePresence() : Promise.resolve()
       ])
     }
 
@@ -576,15 +671,27 @@ export default {
 
     // Live queue is public — boot for everyone; refresh is_mine after login
     watch(
-      () => [authStore.isAuthenticated, authStore.profile?.id],
+      () => [authStore.isAuthenticated, authStore.profile?.id, route.query.checkin],
       async () => {
         await songStore.fetchQueue({ silent: queueBooted })
+        if (authStore.isAuthenticated) await songStore.fetchVenuePresence()
         if (authStore.isMember) await songStore.fetchPriorityQuota()
         if (!queueBooted) {
           queueBooted = true
           songStore.subscribeRealtime()
           songStore.startPlaybackPoll(10000)
         }
+
+        const fromQuery = typeof route.query.checkin === 'string' ? route.query.checkin : ''
+        let pending = fromQuery
+        if (!pending && authStore.isAuthenticated) {
+          try {
+            pending = sessionStorage.getItem(PENDING_CHECKIN_KEY) || ''
+          } catch {
+            pending = ''
+          }
+        }
+        if (pending) await redeemCheckinCode(pending)
       },
       { immediate: true }
     )
@@ -610,6 +717,7 @@ export default {
       highlightMatch,
       refreshQueue,
       refreshAll,
+      refreshPresence,
       runSearch,
       onSearchInput,
       addTrack,
@@ -687,6 +795,12 @@ export default {
   background: rgba(250, 204, 21, 0.15);
   border-color: rgba(250, 204, 21, 0.35);
   color: #fde68a;
+}
+
+.chip-ok {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #86efac;
 }
 
 .chip-warn {

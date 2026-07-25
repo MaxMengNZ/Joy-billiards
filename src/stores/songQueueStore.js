@@ -92,6 +92,14 @@ export const useSongQueueStore = defineStore('songQueue', {
       queue_may_have_more: false,
       is_playing: false,
       updated_at: null
+    },
+    venuePresence: {
+      present: false,
+      is_admin: false,
+      bypass: false,
+      expires_at: null,
+      checked_in_at: null,
+      loading: false
     }
   }),
 
@@ -119,6 +127,18 @@ export const useSongQueueStore = defineStore('songQueue', {
     spotifyQueueVisible: (state) => {
       const q = Array.isArray(state.spotifyPlayer.queue) ? state.spotifyPlayer.queue : []
       return q.slice(0, 30)
+    },
+    canRequestSongs: (state) => !!state.venuePresence.present,
+    venueExpiresLabel: (state) => {
+      if (!state.venuePresence.expires_at) return null
+      try {
+        return new Date(state.venuePresence.expires_at).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      } catch {
+        return null
+      }
     }
   },
 
@@ -366,13 +386,100 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
+    async fetchVenuePresence() {
+      const auth = useAuthStore()
+      if (!auth.isAuthenticated) {
+        this.venuePresence = {
+          present: false,
+          is_admin: false,
+          bypass: false,
+          expires_at: null,
+          checked_in_at: null,
+          loading: false
+        }
+        return this.venuePresence
+      }
+
+      this.venuePresence.loading = true
+      try {
+        const { data, error } = await supabase.rpc('get_my_song_venue_presence')
+        if (error) throw error
+        this.venuePresence = {
+          present: !!data?.present,
+          is_admin: !!data?.is_admin,
+          bypass: !!data?.bypass,
+          expires_at: data?.expires_at || null,
+          checked_in_at: data?.checked_in_at || null,
+          loading: false
+        }
+        return this.venuePresence
+      } catch (err) {
+        console.warn('fetchVenuePresence', err?.message || err)
+        this.venuePresence.loading = false
+        return this.venuePresence
+      }
+    },
+
+    async redeemVenueCheckin(code) {
+      const auth = useAuthStore()
+      if (!auth.isAuthenticated) {
+        throw new Error('Sign in first, then scan the venue QR again.')
+      }
+      const token = String(code || '').trim()
+      if (!token) throw new Error('Check-in code required.')
+
+      const { data, error } = await supabase.rpc('redeem_song_venue_checkin', {
+        p_code: token
+      })
+      if (error) throw error
+      if (!data?.success) {
+        throw new Error(data?.message || data?.error || 'Check-in failed.')
+      }
+
+      this.venuePresence = {
+        present: !!data.present,
+        is_admin: !!data.is_admin,
+        bypass: !!data.bypass,
+        expires_at: data.expires_at || null,
+        checked_in_at: data.checked_in_at || null,
+        loading: false
+      }
+      return data
+    },
+
+    async fetchCheckinQr({ forceNew = false } = {}) {
+      const auth = useAuthStore()
+      if (!auth.isAdmin) {
+        throw new Error('Admin access required.')
+      }
+      const { data, error } = await supabase.rpc('admin_get_song_checkin_qr', {
+        p_force_new: !!forceNew
+      })
+      if (error) throw error
+      if (!data?.success || !data?.code) {
+        throw new Error(data?.error || 'Could not load venue QR code.')
+      }
+      return data
+    },
+
     async submitRequest(track, { isPriority = false } = {}) {
       const auth = useAuthStore()
       if (!auth.isMember) {
         throw new Error('Active membership required to request songs.')
       }
+      if (!auth.isAdmin && !this.venuePresence.present) {
+        await this.fetchVenuePresence()
+        if (!this.venuePresence.present) {
+          throw new Error(
+            'Venue check-in required. Scan the QR code at Joy Billiards to request songs.'
+          )
+        }
+      }
       if (isPriority && !auth.isProMax) {
         throw new Error('Priority queue is for Pro Max members only.')
+      }
+      if (isPriority && !auth.isAdmin && !this.venuePresence.present) {
+        throw new Error('Priority queue requires venue check-in.')
       }
 
       this.submitting = true
@@ -407,6 +514,10 @@ export const useSongQueueStore = defineStore('songQueue', {
       } catch (err) {
         const msg = err.message || String(err)
         this.error = msg
+        // Presence may have expired between UI check and RPC
+        if (/venue check-in|check-in required/i.test(msg)) {
+          await this.fetchVenuePresence()
+        }
         throw new Error(msg)
       } finally {
         this.submitting = false

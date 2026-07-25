@@ -215,6 +215,15 @@
               <div class="action-arrow">→</div>
             </router-link>
 
+            <router-link to="/songs/venue-qr" class="action-card action-tv-display" target="_blank">
+              <div class="action-icon">🎵</div>
+              <div class="action-content">
+                <h3 class="action-title">Song Check-in QR</h3>
+                <p class="action-description">Rotating QR so only in-store guests can request songs</p>
+              </div>
+              <div class="action-arrow">→</div>
+            </router-link>
+
             <button @click="showErrorLog = true" class="action-card action-view-errors">
               <div class="action-icon">🐛</div>
               <div class="action-content">

@@ -85,7 +85,13 @@ const routes = [
     path: '/songs',
     name: 'SongQueue',
     component: () => import('../views/SongQueuePage.vue'),
-    meta: { title: 'Song Queue', requiresAuth: true }
+    meta: { title: 'Song Queue' }
+  },
+  {
+    path: '/songs/venue-qr',
+    name: 'VenueCheckinQr',
+    component: () => import('../views/VenueCheckinQrPage.vue'),
+    meta: { title: 'Song Check-in QR', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/battle/leaderboard',

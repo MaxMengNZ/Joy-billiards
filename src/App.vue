@@ -35,6 +35,7 @@
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link">Admin</router-link>
             <router-link v-if="authStore.isAdmin" to="/tv-display" class="nav-link">📺 TV Display</router-link>
+            <router-link v-if="authStore.isAdmin" to="/songs/venue-qr" class="nav-link">🎵 Song QR</router-link>
             
             <!-- Auth buttons -->
             <div class="auth-nav">
@@ -63,6 +64,7 @@
             <router-link v-if="authStore.isAdmin" to="/players" class="nav-link" @click="closeMobileMenu">Players</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="nav-link" @click="closeMobileMenu">Admin</router-link>
             <router-link v-if="authStore.isAdmin" to="/tv-display" class="nav-link" @click="closeMobileMenu">📺 TV Display</router-link>
+            <router-link v-if="authStore.isAdmin" to="/songs/venue-qr" class="nav-link" @click="closeMobileMenu">🎵 Song QR</router-link>
             
             <!-- Mobile Auth buttons -->
             <div class="auth-nav mobile-auth">
@@ -173,7 +175,7 @@ export default {
     })
     
     const isTVDisplayPage = computed(() => {
-      return route.path === '/tv-display'
+      return route.path === '/tv-display' || route.path === '/songs/venue-qr'
     })
     
     const isBattlePage = computed(() => {

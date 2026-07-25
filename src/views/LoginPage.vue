@@ -126,7 +126,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { createClient } from '@supabase/supabase-js'
 
@@ -139,6 +139,7 @@ export default {
   name: 'LoginPage',
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const authStore = useAuthStore()
 
     const email = ref('')
@@ -177,8 +178,11 @@ export default {
         })
 
         if (result.success) {
-          // Redirect based on role
-          if (authStore.isAdmin) {
+          const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+          // Only allow same-origin relative redirects
+          if (redirect.startsWith('/') && !redirect.startsWith('//')) {
+            router.push(redirect)
+          } else if (authStore.isAdmin) {
             router.push('/admin')
           } else {
             router.push('/')
