@@ -429,7 +429,7 @@ export default {
     const refreshQueue = async () => {
       await Promise.all([
         songStore.fetchQueue(),
-        songStore.syncPlayback(),
+        songStore.syncPlayback({ force: true }),
         authStore.isMember ? songStore.fetchPriorityQuota() : Promise.resolve()
       ])
     }

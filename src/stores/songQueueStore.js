@@ -105,10 +105,10 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
-    async syncPlayback() {
+    async syncPlayback({ force = false } = {}) {
       try {
         const { data, error } = await supabase.functions.invoke('spotify-sync-playback', {
-          body: {}
+          body: { force }
         })
         if (error || !data?.success) {
           // Fall back to last public snapshot so guests still see Spotify queue
@@ -432,8 +432,9 @@ export const useSongQueueStore = defineStore('songQueue', {
             if (localPayload?.skipped) {
               // Missing local refresh token — try Edge next
             } else if (localPayload?.success) {
-              this.actionBusyId = null
-              await this.adminUpdateStatus(request.id, 'playing')
+              await this.fetchQueue({ silent: true })
+              // Immediately reflect the newly queued track in "On Spotify"
+              await this.syncPlayback({ force: true })
               return localPayload
             } else if (localPayload?.error) {
               const msg = String(localPayload.error)
@@ -478,17 +479,9 @@ export const useSongQueueStore = defineStore('songQueue', {
           )
         }
         if (payload?.success) {
-          // Edge may mark playing; refresh silently. Also optimistic.
-          this.queue = sortQueue(
-            this.queue
-              .map((r) => {
-                if (r.id === request.id) return { ...r, status: 'playing' }
-                if (r.status === 'playing') return { ...r, status: 'played' }
-                return r
-              })
-              .filter((r) => r.status === 'pending' || r.status === 'playing')
-          )
           await this.fetchQueue({ silent: true })
+          // Immediately reflect the newly queued track in "On Spotify"
+          await this.syncPlayback({ force: true })
           return payload
         }
         return (
@@ -542,17 +535,8 @@ export const useSongQueueStore = defineStore('songQueue', {
           throw new Error(message)
         }
 
-        // Reflect "now playing" in the website queue
-        this.queue = sortQueue(
-          this.queue
-            .map((r) => {
-              if (r.id === request.id) return { ...r, status: 'playing' }
-              if (r.status === 'playing') return { ...r, status: 'played' }
-              return r
-            })
-            .filter((r) => r.status === 'pending' || r.status === 'playing')
-        )
         await this.fetchQueue({ silent: true })
+        await this.syncPlayback({ force: true })
         return payload
       } finally {
         this.actionBusyId = null
@@ -589,6 +573,7 @@ export const useSongQueueStore = defineStore('songQueue', {
 
         this.queue = this.queue.filter((r) => r.id !== requestId)
         await this.fetchQueue({ silent: true })
+        await this.syncPlayback({ force: true })
         return payload
       } finally {
         this.actionBusyId = null
