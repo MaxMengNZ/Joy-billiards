@@ -572,20 +572,6 @@ export default {
     }
 
     // Live queue is public — boot for everyone; refresh is_mine after login
-    let pollTimer = null
-    const startGuestPoll = () => {
-      if (pollTimer) return
-      pollTimer = setInterval(() => {
-        songStore.fetchQueue({ silent: true })
-      }, 8000)
-    }
-    const stopGuestPoll = () => {
-      if (pollTimer) {
-        clearInterval(pollTimer)
-        pollTimer = null
-      }
-    }
-
     watch(
       () => [authStore.isAuthenticated, authStore.profile?.id],
       async () => {
@@ -596,9 +582,6 @@ export default {
           songStore.subscribeRealtime()
           songStore.startPlaybackPoll(10000)
         }
-        // Guests may miss Realtime auth; light poll keeps queue fresh
-        if (!authStore.isAuthenticated) startGuestPoll()
-        else stopGuestPoll()
       },
       { immediate: true }
     )
@@ -606,7 +589,6 @@ export default {
     onUnmounted(() => {
       if (searchTimer) clearTimeout(searchTimer)
       if (flashTimer) clearTimeout(flashTimer)
-      stopGuestPoll()
       songStore.unsubscribeRealtime()
     })
 

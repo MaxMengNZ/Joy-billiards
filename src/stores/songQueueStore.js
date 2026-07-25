@@ -37,6 +37,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     channel: null,
     _autoCompleteTimer: null,
     _playbackPollTimer: null,
+    _queuePollTimer: null,
     playback: {
       synced: false,
       is_playing: false,
@@ -580,25 +581,39 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
+    onQueueChanged() {
+      const auth = useAuthStore()
+      this.fetchQueue({ silent: true })
+      if (auth.isMember) this.fetchPriorityQuota()
+    },
+
     subscribeRealtime() {
       if (this.channel) return
+      // `anon` has no SELECT grant on song_requests, so postgres_changes never
+      // reaches guests. A DB trigger broadcasts a contentless ping instead, and
+      // every client re-reads the queue through the sanitized RPC.
       this.channel = supabase
-        .channel('song_requests_live')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'song_requests' },
-          () => {
-            this.fetchQueue({ silent: true })
-            // Quota is member-only; ignore failures for guests
-            this.fetchPriorityQuota()
-          }
-        )
+        .channel('song_queue_public')
+        .on('broadcast', { event: 'queue_changed' }, () => {
+          this.onQueueChanged()
+        })
         .subscribe()
+
+      // Safety net if the websocket drops without reconnecting.
+      if (!this._queuePollTimer) {
+        this._queuePollTimer = setInterval(() => {
+          this.fetchQueue({ silent: true })
+        }, 20000)
+      }
     },
 
     unsubscribeRealtime() {
       this.clearAutoCompleteTimer()
       this.stopPlaybackPoll()
+      if (this._queuePollTimer) {
+        clearInterval(this._queuePollTimer)
+        this._queuePollTimer = null
+      }
       if (this.channel) {
         supabase.removeChannel(this.channel)
         this.channel = null
