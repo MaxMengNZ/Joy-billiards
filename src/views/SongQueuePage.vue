@@ -5,8 +5,8 @@
         <p class="eyebrow">Member Jukebox</p>
         <h1>Song Queue</h1>
         <p class="subtitle">
-          Anyone can watch the live queue. Members must scan the in-store QR to request songs
-          (valid 4 hours). Pro Max priority also requires venue check-in. Staff controls Spotify.
+          Anyone can watch the live queue. To request songs, members must scan the
+          <strong>in-store Song Queue QR</strong> (shown on the venue TV / counter) — unlock lasts 4 hours.
         </p>
         <div class="hero-chips" v-if="authStore.isAuthenticated">
           <span class="chip" v-if="authStore.isMember">
@@ -32,6 +32,66 @@
     </section>
 
     <div class="song-content">
+      <!-- Check-in first: members who aren't present need clear in-store instructions -->
+      <div
+        v-if="authStore.isMember && !songStore.canRequestSongs"
+        class="panel checkin-panel"
+        id="venue-checkin"
+      >
+        <h2 class="panel-title">店内扫码后才能点歌 · Scan in-store to request</h2>
+        <ol class="checkin-steps">
+          <li>找店内电视 / 前台的 <strong>Song Queue QR</strong>（不是网站上的按钮）</li>
+          <li>用手机 <strong>相机</strong> 或微信「扫一扫」扫描</li>
+          <li>扫码后自动登录并解锁，<strong>4 小时内</strong>可自由点歌</li>
+        </ol>
+        <p class="hint">
+          Look for the QR on the venue TV / counter. Use your phone camera (or WeChat Scan).
+          There is no scan button on this website — the code is only shown in-store by staff.
+        </p>
+
+        <div class="manual-checkin">
+          <label class="manual-label" for="manual-checkin-code">Or enter the code shown under the QR</label>
+          <div class="manual-row">
+            <input
+              id="manual-checkin-code"
+              v-model="manualCheckinCode"
+              type="text"
+              class="search-input"
+              placeholder="Paste or type check-in code"
+              autocomplete="off"
+              @keydown.enter.prevent="submitManualCheckin"
+            />
+            <button
+              class="btn btn-primary"
+              type="button"
+              :disabled="checkinSubmitting || !manualCheckinCode.trim()"
+              @click="submitManualCheckin"
+            >
+              {{ checkinSubmitting ? 'Checking in…' : 'Check in' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="checkin-actions">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            :disabled="songStore.venuePresence.loading"
+            @click="refreshPresence"
+          >
+            {{ songStore.venuePresence.loading ? 'Checking…' : 'I’ve scanned — refresh' }}
+          </button>
+          <router-link
+            v-if="authStore.isAdmin"
+            to="/songs/venue-qr"
+            class="btn btn-primary"
+            target="_blank"
+          >
+            Staff: open QR screen
+          </router-link>
+        </div>
+      </div>
+
       <!-- Real Spotify player: currently playing + Spotify queue (public) -->
       <div class="panel spotify-panel">
         <div class="panel-header-row">
@@ -248,31 +308,12 @@
       </div>
 
       <div v-else-if="!songStore.canRequestSongs" class="gate-card">
-        <h2>In-store check-in required</h2>
+        <h2>Almost there</h2>
         <p>
-          To keep the queue fair for guests who are here, song requests only work after you scan the
-          QR code displayed at Joy Billiards. Check-in lasts 4 hours.
+          Scroll up to the check-in box, scan the in-store QR (or enter the code), then you can search
+          and request songs for 4 hours.
         </p>
-        <p class="hint">
-          Ask staff for the Song Queue QR on the counter / TV. If you just scanned, wait a moment or
-          tap refresh below.
-        </p>
-        <button
-          class="btn btn-secondary"
-          type="button"
-          :disabled="songStore.venuePresence.loading"
-          @click="refreshPresence"
-        >
-          {{ songStore.venuePresence.loading ? 'Checking…' : 'I’ve scanned — refresh' }}
-        </button>
-        <router-link
-          v-if="authStore.isAdmin"
-          to="/songs/venue-qr"
-          class="btn btn-primary"
-          style="margin-left: 0.5rem"
-        >
-          Open staff QR
-        </router-link>
+        <a class="btn btn-primary" href="#venue-checkin">Go to check-in</a>
       </div>
 
       <template v-else>
@@ -386,6 +427,8 @@ export default {
     const searched = ref(false)
     const actionMessage = ref('')
     const actionMessageType = ref('ok')
+    const manualCheckinCode = ref('')
+    const checkinSubmitting = ref(false)
     let searchTimer = null
     let searchSeq = 0
     let flashTimer = null
@@ -496,6 +539,7 @@ export default {
       const token = String(rawCode || '').trim()
       if (!token || checkinBusy) return
       checkinBusy = true
+      checkinSubmitting.value = true
       try {
         if (!authStore.isAuthenticated) {
           try {
@@ -513,6 +557,7 @@ export default {
         } catch {
           /* ignore */
         }
+        manualCheckinCode.value = ''
         await clearCheckinQuery()
         flash(data?.message || 'Checked in. You can request songs for 4 hours.')
         if (authStore.isMember) await songStore.fetchPriorityQuota()
@@ -520,7 +565,12 @@ export default {
         flash(err.message || 'Check-in failed', 'error')
       } finally {
         checkinBusy = false
+        checkinSubmitting.value = false
       }
+    }
+
+    const submitManualCheckin = async () => {
+      await redeemCheckinCode(manualCheckinCode.value)
     }
 
     const refreshQueue = async () => {
@@ -718,6 +768,9 @@ export default {
       refreshQueue,
       refreshAll,
       refreshPresence,
+      submitManualCheckin,
+      manualCheckinCode,
+      checkinSubmitting,
       runSearch,
       onSearchInput,
       addTrack,
@@ -814,6 +867,50 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.checkin-panel {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.12), rgba(15, 23, 42, 0.7));
+}
+
+.checkin-steps {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.25rem;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.checkin-steps li + li {
+  margin-top: 0.35rem;
+}
+
+.manual-checkin {
+  margin: 1rem 0;
+}
+
+.manual-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.manual-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.manual-row .search-input {
+  flex: 1 1 220px;
+}
+
+.checkin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
 }
 
 .panel,

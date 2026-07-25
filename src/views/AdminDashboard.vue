@@ -219,7 +219,7 @@
               <div class="action-icon">🎵</div>
               <div class="action-content">
                 <h3 class="action-title">Song Check-in QR</h3>
-                <p class="action-description">Rotating QR so only in-store guests can request songs</p>
+                <p class="action-description">Open on TV/counter — guests scan to unlock song requests</p>
               </div>
               <div class="action-arrow">→</div>
             </router-link>

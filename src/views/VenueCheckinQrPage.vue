@@ -2,11 +2,11 @@
   <div class="venue-qr-page">
     <header class="venue-qr-header">
       <div>
-        <p class="eyebrow">Staff · Song Queue</p>
-        <h1>Venue Check-in QR</h1>
+        <p class="eyebrow">Staff · 投屏给客人扫</p>
+        <h1>Song Queue Check-in QR</h1>
         <p class="subtitle">
-          Guests scan this code on their phone to unlock song requests for 4 hours.
-          Code refreshes every 10 minutes.
+          Keep this page open on the venue TV / tablet. Guests scan with their phone camera.
+          Code refreshes every 10 minutes. Check-in unlocks song requests for 4 hours.
         </p>
       </div>
       <div class="header-actions">
@@ -20,22 +20,37 @@
     </header>
 
     <div class="venue-qr-card" v-if="checkinUrl">
+      <p class="scan-banner">请用手机相机 / 微信扫一扫</p>
       <img
         class="qr-image"
         :src="qrImageUrl"
         alt="Venue song check-in QR code"
-        width="320"
-        height="320"
+        width="360"
+        height="360"
       />
       <p class="countdown" :class="{ urgent: secondsLeft <= 60 }">
         {{ countdownLabel }}
       </p>
-      <p class="hint">Scan opens Song Queue and checks the member in automatically.</p>
-      <p class="url-preview">{{ checkinUrl }}</p>
+      <div class="code-block">
+        <p class="code-label">手输验证码 · Manual code</p>
+        <p class="code-value">{{ code }}</p>
+        <button class="btn btn-ghost btn-sm" type="button" @click="copyCode">
+          {{ copied ? 'Copied' : 'Copy code' }}
+        </button>
+      </div>
+      <p class="hint">
+        Guests who cannot scan can open Songs → enter this code under “Or enter the code”.
+      </p>
     </div>
 
     <p v-else-if="loading" class="status">Loading QR…</p>
     <p v-else-if="error" class="status error">{{ error }}</p>
+
+    <ol class="staff-steps">
+      <li>Admin opens this page on the TV / counter tablet and leaves it open.</li>
+      <li>Member opens phone Camera (or WeChat Scan) and scans the big QR.</li>
+      <li>Phone opens Song Queue, signs in if needed, then unlocks for 4 hours.</li>
+    </ol>
   </div>
 </template>
 
@@ -52,8 +67,10 @@ export default {
     const code = ref('')
     const validUntil = ref(null)
     const nowTick = ref(Date.now())
+    const copied = ref(false)
     let tickTimer = null
     let rotateTimer = null
+    let copyTimer = null
 
     const checkinUrl = computed(() => {
       if (!code.value) return ''
@@ -63,7 +80,7 @@ export default {
 
     const qrImageUrl = computed(() => {
       if (!checkinUrl.value) return ''
-      return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(checkinUrl.value)}`
+      return `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=${encodeURIComponent(checkinUrl.value)}`
     })
 
     const secondsLeft = computed(() => {
@@ -86,6 +103,10 @@ export default {
       if (rotateTimer) {
         clearTimeout(rotateTimer)
         rotateTimer = null
+      }
+      if (copyTimer) {
+        clearTimeout(copyTimer)
+        copyTimer = null
       }
     }
 
@@ -113,6 +134,19 @@ export default {
       }
     }
 
+    const copyCode = async () => {
+      try {
+        await navigator.clipboard.writeText(code.value)
+        copied.value = true
+        if (copyTimer) clearTimeout(copyTimer)
+        copyTimer = setTimeout(() => {
+          copied.value = false
+        }, 2000)
+      } catch {
+        /* ignore */
+      }
+    }
+
     onMounted(async () => {
       tickTimer = setInterval(() => {
         nowTick.value = Date.now()
@@ -127,11 +161,14 @@ export default {
     return {
       loading,
       error,
+      code,
       checkinUrl,
       qrImageUrl,
       secondsLeft,
       countdownLabel,
-      refresh
+      copied,
+      refresh,
+      copyCode
     }
   }
 }
@@ -153,7 +190,7 @@ export default {
   gap: 1rem;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .eyebrow {
@@ -171,7 +208,7 @@ h1 {
 
 .subtitle {
   margin: 0;
-  max-width: 40rem;
+  max-width: 42rem;
   color: #94a3b8;
   line-height: 1.5;
 }
@@ -183,7 +220,7 @@ h1 {
 }
 
 .venue-qr-card {
-  max-width: 28rem;
+  max-width: 30rem;
   margin: 0 auto;
   padding: 1.5rem;
   border-radius: 1.25rem;
@@ -192,16 +229,23 @@ h1 {
   text-align: center;
 }
 
+.scan-banner {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #86efac;
+}
+
 .qr-image {
-  width: min(320px, 100%);
+  width: min(360px, 100%);
   height: auto;
   border-radius: 0.75rem;
   background: #fff;
-  padding: 0.75rem;
+  padding: 0.85rem;
 }
 
 .countdown {
-  margin: 1rem 0 0.35rem;
+  margin: 1rem 0 0.5rem;
   font-size: 1.35rem;
   font-weight: 700;
   color: #86efac;
@@ -211,17 +255,41 @@ h1 {
   color: #fbbf24;
 }
 
+.code-block {
+  margin: 0.75rem 0;
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.code-label {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.code-value {
+  margin: 0.35rem 0 0.65rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  color: #f8fafc;
+}
+
 .hint {
   margin: 0;
   color: #94a3b8;
   font-size: 0.95rem;
 }
 
-.url-preview {
-  margin: 1rem 0 0;
-  font-size: 0.75rem;
-  color: #64748b;
-  word-break: break-all;
+.staff-steps {
+  max-width: 40rem;
+  margin: 1.75rem auto 0;
+  padding-left: 1.25rem;
+  color: #94a3b8;
+  line-height: 1.55;
 }
 
 .status {
@@ -239,6 +307,11 @@ h1 {
   padding: 0.65rem 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
 }
 
 .btn:disabled {
