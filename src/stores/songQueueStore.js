@@ -100,6 +100,13 @@ export const useSongQueueStore = defineStore('songQueue', {
       expires_at: null,
       checked_in_at: null,
       loading: false
+    },
+    // When auto mode is on, the server drip-feeds requests into Spotify by priority.
+    autoQueue: {
+      enabled: true,
+      buffer: 1,
+      loaded: false,
+      saving: false
     }
   }),
 
@@ -129,6 +136,7 @@ export const useSongQueueStore = defineStore('songQueue', {
       return q.slice(0, 30)
     },
     canRequestSongs: (state) => !!state.venuePresence.present,
+    autoQueueEnabled: (state) => !!state.autoQueue.enabled,
     venueExpiresLabel: (state) => {
       if (!state.venuePresence.expires_at) return null
       try {
@@ -147,6 +155,45 @@ export const useSongQueueStore = defineStore('songQueue', {
       if (this._autoCompleteTimer) {
         clearTimeout(this._autoCompleteTimer)
         this._autoCompleteTimer = null
+      }
+    },
+
+    async fetchAutoQueueSettings() {
+      try {
+        const { data, error } = await supabase.rpc('get_song_queue_settings')
+        if (error) throw error
+        this.autoQueue = {
+          enabled: data?.auto_queue_enabled !== false,
+          buffer: Number(data?.auto_queue_buffer) || 1,
+          loaded: true,
+          saving: false
+        }
+      } catch (err) {
+        console.warn('fetchAutoQueueSettings', err?.message || err)
+      }
+      return this.autoQueue
+    },
+
+    async setAutoQueueEnabled(enabled) {
+      requireAdmin()
+      const prev = this.autoQueue.enabled
+      this.autoQueue.enabled = !!enabled
+      this.autoQueue.saving = true
+      try {
+        const { data, error } = await supabase.rpc('admin_set_song_auto_queue', {
+          p_enabled: !!enabled
+        })
+        if (error) throw error
+        this.autoQueue.enabled = data?.auto_queue_enabled !== false
+        if (this.autoQueue.enabled) {
+          await this.syncPlayback({ force: true })
+        }
+        return this.autoQueue.enabled
+      } catch (err) {
+        this.autoQueue.enabled = prev
+        throw err
+      } finally {
+        this.autoQueue.saving = false
       }
     },
 
@@ -193,6 +240,10 @@ export const useSongQueueStore = defineStore('songQueue', {
             this.playback = { ...this.playback, synced: !!this.spotifyPlayer.currently_playing }
           }
           return
+        }
+        if (typeof data.auto_queue_enabled === 'boolean') {
+          this.autoQueue.enabled = data.auto_queue_enabled
+          this.autoQueue.loaded = true
         }
         const s = data.spotify || {}
         this.playback = {
@@ -510,6 +561,10 @@ export const useSongQueueStore = defineStore('songQueue', {
         }
         await this.fetchQueue({ silent: true })
         await this.fetchPriorityQuota()
+        // Hand the request to Spotify now instead of waiting for the next cron tick.
+        if (this.autoQueue.enabled) {
+          this.syncPlayback({ force: true }).catch(() => {})
+        }
         return data
       } catch (err) {
         const msg = err.message || String(err)

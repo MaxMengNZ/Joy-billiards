@@ -102,7 +102,13 @@
         </div>
         <p class="hint">
           What the venue Spotify is actually playing and what’s already queued there.
-          List shows the top 30 upcoming tracks. Website requests only appear here after staff uses Play / Queue on Spotify.
+          List shows the top 30 upcoming tracks.
+          <template v-if="songStore.autoQueueEnabled">
+            Website requests move here automatically, one at a time, in priority order.
+          </template>
+          <template v-else>
+            Website requests only appear here after staff uses Play / Queue on Spotify.
+          </template>
         </p>
 
         <div v-if="songStore.spotifyNowPlaying" class="now-playing spotify-now">
@@ -160,7 +166,13 @@
           </button>
         </div>
         <p class="hint">
-          Songs requested on this website (waiting for staff to play or queue them on Spotify).
+          <template v-if="songStore.autoQueueEnabled">
+            Songs requested on this website. They’re sent to Spotify automatically in priority order —
+            Pro Max requests jump ahead. 自动送入 Spotify，无需管理员审核。
+          </template>
+          <template v-else>
+            Songs requested on this website (waiting for staff to play or queue them on Spotify).
+          </template>
         </p>
 
         <p v-if="actionMessage" class="inline-toast" :class="actionMessageType" role="status">
@@ -384,6 +396,35 @@
         <!-- Admin strip -->
         <div v-if="authStore.isAdmin" class="panel admin-panel">
           <h2 class="panel-title">Staff controls</h2>
+
+          <div class="auto-mode" :class="{ on: songStore.autoQueueEnabled }">
+            <div class="auto-mode-text">
+              <strong>{{ songStore.autoQueueEnabled ? 'Auto mode: ON' : 'Auto mode: OFF' }}</strong>
+              <span class="hint">
+                {{
+                  songStore.autoQueueEnabled
+                    ? '自动模式：会员点的歌会按优先级自动进 Spotify，管理员无需逐首审核。'
+                    : '手动模式：每一首都需要管理员点 Play / Queue on Spotify 才会进 Spotify。'
+                }}
+              </span>
+            </div>
+            <button
+              class="btn btn-sm"
+              :class="songStore.autoQueueEnabled ? 'btn-ghost' : 'btn-primary'"
+              type="button"
+              :disabled="songStore.autoQueue.saving"
+              @click="toggleAutoMode"
+            >
+              {{
+                songStore.autoQueue.saving
+                  ? 'Saving…'
+                  : songStore.autoQueueEnabled
+                    ? 'Switch to manual'
+                    : 'Switch to auto'
+              }}
+            </button>
+          </div>
+
           <p class="hint">
             “Play on Spotify” starts that track now on the venue device. “Queue on Spotify” adds it to
             the queue — Spotify has no API to remove one specific queued track, so undo it manually in
@@ -577,9 +618,24 @@ export default {
       await Promise.all([
         songStore.fetchQueue(),
         songStore.syncPlayback({ force: true }),
+        songStore.fetchAutoQueueSettings(),
         authStore.isMember ? songStore.fetchPriorityQuota() : Promise.resolve(),
         authStore.isAuthenticated ? songStore.fetchVenuePresence() : Promise.resolve()
       ])
+    }
+
+    const toggleAutoMode = async () => {
+      try {
+        const enabled = await songStore.setAutoQueueEnabled(!songStore.autoQueueEnabled)
+        flash(
+          enabled
+            ? 'Auto mode on — requests go to Spotify automatically.'
+            : 'Manual mode on — you decide what reaches Spotify.',
+          'success'
+        )
+      } catch (err) {
+        flash(err.message || 'Could not change mode', 'error')
+      }
     }
 
     const refreshAll = refreshQueue
@@ -728,6 +784,7 @@ export default {
         if (authStore.isMember) await songStore.fetchPriorityQuota()
         if (!queueBooted) {
           queueBooted = true
+          songStore.fetchAutoQueueSettings()
           songStore.subscribeRealtime()
           songStore.startPlaybackPoll(10000)
         }
@@ -767,6 +824,7 @@ export default {
       highlightMatch,
       refreshQueue,
       refreshAll,
+      toggleAutoMode,
       refreshPresence,
       submitManualCheckin,
       manualCheckinCode,
@@ -1233,6 +1291,32 @@ export default {
 
 .admin-panel {
   border-color: rgba(250, 204, 21, 0.25);
+}
+
+.auto-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.25rem 0 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.auto-mode.on {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.auto-mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: min(100%, 18rem);
+  flex: 1;
 }
 
 .inline-toast {

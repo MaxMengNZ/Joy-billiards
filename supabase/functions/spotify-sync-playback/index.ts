@@ -12,6 +12,8 @@ const MIN_SYNC_INTERVAL_MS = 8000;
 const SPOTIFY_QUEUE_API_CAP = 20;
 /** How many upcoming tracks we keep for the website list. */
 const QUEUE_DISPLAY_LIMIT = 30;
+/** Re-offer a pushed track if Spotify never played it (queue cleared, device swap). */
+const PUSH_STALE_MS = 45 * 60 * 1000;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -271,9 +273,82 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Auto drip-feed: keep a small buffer of website requests inside Spotify so
+    // priority ordering still applies to everything still waiting on the site.
+    let autoQueued: string[] = [];
+    let autoEnabled = false;
+
+    {
+      const { data: settings } = await adminClient
+        .from("song_queue_settings")
+        .select("auto_queue_enabled, auto_queue_buffer")
+        .eq("id", 1)
+        .maybeSingle();
+
+      autoEnabled = settings?.auto_queue_enabled !== false;
+      const buffer = Math.max(1, Math.min(5, settings?.auto_queue_buffer ?? 1));
+
+      if (autoEnabled) {
+        // Release tracks Spotify never played so they can be offered again.
+        await adminClient
+          .from("song_requests")
+          .update({ pushed_to_spotify_at: null })
+          .eq("status", "pending")
+          .not("pushed_to_spotify_at", "is", null)
+          .lt("pushed_to_spotify_at", new Date(Date.now() - PUSH_STALE_MS).toISOString());
+
+        const { count: inFlight } = await adminClient
+          .from("song_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending")
+          .not("pushed_to_spotify_at", "is", null);
+
+        let slots = buffer - (inFlight ?? 0);
+
+        if (slots > 0) {
+          const { data: candidates } = await adminClient
+            .from("song_requests")
+            .select("id, spotify_track_id, track_name")
+            .eq("status", "pending")
+            .is("pushed_to_spotify_at", null)
+            .order("is_priority", { ascending: false })
+            .order("created_at", { ascending: true })
+            .limit(slots);
+
+          for (const row of candidates ?? []) {
+            if (slots <= 0) break;
+            const trackId = row.spotify_track_id as string | null;
+            if (!trackId || String(trackId).startsWith("mock_track_")) continue;
+
+            const addRes = await fetch(
+              `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(`spotify:track:${trackId}`)}`,
+              { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } },
+            );
+
+            if (!addRes.ok) {
+              // No active device / transient error — try again on the next tick.
+              break;
+            }
+
+            await adminClient
+              .from("song_requests")
+              .update({ pushed_to_spotify_at: new Date().toISOString() })
+              .eq("id", row.id)
+              .eq("status", "pending");
+
+            autoQueued.push(row.id as string);
+            changes.push(`auto_queued:${row.id}`);
+            slots -= 1;
+          }
+        }
+      }
+    }
+
     return json({
       success: true,
       cached: false,
+      auto_queue_enabled: autoEnabled,
+      auto_queued: autoQueued,
       spotify: {
         track_id: playingTrackId,
         track_name: (currentlyPlaying?.track_name as string) || null,
