@@ -1,13 +1,28 @@
 <template>
   <div class="home-page">
-    <!-- Grand Opening Announcement Banner -->
-    <div class="trial-banner" v-if="showTrialBanner">
+    <!-- Song Queue announcement banner -->
+    <div
+      class="trial-banner song-queue-banner"
+      v-if="showSongQueueBanner"
+      role="link"
+      tabindex="0"
+      @click="goToSongs"
+      @keydown.enter.prevent="goToSongs"
+      @keydown.space.prevent="goToSongs"
+    >
       <div class="trial-banner-content">
-        <div class="trial-banner-icon">🎉</div>
+        <div class="trial-banner-icon" aria-hidden="true">🎵</div>
         <div class="trial-banner-text">
-          <strong>Grand Opening Celebration!</strong> Joy Billiards NZ is officially open with fresh pricing, new tournaments, and premium Heyball experiences.
+          <strong>New: Member Song Queue</strong> · Search Spotify tracks and add them to the venue playlist. Tap to try it.
         </div>
-        <div class="trial-banner-close" @click="hideTrialBanner">×</div>
+        <button
+          type="button"
+          class="trial-banner-close"
+          aria-label="Dismiss announcement"
+          @click.stop="hideSongQueueBanner"
+        >
+          ×
+        </button>
       </div>
     </div>
 
@@ -415,15 +430,23 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStatsStore } from '../stores/statsStore'
+
+const SONG_QUEUE_BANNER_KEY = 'joy_song_queue_banner_dismissed'
 
 export default {
   name: 'HomePage',
   setup() {
+    const router = useRouter()
     const statsStore = useStatsStore()
     const lastRefreshTime = ref(new Date())
     const isRefreshing = ref(false)
-    const showTrialBanner = ref(true)
+    const showSongQueueBanner = ref(
+      typeof localStorage === 'undefined'
+        ? true
+        : localStorage.getItem(SONG_QUEUE_BANNER_KEY) !== '1'
+    )
 
     // Use computed properties to get reactive stats
     const stats = computed(() => ({
@@ -469,8 +492,17 @@ export default {
       return `${Math.floor(diff / 60)}m ago`
     }
 
-    const hideTrialBanner = () => {
-      showTrialBanner.value = false
+    const goToSongs = () => {
+      router.push('/songs')
+    }
+
+    const hideSongQueueBanner = () => {
+      showSongQueueBanner.value = false
+      try {
+        localStorage.setItem(SONG_QUEUE_BANNER_KEY, '1')
+      } catch {
+        // ignore storage errors
+      }
     }
 
     return {
@@ -480,8 +512,9 @@ export default {
       lastRefreshTime,
       manualRefresh,
       formatLastRefresh,
-      showTrialBanner,
-      hideTrialBanner
+      showSongQueueBanner,
+      goToSongs,
+      hideSongQueueBanner
     }
   }
 }
@@ -492,7 +525,7 @@ export default {
   max-width: 100%;
 }
 
-/* Trial Opening Banner */
+/* Song Queue / announcement banner */
 .trial-banner {
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   color: #1a1a2e;
@@ -501,6 +534,16 @@ export default {
   position: relative;
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
   animation: banner-pulse 2s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.song-queue-banner:hover {
+  filter: brightness(1.03);
+}
+
+.song-queue-banner:focus-visible {
+  outline: 3px solid #1a1a2e;
+  outline-offset: 2px;
 }
 
 @keyframes banner-pulse {
@@ -551,6 +594,9 @@ export default {
   border-radius: 50%;
   transition: all 0.3s ease;
   background: rgba(26, 26, 46, 0.1);
+  border: none;
+  color: inherit;
+  line-height: 1;
 }
 
 .trial-banner-close:hover {
