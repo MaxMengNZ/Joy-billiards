@@ -60,6 +60,12 @@
               <div class="track-name">{{ songStore.nowPlaying.track_name }}</div>
               <div class="artist-name">{{ songStore.nowPlaying.artist_name }}</div>
               <div class="requester">Requested by {{ requesterName(songStore.nowPlaying) }}</div>
+              <div v-if="playbackProgress" class="playback-progress">
+                <div class="progress-track">
+                  <div class="progress-fill" :style="{ width: playbackProgress.percent + '%' }"></div>
+                </div>
+                <span class="progress-time">{{ playbackProgress.label }}</span>
+              </div>
             </div>
             <div class="result-actions" v-if="authStore.isAdmin">
               <button
@@ -306,6 +312,25 @@ export default {
       return `#${pos} in line · ${pos - 1} ahead`
     }
 
+    // Real Spotify progress for the Now playing card (only when the synced
+    // Spotify track matches the website's now-playing row)
+    const playbackProgress = computed(() => {
+      const now = songStore.nowPlaying
+      const pb = songStore.playback
+      if (!now || !pb.synced || !pb.is_playing) return null
+      if (pb.track_id !== now.spotify_track_id) return null
+      if (pb.progress_ms == null || !pb.duration_ms) return null
+
+      const fmt = (ms) => {
+        const s = Math.max(0, Math.floor(ms / 1000))
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+      }
+      return {
+        percent: Math.min(100, Math.round((pb.progress_ms / pb.duration_ms) * 100)),
+        label: `${fmt(pb.progress_ms)} / ${fmt(pb.duration_ms)}`
+      }
+    })
+
     const mySpotSummary = computed(() =>
       songStore.myPending.map((item) => {
         const pos = Number(item.queue_position)
@@ -506,6 +531,7 @@ export default {
         if (!queueBooted) {
           queueBooted = true
           songStore.subscribeRealtime()
+          songStore.startPlaybackPoll(10000)
         }
         // Guests may miss Realtime auth; light poll keeps queue fresh
         if (!authStore.isAuthenticated) startGuestPoll()
@@ -532,6 +558,7 @@ export default {
       requesterName,
       positionHint,
       mySpotSummary,
+      playbackProgress,
       highlightMatch,
       refreshQueue,
       refreshAll,
@@ -891,6 +918,35 @@ export default {
   border-radius: 12px;
   border: 1px solid rgba(29, 185, 84, 0.35);
   background: rgba(29, 185, 84, 0.08);
+}
+
+.playback-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.progress-track {
+  flex: 1;
+  max-width: 260px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #1db954;
+  transition: width 1s linear;
+}
+
+.progress-time {
+  font-size: 0.75rem;
+  color: #9fb0c9;
+  font-variant-numeric: tabular-nums;
 }
 
 .empty-inline {

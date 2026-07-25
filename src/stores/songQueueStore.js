@@ -35,7 +35,17 @@ export const useSongQueueStore = defineStore('songQueue', {
     actionBusyId: null,
     error: null,
     channel: null,
-    _autoCompleteTimer: null
+    _autoCompleteTimer: null,
+    _playbackPollTimer: null,
+    playback: {
+      synced: false,
+      is_playing: false,
+      track_id: null,
+      track_name: null,
+      artist_name: null,
+      progress_ms: null,
+      duration_ms: null
+    }
   }),
 
   getters: {
@@ -54,6 +64,51 @@ export const useSongQueueStore = defineStore('songQueue', {
       if (this._autoCompleteTimer) {
         clearTimeout(this._autoCompleteTimer)
         this._autoCompleteTimer = null
+      }
+    },
+
+    async syncPlayback() {
+      try {
+        const { data, error } = await supabase.functions.invoke('spotify-sync-playback', {
+          body: {}
+        })
+        if (error || !data?.success) {
+          // Venue token missing or Spotify unreachable — duration fallback still applies
+          this.playback = { ...this.playback, synced: false }
+          return
+        }
+        const s = data.spotify || {}
+        this.playback = {
+          synced: true,
+          is_playing: !!s.is_playing,
+          track_id: s.track_id || null,
+          track_name: s.track_name || null,
+          artist_name: s.artist_name || null,
+          progress_ms: s.progress_ms ?? null,
+          duration_ms: s.duration_ms ?? null
+        }
+        // If the sync changed any request statuses, refresh the queue view
+        if (Array.isArray(data.changes) && data.changes.length) {
+          await this.fetchQueue({ silent: true })
+        }
+      } catch (err) {
+        console.warn('syncPlayback failed:', err?.message || err)
+        this.playback = { ...this.playback, synced: false }
+      }
+    },
+
+    startPlaybackPoll(intervalMs = 10000) {
+      if (this._playbackPollTimer) return
+      this.syncPlayback()
+      this._playbackPollTimer = setInterval(() => {
+        this.syncPlayback()
+      }, intervalMs)
+    },
+
+    stopPlaybackPoll() {
+      if (this._playbackPollTimer) {
+        clearInterval(this._playbackPollTimer)
+        this._playbackPollTimer = null
       }
     },
 
@@ -511,6 +566,7 @@ export const useSongQueueStore = defineStore('songQueue', {
 
     unsubscribeRealtime() {
       this.clearAutoCompleteTimer()
+      this.stopPlaybackPoll()
       if (this.channel) {
         supabase.removeChannel(this.channel)
         this.channel = null
