@@ -34,7 +34,8 @@ export const useSongQueueStore = defineStore('songQueue', {
     submitting: false,
     actionBusyId: null,
     error: null,
-    channel: null
+    channel: null,
+    _autoCompleteTimer: null
   }),
 
   getters: {
@@ -49,6 +50,37 @@ export const useSongQueueStore = defineStore('songQueue', {
   },
 
   actions: {
+    clearAutoCompleteTimer() {
+      if (this._autoCompleteTimer) {
+        clearTimeout(this._autoCompleteTimer)
+        this._autoCompleteTimer = null
+      }
+    },
+
+    scheduleAutoComplete() {
+      this.clearAutoCompleteTimer()
+      const playing = this.queue.find((r) => r.status === 'playing')
+      if (!playing) return
+
+      const startedAt = new Date(playing.played_at || playing.created_at).getTime()
+      if (!Number.isFinite(startedAt)) return
+
+      const durationMs = Number(playing.duration_ms)
+      const trackMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 240000
+      const graceMs = 8000
+      const remaining = startedAt + trackMs + graceMs - Date.now()
+
+      if (remaining <= 0) {
+        // Already due — refresh immediately so RPC can finalize
+        this.fetchQueue({ silent: true })
+        return
+      }
+
+      this._autoCompleteTimer = setTimeout(() => {
+        this.fetchQueue({ silent: true })
+      }, Math.min(remaining, 30 * 60 * 1000))
+    },
+
     async fetchQueue({ silent = false } = {}) {
       if (!silent) {
         this.loading = true
@@ -56,6 +88,7 @@ export const useSongQueueStore = defineStore('songQueue', {
       this.error = null
       try {
         // Sanitized public RPC — no emails / membership / raw user ids
+        // Also auto-marks finished "playing" tracks as played.
         const { data, error } = await supabase.rpc('get_live_song_queue')
         if (error) throw error
         const rows = Array.isArray(data) ? data : []
@@ -67,6 +100,7 @@ export const useSongQueueStore = defineStore('songQueue', {
             user_id: r.is_mine ? '__mine__' : null
           }))
         )
+        this.scheduleAutoComplete()
       } catch (err) {
         console.error('fetchQueue', err)
         this.error = err.message || String(err)
@@ -476,6 +510,7 @@ export const useSongQueueStore = defineStore('songQueue', {
     },
 
     unsubscribeRealtime() {
+      this.clearAutoCompleteTimer()
       if (this.channel) {
         supabase.removeChannel(this.channel)
         this.channel = null
