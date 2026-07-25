@@ -8,6 +8,10 @@ const corsHeaders = {
 };
 
 const MIN_SYNC_INTERVAL_MS = 8000;
+/** Spotify's /me/player/queue endpoint is hard-capped around this size. */
+const SPOTIFY_QUEUE_API_CAP = 20;
+/** How many upcoming tracks we keep for the website list. */
+const QUEUE_DISPLAY_LIMIT = 30;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -28,6 +32,30 @@ function mapTrack(item: Record<string, unknown> | null | undefined) {
     album_art_url: album?.images?.[0]?.url || null,
     duration_ms: typeof item.duration_ms === "number" ? item.duration_ms : null,
   };
+}
+
+/**
+ * Spotify often pads /me/player/queue up to ~20 by repeating the real queue
+ * (e.g. [A,B,C,A,B,C,...]). Collapse that padding so the count is real.
+ */
+function collapseQueuePadding(
+  tracks: Array<Record<string, unknown>>,
+): Array<Record<string, unknown>> {
+  if (tracks.length <= 1) return tracks;
+  const key = (t: Record<string, unknown>) =>
+    String(t.spotify_track_id || `${t.track_name || ""}\0${t.artist_name || ""}`);
+  const n = tracks.length;
+  for (let p = 1; p <= Math.floor(n / 2); p++) {
+    let ok = true;
+    for (let i = 0; i < n; i++) {
+      if (key(tracks[i]) !== key(tracks[i % p])) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) return tracks.slice(0, p);
+  }
+  return tracks;
 }
 
 async function refreshVenueAccessToken() {
@@ -65,10 +93,9 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Rate-limit: reuse fresh snapshot instead of hammering Spotify
     const { data: existing } = await adminClient
       .from("spotify_player_snapshot")
-      .select("currently_playing, queue, is_playing, updated_at")
+      .select("currently_playing, queue, is_playing, updated_at, queue_count, queue_may_have_more")
       .eq("id", 1)
       .maybeSingle();
 
@@ -81,6 +108,7 @@ Deno.serve(async (req: Request) => {
 
     if (!bodyForce && existing && Date.now() - updatedAt < MIN_SYNC_INTERVAL_MS) {
       const cp = existing.currently_playing as Record<string, unknown> | null;
+      const cachedQueue = Array.isArray(existing.queue) ? existing.queue : [];
       return json({
         success: true,
         cached: true,
@@ -93,7 +121,9 @@ Deno.serve(async (req: Request) => {
           duration_ms: (cp?.duration_ms as number) ?? null,
         },
         currently_playing: existing.currently_playing,
-        queue: existing.queue || [],
+        queue: cachedQueue,
+        queue_count: existing.queue_count ?? cachedQueue.length,
+        queue_may_have_more: !!existing.queue_may_have_more,
         is_playing: !!existing.is_playing,
         updated_at: existing.updated_at,
         changes: [],
@@ -102,17 +132,19 @@ Deno.serve(async (req: Request) => {
 
     const accessToken = await refreshVenueAccessToken();
     if (!accessToken) {
+      const cachedQueue = Array.isArray(existing?.queue) ? existing.queue : [];
       return json({
         success: false,
         skipped: true,
         message: "Spotify venue token not configured.",
         currently_playing: existing?.currently_playing ?? null,
-        queue: existing?.queue ?? [],
+        queue: cachedQueue,
+        queue_count: existing?.queue_count ?? cachedQueue.length,
+        queue_may_have_more: !!existing?.queue_may_have_more,
         is_playing: false,
       });
     }
 
-    // Fetch currently-playing (includes progress) + queue in parallel
     const [nowRes, queueRes] = await Promise.all([
       fetch("https://api.spotify.com/v1/me/player/currently-playing", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -137,11 +169,12 @@ Deno.serve(async (req: Request) => {
     }
 
     let queueTracks: Array<Record<string, unknown>> = [];
+    let queueCount = 0;
+    let queueMayHaveMore = false;
     let queueCurrently = currentlyPlaying;
 
     if (queueRes.ok) {
       const qData = await queueRes.json();
-      // Prefer queue endpoint's currently_playing if we didn't get one
       if (!queueCurrently && qData?.currently_playing) {
         queueCurrently = mapTrack(qData.currently_playing);
         if (queueCurrently) {
@@ -152,20 +185,29 @@ Deno.serve(async (req: Request) => {
           };
         }
       }
-      queueTracks = ((qData?.queue as unknown[]) || [])
+      const rawQueue = ((qData?.queue as unknown[]) || [])
         .map((t) => mapTrack(t as Record<string, unknown>))
         .filter(Boolean) as Array<Record<string, unknown>>;
+      const collapsed = collapseQueuePadding(rawQueue);
+      queueCount = collapsed.length;
+      // Spotify hard-caps around 20; if we still have a full page after
+      // collapsing padding, the real queue may be longer than we can see.
+      queueMayHaveMore = rawQueue.length >= SPOTIFY_QUEUE_API_CAP &&
+        collapsed.length >= SPOTIFY_QUEUE_API_CAP;
+      queueTracks = collapsed.slice(0, QUEUE_DISPLAY_LIMIT);
     }
 
+    const updatedAtIso = new Date().toISOString();
     await adminClient.from("spotify_player_snapshot").upsert({
       id: 1,
       currently_playing: currentlyPlaying,
       queue: queueTracks,
+      queue_count: queueCount,
+      queue_may_have_more: queueMayHaveMore,
       is_playing: isPlaying,
-      updated_at: new Date().toISOString(),
+      updated_at: updatedAtIso,
     });
 
-    // Align website song_requests with real Spotify playback
     const changes: string[] = [];
     const playingTrackId = (currentlyPlaying?.spotify_track_id as string) || null;
 
@@ -206,7 +248,6 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (pendingMatch) {
-        // Demote any other playing first
         await adminClient
           .from("song_requests")
           .update({
@@ -243,8 +284,10 @@ Deno.serve(async (req: Request) => {
       },
       currently_playing: currentlyPlaying,
       queue: queueTracks,
+      queue_count: queueCount,
+      queue_may_have_more: queueMayHaveMore,
       is_playing: isPlaying,
-      updated_at: new Date().toISOString(),
+      updated_at: updatedAtIso,
       changes,
     });
   } catch (err) {

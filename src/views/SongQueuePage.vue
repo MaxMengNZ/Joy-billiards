@@ -32,8 +32,8 @@
           </span>
         </div>
         <p class="hint">
-          What the venue Spotify is actually playing and what is already queued there.
-          Website requests only appear here after staff uses Play / Queue on Spotify.
+          What the venue Spotify is actually playing and what’s already queued there.
+          List shows the top 30 upcoming tracks. Website requests only appear here after staff uses Play / Queue on Spotify.
         </p>
 
         <div v-if="songStore.spotifyNowPlaying" class="now-playing spotify-now">
@@ -59,12 +59,15 @@
         </div>
         <p v-else class="empty-inline">Nothing playing on the venue Spotify right now.</p>
 
-        <p v-if="songStore.spotifyQueue.length" class="queue-count-hint">
-          {{ songStore.spotifyQueue.length }} in Spotify queue
+        <p v-if="songStore.spotifyQueueCount" class="queue-count-hint">
+          {{ songStore.spotifyQueueCount }}{{ songStore.spotifyPlayer.queue_may_have_more ? '+' : '' }} in Spotify queue
+          <span v-if="songStore.spotifyQueueVisible.length < songStore.spotifyQueueCount" class="queue-count-sub">
+            · showing top {{ songStore.spotifyQueueVisible.length }}
+          </span>
         </p>
-        <ol class="queue-list" v-if="songStore.spotifyQueue.length">
+        <ol class="queue-list" v-if="songStore.spotifyQueueVisible.length">
           <li
-            v-for="(item, index) in songStore.spotifyQueue"
+            v-for="(item, index) in songStore.spotifyQueueVisible"
             :key="(item.spotify_track_id || item.track_name) + '-' + index"
             class="queue-item"
           >
@@ -937,6 +940,11 @@ export default {
   color: #94a3b8;
   font-size: 0.85rem;
   margin: 0.5rem 0 0;
+}
+
+.queue-count-sub {
+  color: #64748b;
+  font-size: 0.8rem;
 }
 
 .pos-inline {

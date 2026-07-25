@@ -15,6 +15,43 @@ function isMockTrackId(id) {
   return !id || String(id).startsWith('mock_track_')
 }
 
+/** Spotify often pads /me/player/queue to ~20 by repeating the real queue. */
+function collapseQueuePadding(tracks) {
+  if (!Array.isArray(tracks) || tracks.length <= 1) return tracks || []
+  const key = (t) =>
+    String(t?.spotify_track_id || `${t?.track_name || ''}\0${t?.artist_name || ''}`)
+  const n = tracks.length
+  for (let p = 1; p <= Math.floor(n / 2); p++) {
+    let ok = true
+    for (let i = 0; i < n; i++) {
+      if (key(tracks[i]) !== key(tracks[i % p])) {
+        ok = false
+        break
+      }
+    }
+    if (ok) return tracks.slice(0, p)
+  }
+  return tracks
+}
+
+function normalizeSpotifyQueue(rawQueue, meta = {}) {
+  const raw = Array.isArray(rawQueue) ? rawQueue : []
+  const collapsed = collapseQueuePadding(raw)
+  const padded = collapsed.length < raw.length
+  const serverCount = Number(meta.queue_count)
+  const queue_count = padded
+    ? collapsed.length
+    : Number.isFinite(serverCount) && serverCount >= 0
+      ? serverCount
+      : collapsed.length
+  return {
+    queue: collapsed.slice(0, 30),
+    queue_count,
+    queue_may_have_more:
+      !!meta.queue_may_have_more || (raw.length >= 20 && collapsed.length >= 20)
+  }
+}
+
 function requireAdmin() {
   const auth = useAuthStore()
   if (!auth.isAdmin) {
@@ -51,6 +88,8 @@ export const useSongQueueStore = defineStore('songQueue', {
     spotifyPlayer: {
       currently_playing: null,
       queue: [],
+      queue_count: 0,
+      queue_may_have_more: false,
       is_playing: false,
       updated_at: null
     }
@@ -67,7 +106,20 @@ export const useSongQueueStore = defineStore('songQueue', {
     pendingCount: (state) => state.queue.filter((r) => r.status === 'pending').length,
     spotifyNowPlaying: (state) => state.spotifyPlayer.currently_playing || null,
     spotifyQueue: (state) =>
-      Array.isArray(state.spotifyPlayer.queue) ? state.spotifyPlayer.queue : []
+      Array.isArray(state.spotifyPlayer.queue) ? state.spotifyPlayer.queue : [],
+    /** Real upcoming count after Spotify padding collapse (not just list.length). */
+    spotifyQueueCount: (state) => {
+      const listed = Array.isArray(state.spotifyPlayer.queue)
+        ? state.spotifyPlayer.queue.length
+        : 0
+      const count = Number(state.spotifyPlayer.queue_count)
+      return Number.isFinite(count) && count >= 0 ? count : listed
+    },
+    /** UI list: at most top 30 upcoming tracks. */
+    spotifyQueueVisible: (state) => {
+      const q = Array.isArray(state.spotifyPlayer.queue) ? state.spotifyPlayer.queue : []
+      return q.slice(0, 30)
+    }
   },
 
   actions: {
@@ -83,9 +135,12 @@ export const useSongQueueStore = defineStore('songQueue', {
         const { data, error } = await supabase.rpc('get_spotify_player_snapshot')
         if (error) throw error
         if (!data) return
+        const normalized = normalizeSpotifyQueue(data.queue, data)
         this.spotifyPlayer = {
           currently_playing: data.currently_playing || null,
-          queue: Array.isArray(data.queue) ? data.queue : [],
+          queue: normalized.queue,
+          queue_count: normalized.queue_count,
+          queue_may_have_more: normalized.queue_may_have_more,
           is_playing: !!data.is_playing,
           updated_at: data.updated_at || null
         }
@@ -129,9 +184,13 @@ export const useSongQueueStore = defineStore('songQueue', {
           progress_ms: s.progress_ms ?? null,
           duration_ms: s.duration_ms ?? null
         }
+        const queue = Array.isArray(data.queue) ? data.queue : []
+        const normalized = normalizeSpotifyQueue(queue, data)
         this.spotifyPlayer = {
           currently_playing: data.currently_playing || null,
-          queue: Array.isArray(data.queue) ? data.queue : [],
+          queue: normalized.queue,
+          queue_count: normalized.queue_count,
+          queue_may_have_more: normalized.queue_may_have_more,
           is_playing: !!data.is_playing,
           updated_at: data.updated_at || null
         }
