@@ -191,7 +191,6 @@ Deno.serve(async (req: Request) => {
         .map((t) => mapTrack(t as Record<string, unknown>))
         .filter(Boolean) as Array<Record<string, unknown>>;
       const collapsed = collapseQueuePadding(rawQueue);
-      queueCount = collapsed.length;
       // Spotify hard-caps around 20; if we still have a full page after
       // collapsing padding, the real queue may be longer than we can see.
       queueMayHaveMore = rawQueue.length >= SPOTIFY_QUEUE_API_CAP &&
@@ -199,19 +198,52 @@ Deno.serve(async (req: Request) => {
       queueTracks = collapsed.slice(0, QUEUE_DISPLAY_LIMIT);
     }
 
-    const updatedAtIso = new Date().toISOString();
-    await adminClient.from("spotify_player_snapshot").upsert({
-      id: 1,
-      currently_playing: currentlyPlaying,
-      queue: queueTracks,
-      queue_count: queueCount,
-      queue_may_have_more: queueMayHaveMore,
-      is_playing: isPlaying,
-      updated_at: updatedAtIso,
-    });
-
     const changes: string[] = [];
     const playingTrackId = (currentlyPlaying?.spotify_track_id as string) || null;
+
+    // Spotify often leaves already-played tracks (or radio suggestions) in
+    // /me/player/queue. Hide anything the website already finished, unless a
+    // guest has re-requested the same track and it's pending/playing again.
+    {
+      const sinceIso = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+      const [{ data: finishedRows }, { data: activeRows }] = await Promise.all([
+        adminClient
+          .from("song_requests")
+          .select("spotify_track_id")
+          .in("status", ["played", "skipped", "cancelled"])
+          .gte("updated_at", sinceIso),
+        adminClient
+          .from("song_requests")
+          .select("spotify_track_id")
+          .in("status", ["pending", "playing"]),
+      ]);
+
+      const activeIds = new Set(
+        (activeRows || [])
+          .map((r) => r.spotify_track_id as string | null)
+          .filter(Boolean) as string[],
+      );
+      const hideIds = new Set(
+        (finishedRows || [])
+          .map((r) => r.spotify_track_id as string | null)
+          .filter((id): id is string => !!id && !activeIds.has(id)),
+      );
+      if (playingTrackId) hideIds.add(playingTrackId);
+
+      if (hideIds.size && queueTracks.length) {
+        const before = queueTracks.length;
+        queueTracks = queueTracks.filter(
+          (t) => !hideIds.has(String(t.spotify_track_id || "")),
+        );
+        if (queueTracks.length !== before) {
+          changes.push(`filtered_stale_queue:${before - queueTracks.length}`);
+        }
+      }
+      queueCount = queueTracks.length;
+      if (queueTracks.length < QUEUE_DISPLAY_LIMIT) {
+        queueMayHaveMore = false;
+      }
+    }
 
     const { data: playingRow } = await adminClient
       .from("song_requests")
@@ -343,6 +375,17 @@ Deno.serve(async (req: Request) => {
         }
       }
     }
+
+    const updatedAtIso = new Date().toISOString();
+    await adminClient.from("spotify_player_snapshot").upsert({
+      id: 1,
+      currently_playing: currentlyPlaying,
+      queue: queueTracks,
+      queue_count: queueCount,
+      queue_may_have_more: queueMayHaveMore,
+      is_playing: isPlaying,
+      updated_at: updatedAtIso,
+    });
 
     return json({
       success: true,
