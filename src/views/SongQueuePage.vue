@@ -124,9 +124,9 @@
                 <button
                   class="btn btn-primary btn-sm"
                   :disabled="!!songStore.actionBusyId"
-                  @click="setStatus(item.id, 'playing')"
+                  @click="playNow(item)"
                 >
-                  {{ songStore.actionBusyId === item.id ? '…' : 'Play' }}
+                  {{ songStore.actionBusyId === item.id ? 'Playing…' : 'Play on Spotify' }}
                 </button>
                 <button
                   class="btn btn-secondary btn-sm"
@@ -134,6 +134,14 @@
                   @click="pushSpotify(item)"
                 >
                   {{ songStore.actionBusyId === item.id ? 'Sending…' : 'Queue on Spotify' }}
+                </button>
+                <button
+                  class="btn btn-ghost btn-sm"
+                  :disabled="!!songStore.actionBusyId"
+                  @click="setStatus(item.id, 'playing')"
+                  title="Only mark as playing on the website (does not control Spotify)"
+                >
+                  Mark playing
                 </button>
                 <button
                   class="btn btn-ghost btn-sm"
@@ -230,19 +238,19 @@
         <div v-if="authStore.isAdmin" class="panel admin-panel">
           <h2 class="panel-title">Staff controls</h2>
           <p class="hint">
-            “Queue on Spotify” adds the track to the venue Premium queue. Spotify does not provide an
-            API to remove one specific queued track, so this cannot be undone from the website. Remove
-            it manually in the Spotify app if needed. “Skip current on Spotify” only advances the track
-            that is currently playing.
+            “Play on Spotify” starts that track now on the venue device. “Queue on Spotify” adds it to
+            the queue — Spotify has no API to remove one specific queued track, so undo it manually in
+            the Spotify app. “Skip current on Spotify” advances the currently playing track. “Mark
+            playing” only updates the website (no Spotify control).
           </p>
           <button
             v-if="songStore.nextUp"
             class="btn btn-primary"
             type="button"
             :disabled="!!songStore.actionBusyId"
-            @click="playNext"
+            @click="playNow(songStore.nextUp)"
           >
-            Play next: {{ songStore.nextUp.track_name }}
+            Play next on Spotify: {{ songStore.nextUp.track_name }}
           </button>
         </div>
       </template>
@@ -441,6 +449,25 @@ export default {
       }
     }
 
+    const playNow = async (item) => {
+      try {
+        flash('Starting playback on Spotify…')
+        const data = await songStore.playNowOnSpotify(item)
+        if (data?.skipped) {
+          flash(
+            data.message ||
+              'Spotify venue token not configured. Use “Mark playing” for website-only.',
+            'warn'
+          )
+        } else {
+          const device = data?.device_name ? ` on “${data.device_name}”` : ''
+          flash(`Now playing on Spotify${device}.`)
+        }
+      } catch (err) {
+        flash(err.message || 'Spotify play failed', 'error')
+      }
+    }
+
     const skipCurrentSpotify = async (id) => {
       try {
         const data = await songStore.skipCurrentOnSpotify(id)
@@ -513,6 +540,7 @@ export default {
       cancelMine,
       setStatus,
       pushSpotify,
+      playNow,
       skipCurrentSpotify,
       playNext
     }

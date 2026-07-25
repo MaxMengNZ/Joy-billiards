@@ -222,6 +222,58 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (action === "play_now") {
+      // Start playback of this specific track immediately on the active device.
+      const deviceQuery = active?.id ? `?device_id=${encodeURIComponent(active.id)}` : "";
+      const playRes = await fetch(
+        `https://api.spotify.com/v1/me/player/play${deviceQuery}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ uris: [uri] }),
+        },
+      );
+
+      if (!playRes.ok) {
+        const text = await playRes.text();
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Spotify play failed: ${playRes.status} ${text}`,
+            hint:
+              "Open the venue Premium Spotify on a device and start any track once so it becomes the active device, then retry Play.",
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (requestId) {
+        await adminClient
+          .from("song_requests")
+          .update({ status: "played", played_at: new Date().toISOString() })
+          .eq("status", "playing")
+          .neq("id", requestId);
+
+        await adminClient
+          .from("song_requests")
+          .update({ status: "playing", played_at: new Date().toISOString() })
+          .eq("id", requestId);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "play_now",
+          uri,
+          device_name: active?.name || null,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const queueRes = await fetch(
       `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(uri)}`,
       {

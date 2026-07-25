@@ -348,6 +348,62 @@ export const useSongQueueStore = defineStore('songQueue', {
       }
     },
 
+    async playNowOnSpotify(request) {
+      if (isMockTrackId(request.spotify_track_id)) {
+        throw new Error(
+          'This track is a mock/demo ID and cannot be played on Spotify. Add a real Spotify track.'
+        )
+      }
+
+      this.actionBusyId = request.id
+      try {
+        const invokeEdge = async () => {
+          const { data, error } = await supabase.functions.invoke('spotify-push-queue', {
+            body: {
+              action: 'play_now',
+              request_id: request.id,
+              spotify_track_id: request.spotify_track_id
+            }
+          })
+          let payload = data
+          if (!payload && error?.context && typeof error.context.json === 'function') {
+            try {
+              payload = await error.context.json()
+            } catch {
+              payload = null
+            }
+          }
+          if (error && !payload) throw error
+          return payload
+        }
+
+        const payload = await invokeEdge()
+
+        if (payload?.skipped) return payload
+        if (!payload?.success) {
+          const message = payload?.hint
+            ? `${payload.error || payload.message} ${payload.hint}`
+            : payload?.error || payload?.message || 'Spotify play failed.'
+          throw new Error(message)
+        }
+
+        // Reflect "now playing" in the website queue
+        this.queue = sortQueue(
+          this.queue
+            .map((r) => {
+              if (r.id === request.id) return { ...r, status: 'playing' }
+              if (r.status === 'playing') return { ...r, status: 'played' }
+              return r
+            })
+            .filter((r) => r.status === 'pending' || r.status === 'playing')
+        )
+        await this.fetchQueue({ silent: true })
+        return payload
+      } finally {
+        this.actionBusyId = null
+      }
+    },
+
     async skipCurrentOnSpotify(requestId) {
       this.actionBusyId = requestId
       try {
