@@ -14,7 +14,7 @@
           <h2>{{ t('auth.loginTitle') }}</h2>
 
           <div v-if="passwordChangedMessage" class="alert alert-success">
-            ✅ Password updated successfully! Please log in with your new password.
+            ✅ {{ t('auth.passwordUpdated') }}
           </div>
 
           <div v-if="authStore.error" class="alert alert-danger">
@@ -22,7 +22,7 @@
           </div>
 
           <div v-if="verificationSent" class="alert alert-success">
-            ✅ Verification email resent! Please check your inbox.
+            ✅ {{ t('auth.verificationResent') }}
           </div>
 
           <div v-if="verificationError" class="alert alert-danger">
@@ -48,7 +48,7 @@
                 type="password"
                 class="form-control"
                 v-model="password"
-                placeholder="Enter your password"
+                :placeholder="t('auth.passwordPlaceholder')"
                 required
                 :disabled="authStore.loading"
               >
@@ -94,15 +94,15 @@
     <div v-if="showResetModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Reset Password</h2>
+          <h2>{{ t('auth.resetTitle') }}</h2>
           <button class="btn btn-secondary btn-sm" @click="showResetModal = false">
-            Close
+            {{ t('auth.close') }}
           </button>
         </div>
         <div class="modal-body">
-          <p>Enter your email address and we'll send you a password reset link.</p>
+          <p>{{ t('auth.resetDesc') }}</p>
           <div class="form-group">
-            <label class="form-label">Email</label>
+            <label class="form-label">{{ t('auth.email') }}</label>
             <input
               type="email"
               class="form-control"
@@ -111,15 +111,15 @@
             >
           </div>
           <div v-if="resetSuccess" class="alert alert-success mt-2">
-            Password reset email sent! Please check your inbox.
+            {{ t('auth.resetSent') }}
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="showResetModal = false">
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button class="btn btn-primary" @click="handleResetPassword">
-            Send Reset Link
+            {{ t('auth.sendResetLink') }}
           </button>
         </div>
       </div>
@@ -561,5 +561,4 @@ export default {
   }
 }
 </style>
-
 

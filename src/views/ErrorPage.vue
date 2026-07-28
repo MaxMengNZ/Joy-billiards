@@ -10,9 +10,9 @@
             <div class="ball ball-3">4</div>
           </div>
         </div>
-        <h1 class="error-title">Page Not Found</h1>
+        <h1 class="error-title">{{ t('errorPage.notFound') }}</h1>
         <p class="error-description">
-          The page you're looking for seems to have been scratched off the table.
+          {{ t('errorPage.notFoundDesc') }}
         </p>
       </div>
 
@@ -23,9 +23,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 class="error-title">Access Denied</h1>
+        <h1 class="error-title">{{ t('errorPage.denied') }}</h1>
         <p class="error-description">
-          You don't have permission to access this area. Please contact an administrator if you believe this is a mistake.
+          {{ t('errorPage.deniedDesc') }}
         </p>
       </div>
 
@@ -36,9 +36,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h1 class="error-title">Server Error</h1>
+        <h1 class="error-title">{{ t('errorPage.server') }}</h1>
         <p class="error-description">
-          Something went wrong on our end. We're working to fix it. Please try again later.
+          {{ t('errorPage.serverDesc') }}
         </p>
       </div>
 
@@ -49,9 +49,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
           </svg>
         </div>
-        <h1 class="error-title">Connection Lost</h1>
+        <h1 class="error-title">{{ t('errorPage.network') }}</h1>
         <p class="error-description">
-          Unable to connect to the server. Please check your internet connection and try again.
+          {{ t('errorPage.networkDesc') }}
         </p>
       </div>
 
@@ -62,9 +62,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h1 class="error-title">Oops! Something Went Wrong</h1>
+        <h1 class="error-title">{{ t('errorPage.generic') }}</h1>
         <p class="error-description">
-          {{ customMessage || 'An unexpected error occurred. Please try again later.' }}
+          {{ customMessage || t('errorPage.genericDesc') }}
         </p>
       </div>
 
@@ -74,24 +74,24 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Go Back
+          {{ t('errorPage.goBack') }}
         </button>
         <button @click="goHome" class="btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          Home
+          {{ t('errorPage.home') }}
         </button>
         <button v-if="isRetryable" @click="retry" class="btn-accent">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Try Again
+          {{ t('errorPage.retry') }}
         </button>
       </div>
 
       <p class="error-help">
-        Need help? Contact us at 
+        {{ t('errorPage.help') }}
         <a href="mailto:info@joybilliardsnz.com">info@joybilliardsnz.com</a>
       </p>
     </div>
@@ -101,9 +101,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from '../i18n'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 const props = defineProps({
   errorType: {
@@ -405,5 +407,4 @@ const retry = () => {
   }
 }
 </style>
-
 

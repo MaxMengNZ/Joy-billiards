@@ -4,18 +4,18 @@
       <div class="register-card card">
         <div class="register-header">
           <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="register-logo">
-          <p>Create Your Account</p>
+          <p>{{ t('auth.createAccount') }}</p>
         </div>
 
         <div class="register-body">
-          <h2>Sign Up</h2>
+          <h2>{{ t('auth.registerTitle') }}</h2>
 
           <div v-if="authStore.error" class="alert alert-danger">
             {{ authStore.error }}
           </div>
 
           <div v-if="registrationSuccess" class="alert alert-success">
-            Registration successful! Please check your email to verify your account.
+            {{ t('auth.registrationSuccess') }}
           </div>
 
           <div v-if="registrationError" class="alert alert-danger">
@@ -24,33 +24,33 @@
 
           <form @submit.prevent="handleSignUp" v-if="!registrationSuccess">
             <div class="form-group">
-              <label class="form-label">Full Name *</label>
+              <label class="form-label">{{ t('auth.fullName') }} *</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="fullName"
-                placeholder="Enter your full name"
+                :placeholder="t('auth.fullNamePlaceholder')"
                 required
                 :disabled="authStore.loading"
               >
             </div>
 
             <div class="form-group">
-              <label class="form-label">Date of Birth *</label>
+              <label class="form-label">{{ t('auth.birthday') }} *</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="birthday"
-                placeholder="DD/MM/YYYY (e.g., 15/03/2000)"
+                :placeholder="t('auth.birthdayPlaceholder')"
                 required
                 :disabled="authStore.loading"
                 @input="formatBirthdayInput"
               >
-              <small class="form-text">Format: DD/MM/YYYY (You must be at least 13 years old)</small>
+              <small class="form-text">{{ t('auth.birthdayHint') }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Email *</label>
+              <label class="form-label">{{ t('auth.email') }} *</label>
               <input
                 type="email"
                 class="form-control"
@@ -66,41 +66,41 @@
                 {{ emailError }}
               </div>
               <div v-if="emailChecking" class="form-text text-info">
-                <i class="fas fa-spinner fa-spin"></i> Checking email availability...
+                <i class="fas fa-spinner fa-spin"></i> {{ t('auth.checkingEmail') }}
               </div>
               <div v-if="emailValid && !emailChecking" class="form-text text-success">
-                <i class="fas fa-check"></i> Email is available
+                <i class="fas fa-check"></i> {{ t('auth.emailAvailable') }}
               </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Password *</label>
+              <label class="form-label">{{ t('auth.password') }} *</label>
               <input
                 type="password"
                 class="form-control"
                 v-model="password"
-                placeholder="Min 6 characters"
+                :placeholder="t('auth.minPassword')"
                 required
                 minlength="6"
                 :disabled="authStore.loading"
               >
-              <small class="form-text">Password must be at least 6 characters</small>
+              <small class="form-text">{{ t('auth.passwordHint') }}</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Confirm Password *</label>
+              <label class="form-label">{{ t('auth.confirmPassword') }} *</label>
               <input
                 type="password"
                 class="form-control"
                 v-model="confirmPassword"
-                placeholder="Re-enter your password"
+                :placeholder="t('auth.confirmPasswordPlaceholder')"
                 required
                 :disabled="authStore.loading"
               >
             </div>
 
             <div class="form-group">
-              <label class="form-label">Phone Number *</label>
+              <label class="form-label">{{ t('auth.phone') }} *</label>
               <input
                 type="tel"
                 class="form-control"
@@ -109,7 +109,7 @@
                 required
                 :disabled="authStore.loading"
               >
-              <small class="form-text">Please enter your phone number</small>
+              <small class="form-text">{{ t('auth.phoneHint') }}</small>
             </div>
 
             <!-- Role is hidden, all public registrations are Players -->
@@ -121,19 +121,19 @@
                 class="btn btn-primary btn-lg"
                 :disabled="authStore.loading || password !== confirmPassword || !emailValid || emailChecking"
               >
-                {{ authStore.loading ? 'Creating Account...' : 'Sign Up' }}
+                {{ authStore.loading ? t('auth.creatingAccount') : t('auth.submitRegister') }}
               </button>
             </div>
 
             <div v-if="password && confirmPassword && password !== confirmPassword" class="alert alert-warning mt-2">
-              Passwords do not match
+              {{ t('auth.passwordsMismatch') }}
             </div>
           </form>
 
           <div class="register-footer">
             <p>
-              Already have an account?
-              <router-link to="/login" class="link">Sign In</router-link>
+              {{ t('auth.hasAccount') }}
+              <router-link to="/login" class="link">{{ t('auth.goLogin') }}</router-link>
             </p>
           </div>
         </div>
@@ -152,6 +152,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { createClient } from '@supabase/supabase-js'
+import { useI18n } from '../i18n'
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -163,6 +164,7 @@ export default {
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
+    const { t } = useI18n()
 
     const fullName = ref('')
     const email = ref('')
@@ -226,7 +228,7 @@ export default {
 
       // Check email format first
       if (!validateEmailFormat(email.value)) {
-        emailError.value = 'Please enter a valid email address'
+        emailError.value = t('auth.invalidEmail')
         emailValid.value = false
         return
       }
@@ -235,7 +237,7 @@ export default {
       const invalidDomains = ['example.com', 'test.com', 'fake.com', 'temp.com']
       const domain = email.value.split('@')[1]?.toLowerCase()
       if (invalidDomains.includes(domain)) {
-        emailError.value = 'Please use a real email address'
+        emailError.value = t('auth.realEmail')
         emailValid.value = false
         return
       }
@@ -256,10 +258,10 @@ export default {
         ])
         
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-          emailError.value = 'Error checking email availability'
+          emailError.value = t('auth.emailCheckFailed')
           emailValid.value = false
         } else if (exists) {
-          emailError.value = 'This email is already registered'
+          emailError.value = t('auth.emailRegistered')
           emailValid.value = false
         } else {
           emailError.value = ''
@@ -267,7 +269,7 @@ export default {
         }
       } catch (err) {
         console.error('Email validation error:', err)
-        emailError.value = 'Error checking email availability'
+        emailError.value = t('auth.emailCheckFailed')
         emailValid.value = false
       } finally {
         emailChecking.value = false
@@ -332,68 +334,68 @@ export default {
       
       // Validate all required fields
       if (!fullName.value.trim()) {
-        registrationError.value = 'Please enter your full name'
+        registrationError.value = t('auth.enterName')
         return
       }
 
       if (!email.value.trim()) {
-        registrationError.value = 'Please enter your email address'
+        registrationError.value = t('auth.enterEmail')
         return
       }
 
       // Check email validation
       if (emailError.value || !emailValid.value) {
-        registrationError.value = 'Please fix the email validation errors'
+        registrationError.value = t('auth.fixEmail')
         return
       }
 
       if (!password.value) {
-        registrationError.value = 'Please enter a password'
+        registrationError.value = t('auth.enterPassword')
         return
       }
 
       if (!confirmPassword.value) {
-        registrationError.value = 'Please confirm your password'
+        registrationError.value = t('auth.enterConfirmPassword')
         return
       }
 
       if (password.value !== confirmPassword.value) {
-        registrationError.value = 'Passwords do not match'
+        registrationError.value = t('auth.passwordsMismatch')
         return
       }
 
       if (password.value.length < 6) {
-        registrationError.value = 'Password must be at least 6 characters'
+        registrationError.value = t('auth.passwordHint')
         return
       }
 
       if (!phoneNumber.value.trim()) {
-        registrationError.value = 'Please enter your phone number'
+        registrationError.value = t('auth.enterPhone')
         return
       }
 
       if (!birthday.value) {
-        registrationError.value = 'Please enter your date of birth'
+        registrationError.value = t('auth.enterBirthday')
         return
       }
 
       // Validate birthday format (DD/MM/YYYY)
       const birthdayRegex = /^\d{2}\/\d{2}\/\d{4}$/
       if (!birthdayRegex.test(birthday.value)) {
-        registrationError.value = 'Please enter date of birth in DD/MM/YYYY format (e.g., 15/03/2000)'
+        registrationError.value = t('auth.birthdayFormatError')
         return
       }
 
       // Parse and validate the date
       const birthDate = parseBirthday(birthday.value)
       if (!birthDate) {
-        registrationError.value = 'Please enter a valid date of birth (e.g., 15/03/2000)'
+        registrationError.value = t('auth.birthdayInvalid')
         return
       }
 
       // Check if date is not in the future
       if (birthDate > today) {
-        registrationError.value = 'Date of birth cannot be in the future'
+        registrationError.value = t('auth.birthdayFuture')
         return
       }
 
@@ -403,7 +405,7 @@ export default {
       const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age
 
       if (actualAge < 13) {
-        registrationError.value = 'You must be at least 13 years old to register'
+        registrationError.value = t('auth.ageMinimum')
         return
       }
 
@@ -426,12 +428,13 @@ export default {
           router.push('/login')
         }, 3000)
       } else {
-        registrationError.value = result.error || 'Registration failed. Please try again.'
+        registrationError.value = result.error || t('auth.registrationFailed')
       }
     }
 
     return {
       authStore,
+      t,
       fullName,
       email,
       password,
@@ -681,5 +684,3 @@ export default {
   100% { transform: rotate(360deg); }
 }
 </style>
-
-
