@@ -10,18 +10,18 @@
       <div class="tournaments-hero-content">
         <div class="hero-badge">
           <span class="badge-icon">🏆</span>
-          <span class="badge-text">Tournaments & Events Calendar</span>
+          <span class="badge-text">{{ t('tournamentPage.badge') }}</span>
         </div>
         <h1 class="hero-title">
-          Tournament <span class="title-highlight">Calendar</span>
+          {{ t('tournamentPage.titleBefore') }} <span class="title-highlight">{{ t('tournamentPage.titleHighlight') }}</span>
         </h1>
         <p class="hero-subtitle">
-          View all tournaments and events at a glance. Register with one click.
+          {{ t('tournamentPage.subtitle') }}
         </p>
         <div class="hero-actions" v-if="authStore.isAdmin">
           <button class="btn-hero btn-hero-primary" @click="showCreateModal = true">
             <span class="btn-icon">➕</span>
-            <span>Add Event</span>
+            <span>{{ t('tournamentPage.addEvent') }}</span>
           </button>
         </div>
       </div>
@@ -44,13 +44,13 @@
         <div class="calendar-header">
           <button class="btn-nav btn-nav-prev" @click="previousMonth" :disabled="isLoading" aria-label="Previous month">
             <span class="btn-nav-icon">←</span>
-            <span class="btn-nav-text">Prev</span>
+            <span class="btn-nav-text">{{ t('tournamentPage.previous') }}</span>
           </button>
           <h2 class="calendar-month-title">
             {{ currentMonthName }} {{ currentYear }}
           </h2>
           <button class="btn-nav btn-nav-next" @click="nextMonth" :disabled="isLoading" aria-label="Next month">
-            <span class="btn-nav-text">Next</span>
+            <span class="btn-nav-text">{{ t('tournamentPage.next') }}</span>
             <span class="btn-nav-icon">→</span>
           </button>
         </div>
@@ -103,39 +103,39 @@
               {{ selectedEvent.name }}
             </h2>
           </div>
-          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeEventModal" aria-label="Close modal">Close</button>
+          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeEventModal" aria-label="Close modal">{{ t('tournamentPage.close') }}</button>
         </div>
         <div class="modal-body">
           <div class="event-details">
             <div class="detail-item">
-              <span class="detail-label">📅 Date:</span>
+              <span class="detail-label">📅 {{ t('tournamentPage.date') }}</span>
               <span class="detail-value">{{ formatEventDate(selectedEvent.start_date) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">⏰ Time:</span>
+              <span class="detail-label">⏰ {{ t('tournamentPage.time') }}</span>
               <span class="detail-value">{{ formatEventTime(selectedEvent.start_date) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">💰 Entry Fee:</span>
+              <span class="detail-label">💰 {{ t('tournamentPage.entryFee') }}</span>
               <span class="detail-value">${{ selectedEvent.entry_fee }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">👥 Registered:</span>
+              <span class="detail-label">👥 {{ t('tournamentPage.registered') }}</span>
               <span class="detail-value">
                 {{ getRegistrationCount(selectedEvent.id) }}
                 <span v-if="selectedEvent.min_players">
-                  / Min: {{ selectedEvent.min_players }}
+                  / {{ t('tournamentPage.minimum') }} {{ selectedEvent.min_players }}
                 </span>
               </span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">📊 Status:</span>
+              <span class="detail-label">📊 {{ t('tournamentPage.status') }}</span>
               <span class="detail-value badge" :class="getStatusBadgeClass(selectedEvent.status)">
                 {{ formatStatus(selectedEvent.status) }}
               </span>
             </div>
             <div class="detail-item" v-if="selectedEvent.description">
-              <span class="detail-label">📝 Description:</span>
+              <span class="detail-label">📝 {{ t('tournamentPage.description') }}</span>
               <span class="detail-value">{{ selectedEvent.description }}</span>
             </div>
 
@@ -144,13 +144,13 @@
               v-if="getRegistrationCount(selectedEvent.id) < (selectedEvent.min_players || 8)"
               class="alert alert-warning"
             >
-              ⚠️ Minimum {{ selectedEvent.min_players || 8 }} players required to start
+              ⚠️ {{ t('tournamentPage.minimumWarning', { count: selectedEvent.min_players || 8 }) }}
             </div>
             <div
               v-else-if="selectedEvent.status !== 'completed'"
               class="alert alert-success"
             >
-              ✅ Tournament confirmed ({{ selectedEvent.min_players || 8 }}+ players)
+              ✅ {{ t('tournamentPage.confirmed', { count: selectedEvent.min_players || 8 }) }}
             </div>
 
             <!-- Join Tournament Button (for non-logged-in users) - Desktop & Mobile -->
@@ -162,15 +162,15 @@
                 class="btn btn-primary btn-lg btn-join-tournament"
                 @click="goToLogin"
               >
-                🎯 Join Tournament
+                🎯 {{ t('tournamentPage.join') }}
               </button>
-              <p class="join-tournament-note">Please login to register for this tournament</p>
+              <p class="join-tournament-note">{{ t('tournamentPage.loginNote') }}</p>
             </div>
 
             <!-- Participants List -->
             <div class="participants-section">
               <div class="participants-header">
-                <h3>👥 Participants ({{ participantsList.length }})</h3>
+                <h3>👥 {{ t('tournamentPage.participants', { count: participantsList.length }) }}</h3>
                 <!-- Admin: Add Player Button -->
                 <button
                   v-if="authStore.isAdmin && selectedEvent.status !== 'completed'"
@@ -178,14 +178,14 @@
                   @click="openAddPlayerModal"
                   title="Add player manually"
                 >
-                  ➕ Add Player
+                  ➕ {{ t('tournamentPage.addPlayer') }}
                 </button>
               </div>
               <div v-if="loadingParticipants" class="text-center p-2">
                 <div class="spinner-small"></div>
               </div>
               <div v-else-if="participantsList.length === 0" class="text-muted p-2">
-                No participants yet.
+                {{ t('tournamentPage.noParticipants') }}
               </div>
               <div v-else class="participants-list">
                 <div
@@ -195,8 +195,8 @@
                   :class="{ 'is-current-user': participant.user_id === currentUserId }"
                 >
                   <span class="participant-number">{{ idx + 1 }}.</span>
-                  <span class="participant-name">{{ participant.user?.name || 'Unknown' }}</span>
-                  <span v-if="participant.user_id === currentUserId" class="badge badge-success">You</span>
+                  <span class="participant-name">{{ participant.user?.name || t('tournamentPage.unknown') }}</span>
+                  <span v-if="participant.user_id === currentUserId" class="badge badge-success">{{ t('tournamentPage.you') }}</span>
                   <!-- Admin: Remove Player Button -->
                   <button
                     v-if="authStore.isAdmin && selectedEvent.status !== 'completed'"
@@ -218,7 +218,7 @@
                 @click="registerForEvent"
                 :disabled="isRegistering || selectedEvent.status === 'completed'"
               >
-                {{ isRegistering ? 'Registering...' : 'Register' }}
+                {{ isRegistering ? t('tournamentPage.registering') : t('tournamentPage.register') }}
               </button>
               <button
                 v-else
@@ -226,7 +226,7 @@
                 @click="cancelRegistration"
                 :disabled="isCancelling || selectedEvent.status === 'completed'"
               >
-                {{ isCancelling ? 'Cancelling...' : 'Cancel Registration' }}
+                {{ isCancelling ? t('tournamentPage.cancelling') : t('tournamentPage.cancelRegistration') }}
               </button>
             </div>
 
@@ -237,20 +237,20 @@
                 class="btn btn-success btn-lg"
                 @click="completeTournament"
               >
-                ✅ Complete Tournament
+                ✅ {{ t('tournamentPage.complete') }}
               </button>
               <button
                 v-if="selectedEvent.status === 'completed' && participantsList.length > 0"
                 class="btn btn-primary btn-lg"
                 @click="openResultEntryModal"
               >
-                📊 Enter Tournament Results
+                📊 {{ t('tournamentPage.enterResults') }}
               </button>
               <button class="btn btn-secondary btn-lg" @click="editEvent">
-                Edit
+                {{ t('tournamentPage.edit') }}
               </button>
               <button class="btn btn-danger btn-lg" @click="confirmDeleteEvent">
-                Delete
+                {{ t('tournamentPage.delete') }}
               </button>
             </div>
           </div>
@@ -262,17 +262,17 @@
     <div v-if="showResultEntryModal" class="modal" @click.self="closeResultEntryModal">
       <div class="modal-content modal-large" style="max-width: 900px; max-height: 90vh;">
         <div class="modal-header">
-          <h2>📊 Enter Tournament Results - {{ selectedEvent?.name }}</h2>
-          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeResultEntryModal" aria-label="Close modal">Close</button>
+          <h2>📊 {{ t('tournamentPage.resultTitle', { name: selectedEvent?.name }) }}</h2>
+          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeResultEntryModal" aria-label="Close modal">{{ t('tournamentPage.close') }}</button>
         </div>
         <div class="modal-body">
           <div class="alert alert-info" style="margin-bottom: 1.5rem;">
-            <strong>📋 Instructions:</strong>
+            <strong>📋 {{ t('tournamentPage.instructions') }}</strong>
             <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-              <li>Enter each player's final ranking (1st, 2nd, 3rd, etc.)</li>
-              <li>Points will be automatically calculated based on ranking</li>
-              <li>Manually enter Wins and Losses for each player</li>
-              <li>You can optionally add Break & Run count</li>
+              <li>{{ t('tournamentPage.instruction1') }}</li>
+              <li>{{ t('tournamentPage.instruction2') }}</li>
+              <li>{{ t('tournamentPage.instruction3') }}</li>
+              <li>{{ t('tournamentPage.instruction4') }}</li>
             </ul>
           </div>
 
@@ -284,12 +284,12 @@
             >
               <div class="result-entry-header">
                 <span class="result-entry-number">{{ index + 1 }}</span>
-                <span class="result-entry-name">{{ participant.user?.name || 'Unknown' }}</span>
+                <span class="result-entry-name">{{ participant.user?.name || t('tournamentPage.unknown') }}</span>
               </div>
               
               <div class="result-entry-fields">
                 <div class="form-group" style="flex: 1;">
-                  <label class="form-label">Final Ranking *</label>
+                  <label class="form-label">{{ t('tournamentPage.finalRanking') }}</label>
                   <input
                     type="number"
                     class="form-control"
@@ -299,11 +299,11 @@
                     placeholder="1, 2, 3..."
                     @input="updateResultEntry(participant)"
                   />
-                  <small class="form-text">Ranking determines points automatically</small>
+                  <small class="form-text">{{ t('tournamentPage.rankingHint') }}</small>
                 </div>
                 
                 <div class="form-group" style="flex: 1;">
-                  <label class="form-label">Wins *</label>
+                  <label class="form-label">{{ t('tournamentPage.wins') }}</label>
                   <input
                     type="number"
                     class="form-control"
@@ -311,11 +311,11 @@
                     min="0"
                     placeholder="0"
                   />
-                  <small class="form-text">Number of matches won</small>
+                  <small class="form-text">{{ t('tournamentPage.winsHint') }}</small>
                 </div>
                 
                 <div class="form-group" style="flex: 1;">
-                  <label class="form-label">Losses *</label>
+                  <label class="form-label">{{ t('tournamentPage.losses') }}</label>
                   <input
                     type="number"
                     class="form-control"
@@ -323,11 +323,11 @@
                     min="0"
                     placeholder="0"
                   />
-                  <small class="form-text">Number of matches lost</small>
+                  <small class="form-text">{{ t('tournamentPage.lossesHint') }}</small>
                 </div>
                 
                 <div class="form-group" style="flex: 1;">
-                  <label class="form-label">Break & Run (Optional)</label>
+                  <label class="form-label">{{ t('tournamentPage.breakRun') }}</label>
                   <input
                     type="number"
                     class="form-control"
@@ -340,19 +340,19 @@
 
               <div class="result-entry-preview" v-if="participant.ranking">
                 <div class="preview-item">
-                  <span class="preview-label">Points:</span>
+                  <span class="preview-label">{{ t('tournamentPage.points') }}</span>
                   <span class="preview-value points-positive">+{{ getPointsForRanking(participant.ranking) }}</span>
                 </div>
                 <div class="preview-item">
-                  <span class="preview-label">Wins:</span>
+                  <span class="preview-label">{{ t('profilePage.wins') }}：</span>
                   <span class="preview-value">{{ participant.wins || 0 }}</span>
                 </div>
                 <div class="preview-item">
-                  <span class="preview-label">Losses:</span>
+                  <span class="preview-label">{{ t('profilePage.losses') }}：</span>
                   <span class="preview-value">{{ participant.losses || 0 }}</span>
                 </div>
                 <div class="preview-item" v-if="participant.break_and_run > 0">
-                  <span class="preview-label">Break & Run:</span>
+                  <span class="preview-label">{{ t('profilePage.breakRun') }}：</span>
                   <span class="preview-value">+{{ participant.break_and_run }}</span>
                 </div>
               </div>
@@ -360,18 +360,18 @@
           </div>
 
           <div class="result-entry-summary" v-if="resultEntryList.some(p => p.ranking)">
-            <h4>📊 Summary</h4>
+            <h4>📊 {{ t('tournamentPage.summary') }}</h4>
             <div class="summary-stats">
               <div class="summary-item">
-                <span class="summary-label">Total Players:</span>
+                <span class="summary-label">{{ t('tournamentPage.totalPlayers') }}</span>
                 <span class="summary-value">{{ resultEntryList.length }}</span>
               </div>
               <div class="summary-item">
-                <span class="summary-label">Rankings Entered:</span>
+                <span class="summary-label">{{ t('tournamentPage.rankingsEntered') }}</span>
                 <span class="summary-value">{{ resultEntryList.filter(p => p.ranking).length }}</span>
               </div>
               <div class="summary-item">
-                <span class="summary-label">Division:</span>
+                <span class="summary-label">{{ t('tournamentPage.division') }}</span>
                 <span class="summary-value badge" :class="selectedEvent?.participant_category === 'adult' ? 'badge-primary' : 'badge-success'">
                   {{ selectedEvent?.participant_category === 'adult' ? 'Pro' : 'Student' }}
                 </span>
@@ -381,15 +381,15 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeResultEntryModal" :disabled="isSubmittingResults">
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button
             class="btn btn-success btn-lg"
             @click="submitTournamentResults"
             :disabled="isSubmittingResults || !canSubmitResults"
           >
-            <span v-if="isSubmittingResults">Processing...</span>
-            <span v-else>✅ Submit Results & Update Stats</span>
+            <span v-if="isSubmittingResults">{{ t('tournamentPage.processing') }}</span>
+            <span v-else>✅ {{ t('tournamentPage.submitResults') }}</span>
           </button>
         </div>
       </div>
@@ -399,27 +399,27 @@
     <div v-if="showAddPlayerModal" class="modal" @click.self="closeAddPlayerModal">
       <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
         <div class="modal-header">
-          <h2>➕ Add Player to Tournament</h2>
-          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeAddPlayerModal" aria-label="Close modal">Close</button>
+          <h2>➕ {{ t('tournamentPage.addPlayerTitle') }}</h2>
+          <button class="btn btn-secondary btn-sm btn-close-modal" @click="closeAddPlayerModal" aria-label="Close modal">{{ t('tournamentPage.close') }}</button>
         </div>
         <div class="modal-body">
           <div v-if="loadingPlayers" class="text-center p-4">
             <div class="spinner"></div>
-            <p>Loading players...</p>
+            <p>{{ t('tournamentPage.loadingPlayers') }}</p>
           </div>
           <div v-else>
             <div class="form-group">
-              <label class="form-label">Search Player</label>
+              <label class="form-label">{{ t('tournamentPage.searchPlayer') }}</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="playerSearchQuery"
-                placeholder="Type to search players..."
+                :placeholder="t('tournamentPage.searchPlaceholder')"
               />
             </div>
             <div class="players-list" style="max-height: 400px; overflow-y: auto; margin-top: 1rem;">
               <div v-if="filteredPlayersList.length === 0" class="text-muted p-2 text-center">
-                No players found.
+                {{ t('tournamentPage.noPlayers') }}
               </div>
               <div
                 v-for="player in filteredPlayersList"
@@ -429,7 +429,7 @@
               >
                 <div class="player-select-info">
                   <span class="player-select-name">{{ player.name }}</span>
-                  <span v-if="isPlayerRegistered(player.id)" class="badge badge-warning">Already Registered</span>
+                  <span v-if="isPlayerRegistered(player.id)" class="badge badge-warning">{{ t('tournamentPage.alreadyRegistered') }}</span>
                 </div>
                 <button
                   v-if="!isPlayerRegistered(player.id)"
@@ -437,7 +437,7 @@
                   @click.stop="addPlayerToEvent(player)"
                   :disabled="isAddingPlayer"
                 >
-                  Add
+                  {{ t('tournamentPage.add') }}
                 </button>
               </div>
             </div>
@@ -450,28 +450,28 @@
     <div v-if="showCreateModal || editingEvent" class="modal" @click.self="closeCreateModal">
       <div class="modal-content modal-large">
         <div class="modal-header">
-          <h2>{{ editingEvent ? 'Edit Event' : 'Create New Event' }}</h2>
-          <button class="btn btn-secondary btn-sm" @click="closeCreateModal">Close</button>
+          <h2>{{ editingEvent ? t('tournamentPage.editEvent') : t('tournamentPage.createEvent') }}</h2>
+          <button class="btn btn-secondary btn-sm" @click="closeCreateModal">{{ t('tournamentPage.close') }}</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Event Name *</label>
+            <label class="form-label">{{ t('tournamentPage.eventName') }}</label>
             <input type="text" class="form-control" v-model="eventForm.name" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Description</label>
+            <label class="form-label">{{ t('tournamentPage.description') }}</label>
             <textarea class="form-control" v-model="eventForm.description" rows="3"></textarea>
           </div>
           <div class="row">
             <div class="col col-2">
               <div class="form-group">
-                <label class="form-label">Date *</label>
+                <label class="form-label">{{ t('tournamentPage.date') }} *</label>
                 <input type="date" class="form-control" v-model="eventForm.date" required>
               </div>
             </div>
             <div class="col col-2">
               <div class="form-group">
-                <label class="form-label">Time *</label>
+                <label class="form-label">{{ t('tournamentPage.time') }} *</label>
                 <input type="time" class="form-control" v-model="eventForm.time" required>
               </div>
             </div>
@@ -479,20 +479,20 @@
           <div class="row">
             <div class="col col-2">
               <div class="form-group">
-                <label class="form-label">Event Type *</label>
+                <label class="form-label">{{ t('tournamentPage.eventType') }}</label>
                 <select class="form-control" v-model="eventForm.event_type" required>
-                  <option value="custom">Custom Event</option>
-                  <option value="weekly_pro">Weekly Pro Tournament</option>
-                  <option value="weekly_student">Weekly Student Tournament</option>
+                  <option value="custom">{{ t('tournamentPage.customEvent') }}</option>
+                  <option value="weekly_pro">{{ t('tournamentPage.weeklyPro') }}</option>
+                  <option value="weekly_student">{{ t('tournamentPage.weeklyStudent') }}</option>
                 </select>
               </div>
             </div>
             <div class="col col-2">
               <div class="form-group">
-                <label class="form-label">Category *</label>
+                <label class="form-label">{{ t('tournamentPage.category') }}</label>
                 <select class="form-control" v-model="eventForm.participant_category" required>
-                  <option value="adult">Adult (Pro)</option>
-                  <option value="student">Student</option>
+                  <option value="adult">{{ t('tournamentPage.adultPro') }}</option>
+                  <option value="student">{{ t('tournamentPage.student') }}</option>
                 </select>
               </div>
             </div>
@@ -500,31 +500,31 @@
           <div class="row">
             <div class="col col-3">
               <div class="form-group">
-                <label class="form-label">Entry Fee ($)</label>
+                <label class="form-label">{{ t('tournamentPage.entryFee') }} ($)</label>
                 <input type="number" class="form-control" v-model="eventForm.entry_fee" min="0" step="0.01">
               </div>
             </div>
             <div class="col col-3">
               <div class="form-group">
-                <label class="form-label">Min Players</label>
+                <label class="form-label">{{ t('tournamentPage.minPlayers') }}</label>
                 <input type="number" class="form-control" v-model="eventForm.min_players" min="1" value="8">
               </div>
             </div>
             <div class="col col-3">
               <div class="form-group">
-                <label class="form-label">Max Players</label>
+                <label class="form-label">{{ t('tournamentPage.maxPlayers') }}</label>
                 <input type="number" class="form-control" v-model="eventForm.max_players" min="1">
               </div>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Status *</label>
+            <label class="form-label">{{ t('tournamentPage.status') }} *</label>
             <select class="form-control" v-model="eventForm.status" required>
-              <option value="upcoming">Upcoming</option>
-              <option value="registration">Registration Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="upcoming">{{ t('tournamentPage.statuses.upcoming') }}</option>
+              <option value="registration">{{ t('tournamentPage.statuses.registration') }}</option>
+              <option value="in_progress">{{ t('tournamentPage.statuses.in_progress') }}</option>
+              <option value="completed">{{ t('tournamentPage.statuses.completed') }}</option>
+              <option value="cancelled">{{ t('tournamentPage.statuses.cancelled') }}</option>
             </select>
           </div>
         </div>
@@ -535,7 +535,7 @@
             :disabled="isSavingEvent"
             type="button"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button 
             class="btn btn-success" 
@@ -544,7 +544,7 @@
             type="button"
           >
             <span v-if="isSavingEvent" class="spinner-small"></span>
-            <span v-else>{{ editingEvent ? 'Update' : 'Create' }}</span>
+            <span v-else>{{ editingEvent ? t('tournamentPage.update') : t('tournamentPage.create') }}</span>
           </button>
         </div>
       </div>
@@ -554,27 +554,22 @@
     <div v-if="showCompleteModal" class="modal" @click.self="showCompleteModal = false">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>✅ Complete Tournament?</h2>
+          <h2>✅ {{ t('tournamentPage.completeTitle') }}</h2>
         </div>
         <div class="modal-body">
-          <p>Are you sure you want to mark this tournament as completed?</p>
+          <p>{{ t('tournamentPage.completeQuestion') }}</p>
           <div class="complete-details">
-            <p><strong>Tournament:</strong> {{ selectedEvent?.name }}</p>
-            <p><strong>Date:</strong> {{ selectedEvent ? formatEventDate(selectedEvent.start_date) : '' }}</p>
-            <p><strong>Participants:</strong> {{ getRegistrationCount(selectedEvent?.id) }}</p>
+            <p><strong>{{ t('tournamentPage.tournament') }}</strong> {{ selectedEvent?.name }}</p>
+            <p><strong>{{ t('tournamentPage.date') }}</strong> {{ selectedEvent ? formatEventDate(selectedEvent.start_date) : '' }}</p>
+            <p><strong>{{ t('tournamentPage.participantsLabel') }}</strong> {{ getRegistrationCount(selectedEvent?.id) }}</p>
           </div>
           <div class="alert alert-warning">
-            ⚠️ This action will:
-            <ul>
-              <li>Update status to "Completed"</li>
-              <li>Sync to homepage statistics</li>
-              <li>Cannot be undone easily</li>
-            </ul>
+            ⚠️ {{ t('tournamentPage.completeWarning') }}
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showCompleteModal = false">Cancel</button>
-          <button class="btn btn-success" @click="confirmCompleteTournament">Confirm Complete</button>
+          <button class="btn btn-secondary" @click="showCompleteModal = false">{{ t('common.cancel') }}</button>
+          <button class="btn btn-success" @click="confirmCompleteTournament">{{ t('tournamentPage.confirmComplete') }}</button>
         </div>
       </div>
     </div>
@@ -589,6 +584,7 @@ import { useAuthStore } from '../stores/authStore'
 import { usePlayerStore } from '../stores/playerStore'
 import { formatNZDate } from '../utils/timezone'
 import { supabase } from '../config/supabase'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'TournamentsPage',
@@ -597,6 +593,7 @@ export default {
     const tournamentStore = useTournamentStore()
     const authStore = useAuthStore()
     const playerStore = usePlayerStore()
+    const { t, list, isZh } = useI18n()
     
     // Calendar state
     const currentMonth = ref(new Date().getMonth())
@@ -649,12 +646,12 @@ export default {
     })
 
     // Weekdays
-    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const weekdays = computed(() => list('tournamentPage.weekdays'))
 
     // Computed: Current month name
     const currentMonthName = computed(() => {
       const date = new Date(currentYear.value, currentMonth.value, 1)
-      return date.toLocaleDateString('en-US', { month: 'long' })
+      return date.toLocaleDateString(isZh.value ? 'zh-CN' : 'en-US', { month: 'long' })
     })
 
     // Computed: Calendar days
@@ -752,8 +749,8 @@ export default {
     // Get event name
     const getEventName = (event) => {
       if (!event) return ''
-      if (event.event_type === 'weekly_pro') return 'Weekly'
-      if (event.event_type === 'weekly_student') return 'Student'
+      if (event.event_type === 'weekly_pro') return t('tournamentPage.weekly')
+      if (event.event_type === 'weekly_student') return t('tournamentPage.student')
       return event.name.length > 10 ? event.name.substring(0, 10) + '...' : event.name
     }
 
@@ -770,7 +767,7 @@ export default {
     const formatEventDate = (dateString) => {
       if (!dateString) return 'N/A'
       const d = new Date(dateString)
-      return new Intl.DateTimeFormat('en-NZ', {
+      return new Intl.DateTimeFormat(isZh.value ? 'zh-CN' : 'en-NZ', {
         timeZone: 'Pacific/Auckland',
         year: 'numeric',
         month: 'long',
@@ -782,7 +779,7 @@ export default {
     const formatEventTime = (dateString) => {
       if (!dateString) return 'N/A'
       const d = new Date(dateString)
-      return new Intl.DateTimeFormat('en-NZ', {
+      return new Intl.DateTimeFormat(isZh.value ? 'zh-CN' : 'en-NZ', {
         timeZone: 'Pacific/Auckland',
         hour: '2-digit',
         minute: '2-digit',
@@ -792,9 +789,7 @@ export default {
 
     // Format status
     const formatStatus = (status) => {
-      return status.split('_').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ')
+      return t(`tournamentPage.statuses.${status}`)
     }
 
     // Get status badge class
@@ -1506,6 +1501,8 @@ export default {
 
     return {
       tournamentStore,
+      t,
+      isZh,
       authStore,
       currentMonth,
       currentYear,
@@ -2858,4 +2855,3 @@ export default {
   }
 }
 </style>
-
