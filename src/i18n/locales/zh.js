@@ -27,8 +27,8 @@ export default {
   },
   footer: {
     brand: 'Joy Billiards 新西兰',
-    address: '汉密尔顿中心 Tristram 街 88 号',
-    rights: 'Joy Billiards NZ. 保留所有权利。',
+    address: '新西兰汉密尔顿市中心 Tristram Street 88 号',
+    rights: 'Joy Billiards NZ 版权所有。',
     facebook: '关注我们的 Facebook',
     instagram: '关注我们的 Instagram',
     wechat: '关注我们的微信',
@@ -336,7 +336,7 @@ export default {
     faqBirthdayA: '有。生日月可获赠精品饮品或 Joy Billiards 专属周边。',
     ctaTitle: '现在加入，下一局就开始省',
     ctaDesc: '免费注册 Lite，或充值升级，立即解锁更低台费与专属权益。',
-    ctaHours: '周一至周四 9:00–次日 1:00｜周五至周六 9:00–次日 2:00｜周日 10:00–次日 1:00',
+    ctaHours: '周一至周四 11:00–次日 1:00｜周五至周六 11:00–次日 2:00｜周日 11:00–次日 1:00',
     joinNow: '立即免费加入',
     callNow: '电话咨询'
   },
@@ -456,6 +456,16 @@ export default {
     home: '返回首页',
     retry: '重新尝试',
     help: '需要帮助？请联系我们：'
+  },
+  verification: {
+    title: '邮箱验证', confirming: '正在验证邮箱…', confirmed: '邮箱验证成功！',
+    confirmedDesc: '你的账户已完成验证，现在可以登录并使用全部功能。',
+    goLogin: '前往登录', failed: '验证失败', backLogin: '返回登录', tryAgain: '重新注册',
+    sending: '发送中…', resend: '重新发送验证邮件', waiting: '请稍候，我们正在验证你的邮箱。',
+    invalidLink: '验证链接无效或已过期，请重新获取验证邮件。',
+    genericFailed: '邮箱验证失败，请重试或重新获取验证邮件。',
+    sent: '验证邮件已发送，请检查收件箱。', resendFailed: '验证邮件发送失败，请稍后重试。',
+    missingToken: '缺少验证信息，请重新打开邮件中的验证链接。'
   },
   songs: {
     eyebrow: '会员点歌机',

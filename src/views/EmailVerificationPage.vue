@@ -4,23 +4,23 @@
       <div class="verification-card card">
         <div class="verification-header">
           <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="verification-logo">
-          <h2>Email Verification</h2>
+          <h2>{{ t('verification.title') }}</h2>
         </div>
 
         <div class="verification-body">
           <div v-if="verificationSuccess" class="alert alert-success">
             <i class="fas fa-check-circle"></i>
-            <strong>Email Verified Successfully!</strong>
-            <p>Your email has been verified. You can now access all features.</p>
-            <router-link to="/login" class="btn btn-primary">Go to Login</router-link>
+            <strong>{{ t('verification.confirmed') }}</strong>
+            <p>{{ t('verification.confirmedDesc') }}</p>
+            <router-link to="/login" class="btn btn-primary">{{ t('verification.goLogin') }}</router-link>
           </div>
 
           <div v-else-if="verificationError" class="alert alert-danger">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>Verification Failed</strong>
+            <strong>{{ t('verification.failed') }}</strong>
             <p>{{ verificationError }}</p>
             <button @click="resendVerification" class="btn btn-outline-primary" :disabled="resending">
-              {{ resending ? 'Sending...' : 'Resend Verification Email' }}
+              {{ resending ? t('verification.sending') : t('verification.resend') }}
             </button>
           </div>
 
@@ -28,8 +28,8 @@
             <div class="spinner-container">
               <i class="fas fa-spinner fa-spin"></i>
             </div>
-            <h3>Verifying your email...</h3>
-            <p>Please wait while we verify your email address.</p>
+            <h3>{{ t('verification.confirming') }}</h3>
+            <p>{{ t('verification.waiting') }}</p>
           </div>
         </div>
       </div>
@@ -46,6 +46,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createClient } from '@supabase/supabase-js'
+import { useI18n } from '../i18n'
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -57,6 +58,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { t } = useI18n()
     
     const verificationSuccess = ref(false)
     const verificationError = ref('')
@@ -74,11 +76,11 @@ export default {
           verificationSuccess.value = true
           verificationError.value = ''
         } else {
-          verificationError.value = 'Invalid or expired verification token. Please request a new verification email.'
+          verificationError.value = t('verification.invalidLink')
         }
       } catch (err) {
         console.error('Email verification error:', err)
-        verificationError.value = 'Verification failed. Please try again or request a new verification email.'
+        verificationError.value = t('verification.genericFailed')
       }
     }
 
@@ -93,10 +95,10 @@ export default {
           throw error
         }
         
-        verificationError.value = 'Verification email sent! Please check your inbox.'
+        verificationError.value = t('verification.sent')
       } catch (err) {
         console.error('Resend verification error:', err)
-        verificationError.value = 'Failed to resend verification email. Please try again.'
+        verificationError.value = t('verification.resendFailed')
       } finally {
         resending.value = false
       }
@@ -107,12 +109,13 @@ export default {
       if (token) {
         verifyEmail(token)
       } else {
-        verificationError.value = 'No verification token provided.'
+        verificationError.value = t('verification.missingToken')
       }
     })
 
     return {
       verificationSuccess,
+      t,
       verificationError,
       resending,
       resendVerification

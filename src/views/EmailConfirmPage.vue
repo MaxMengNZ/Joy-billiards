@@ -4,34 +4,34 @@
       <div class="confirm-card card">
         <div class="confirm-header">
           <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="confirm-logo">
-          <p>Email Confirmation</p>
+          <p>{{ t('verification.title') }}</p>
         </div>
 
         <div class="confirm-body">
           <div v-if="loading" class="loading-state">
             <div class="spinner"></div>
-            <p>Confirming your email...</p>
+            <p>{{ t('verification.confirming') }}</p>
           </div>
 
           <div v-else-if="success" class="success-state">
             <div class="success-icon">✅</div>
-            <h2>Email Confirmed Successfully!</h2>
-            <p>Your account has been verified. You can now sign in.</p>
+            <h2>{{ t('verification.confirmed') }}</h2>
+            <p>{{ t('verification.confirmedDesc') }}</p>
             <router-link to="/login" class="btn btn-primary btn-lg">
-              Go to Sign In
+              {{ t('verification.goLogin') }}
             </router-link>
           </div>
 
           <div v-else-if="error" class="error-state">
             <div class="error-icon">❌</div>
-            <h2>Confirmation Failed</h2>
+            <h2>{{ t('verification.failed') }}</h2>
             <p>{{ error }}</p>
             <div class="error-actions">
               <router-link to="/login" class="btn btn-secondary">
-                Back to Sign In
+                {{ t('verification.backLogin') }}
               </router-link>
               <router-link to="/register" class="btn btn-primary">
-                Try Again
+                {{ t('verification.tryAgain') }}
               </router-link>
             </div>
           </div>
@@ -45,11 +45,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../config/supabase'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'EmailConfirmPage',
   setup() {
     const router = useRouter()
+    const { t } = useI18n()
     const loading = ref(true)
     const success = ref(false)
     const error = ref(null)
@@ -63,7 +65,7 @@ export default {
         const type = urlParams.get('type')
 
         if (!accessToken || !refreshToken || type !== 'signup') {
-          throw new Error('Invalid confirmation link')
+          throw new Error(t('verification.invalidLink'))
         }
 
         // Set session with tokens
@@ -89,7 +91,7 @@ export default {
 
       } catch (err) {
         console.error('Email confirmation error:', err)
-        error.value = err.message || 'Failed to confirm email'
+        error.value = err.message || t('verification.genericFailed')
         loading.value = false
       }
     }
@@ -100,6 +102,7 @@ export default {
 
     return {
       loading,
+      t,
       success,
       error
     }

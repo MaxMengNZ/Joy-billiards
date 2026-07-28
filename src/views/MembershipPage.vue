@@ -250,17 +250,17 @@
             </tr>
             <tr>
               <td class="feature-name">{{ t('membershipPage.q7Rate') }}</td>
-              <td>$23/{{ t('home.perHour') }}</td>
-              <td class="highlight">$21/{{ t('home.perHour') }}</td>
-              <td class="highlight">$19/{{ t('home.perHour') }}</td>
-              <td class="highlight best">$17/{{ t('home.perHour') }}</td>
+              <td>$23 {{ t('home.perHour') }}</td>
+              <td class="highlight">$21 {{ t('home.perHour') }}</td>
+              <td class="highlight">$19 {{ t('home.perHour') }}</td>
+              <td class="highlight best">$17 {{ t('home.perHour') }}</td>
             </tr>
             <tr>
               <td class="feature-name">{{ t('membershipPage.q8Rate') }}</td>
-              <td>$28/{{ t('home.perHour') }}</td>
-              <td class="highlight">$26/{{ t('home.perHour') }}</td>
-              <td class="highlight">$24/{{ t('home.perHour') }}</td>
-              <td class="highlight best">$22/{{ t('home.perHour') }}</td>
+              <td>$28 {{ t('home.perHour') }}</td>
+              <td class="highlight">$26 {{ t('home.perHour') }}</td>
+              <td class="highlight">$24 {{ t('home.perHour') }}</td>
+              <td class="highlight best">$22 {{ t('home.perHour') }}</td>
             </tr>
             <tr>
               <td class="feature-name">{{ t('membershipPage.priorityBookingLabel') }}</td>

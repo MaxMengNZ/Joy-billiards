@@ -336,7 +336,7 @@ export default {
     faqBirthdayA: 'Yes. Pro Max members receive a premium drink or Joy Billiards merchandise during their birthday month.',
     ctaTitle: 'Join Today and Save from Your Next Game',
     ctaDesc: 'Register for free with Lite or top up to unlock lower rates and exclusive benefits.',
-    ctaHours: 'Mon–Thu 9am–1am | Fri–Sat 9am–2am | Sun 10am–1am',
+    ctaHours: 'Mon–Thu 11am–1am | Fri–Sat 11am–2am | Sun 11am–1am',
     joinNow: 'Join Free Now',
     callNow: 'Call Us Now'
   },
@@ -456,6 +456,16 @@ export default {
     home: 'Home',
     retry: 'Try Again',
     help: 'Need help? Contact us at'
+  },
+  verification: {
+    title: 'Email Verification', confirming: 'Confirming your email…', confirmed: 'Email Confirmed!',
+    confirmedDesc: 'Your account is verified. You can now sign in and use all features.',
+    goLogin: 'Go to Sign In', failed: 'Verification Failed', backLogin: 'Back to Sign In', tryAgain: 'Try Again',
+    sending: 'Sending…', resend: 'Resend Verification Email', waiting: 'Please wait while we verify your email.',
+    invalidLink: 'This verification link is invalid or expired. Request a new verification email.',
+    genericFailed: 'Email verification failed. Try again or request a new verification email.',
+    sent: 'Verification email sent. Please check your inbox.', resendFailed: 'Could not resend the verification email. Try again.',
+    missingToken: 'Verification details are missing. Open the verification link from your email again.'
   },
   songs: {
     eyebrow: 'Member Jukebox',
