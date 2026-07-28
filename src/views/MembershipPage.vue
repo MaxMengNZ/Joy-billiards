@@ -10,26 +10,26 @@
       <div class="membership-hero-content">
         <div class="hero-badge">
           <span class="badge-icon">💳</span>
-          <span class="badge-text">Exclusive Membership System</span>
+          <span class="badge-text">{{ t('membershipPage.badge') }}</span>
         </div>
         <h1 class="hero-title">
-          Join <span class="title-highlight">Joy Billiards</span> Membership
+          {{ t('membershipPage.titleBefore') }} <span class="title-highlight">Joy Billiards</span> {{ t('membershipPage.titleAfter') }}
         </h1>
         <p class="hero-subtitle">
-          Choose your level, unlock exclusive benefits, and elevate your billiards experience
+          {{ t('membershipPage.subtitle') }}
         </p>
         <div class="hero-stats">
           <div class="hero-stat-item">
             <div class="hero-stat-number">4</div>
-            <div class="hero-stat-label">Membership Tiers</div>
+            <div class="hero-stat-label">{{ t('membershipPage.tiersCount') }}</div>
           </div>
           <div class="hero-stat-item">
             <div class="hero-stat-number">$6</div>
-            <div class="hero-stat-label">Max Savings/Hour</div>
+            <div class="hero-stat-label">{{ t('membershipPage.maxSaving') }}</div>
           </div>
           <div class="hero-stat-item">
             <div class="hero-stat-number">1.6x</div>
-            <div class="hero-stat-label">Max Points Multiplier</div>
+            <div class="hero-stat-label">{{ t('membershipPage.maxMultiplier') }}</div>
           </div>
         </div>
       </div>
@@ -41,32 +41,31 @@
     <div class="price-drop-banner">
       <div class="banner-flash">🎉</div>
       <div class="banner-content">
-        <div class="banner-tag">GRAND OPENING SPECIAL</div>
-        <h2 class="banner-title">🔥 PRICES REDUCED - NOW OPEN! 🔥</h2>
+        <div class="banner-tag">{{ t('membershipPage.openingSpecial') }}</div>
+        <h2 class="banner-title">🔥 {{ t('membershipPage.priceReduced') }} 🔥</h2>
         <div class="price-comparison">
           <div class="price-old">
-            <span class="old-label">Was:</span>
+            <span class="old-label">{{ t('membershipPage.was') }}</span>
             <span class="old-price">Q7 $28/h | Q8 $33/h</span>
           </div>
           <div class="price-arrow">→</div>
           <div class="price-new">
-            <span class="new-label">NOW:</span>
+            <span class="new-label">{{ t('membershipPage.now') }}</span>
             <span class="new-price">Q7 $23/h | Q8 $28/h</span>
           </div>
           <div class="price-save">
-            <span class="save-badge">SAVE $5/HOUR!</span>
+            <span class="save-badge">{{ t('membershipPage.savePerHour') }}</span>
           </div>
         </div>
         <p class="banner-subtitle">
-          💰 <strong>No Membership Fees!</strong> Your top-up IS your playing money. 
-          Top up $200+ for even better rates: Plus $21/h | Pro $19/h | Pro Max $17/h
+          💰 <strong>{{ t('membershipPage.noFees') }}</strong> {{ t('membershipPage.topUpExplanation') }}
         </p>
       </div>
     </div>
 
     <!-- Membership Tiers -->
     <section class="tiers-section">
-      <h2 class="section-title">Choose Your Membership Level</h2>
+      <h2 class="section-title">{{ t('membershipPage.chooseLevel') }}</h2>
       
       <!-- Mobile: Tabs for tier selection -->
       <div class="mobile-tier-tabs">
@@ -88,22 +87,22 @@
           <div class="tier-header">
             <div class="tier-icon">🎱</div>
             <h3 class="tier-name">Lite</h3>
-            <p class="tier-tagline">Perfect for Casual Players</p>
+            <p class="tier-tagline">{{ t('membershipPage.casualPlayers') }}</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">FREE</span>
-            <span class="price-period">Forever</span>
+            <span class="price-amount">{{ t('membershipPage.free') }}</span>
+            <span class="price-period">{{ t('membershipPage.forever') }}</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">✅</span> Free registration</li>
+            <li><span class="feature-icon">✅</span> {{ t('membershipPage.freeRegistration') }}</li>
             <li><span class="feature-icon">🎱</span> Q7 (Silver Leg): $23/h | Q8 (Gold Leg): $28/h</li>
-            <li><span class="feature-icon">🎯</span> Basic cue sticks</li>
-            <li><span class="feature-icon">📊</span> Basic statistics</li>
-            <li><span class="feature-icon">📅</span> Same-day booking (2h advance)</li>
-            <li><span class="feature-icon">💰</span> Loyalty Points: 1.0x</li>
+            <li><span class="feature-icon">🎯</span> {{ t('membershipPage.basicCues') }}</li>
+            <li><span class="feature-icon">📊</span> {{ t('membershipPage.basicStats') }}</li>
+            <li><span class="feature-icon">📅</span> {{ t('membershipPage.sameDayBooking') }}</li>
+            <li><span class="feature-icon">💰</span> {{ t('membershipPage.loyaltyPoints', { multiplier: '1.0x' }) }}</li>
           </ul>
-          <div class="lite-note">All prices include GST</div>
-          <button class="btn btn-secondary btn-lg" @click="scrollToSignup">Join Free</button>
+          <div class="lite-note">{{ t('membershipPage.allPricesGst') }}</div>
+          <button class="btn btn-secondary btn-lg" @click="scrollToSignup">{{ t('membershipPage.joinFree') }}</button>
         </div>
 
         <!-- Plus -->
@@ -111,94 +110,94 @@
           <div class="tier-header">
             <div class="tier-icon">⭐</div>
             <h3 class="tier-name">Plus</h3>
-            <p class="tier-tagline">Great Value for Regular Players</p>
+            <p class="tier-tagline">{{ t('membershipPage.regularPlayers') }}</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">Top-up $200+</span>
-            <span class="price-period">Pre-pay for playing - not a membership fee</span>
+            <span class="price-amount">{{ t('membershipPage.topUp', { amount: 200 }) }}</span>
+            <span class="price-period">{{ t('membershipPage.prepaidNote') }}</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
-            <li><span class="feature-icon">💰</span> Your $200 = $200 playing credit (no extra fees)</li>
-            <li><span class="feature-icon">⭐</span> Loyalty Points: 1.2x faster</li>
-            <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
-            <li><span class="feature-icon">📅</span> 6h priority booking</li>
+            <li><span class="feature-icon">💳</span> <strong>{{ t('membershipPage.memberRates') }}</strong> Q7: $21/h | Q8: $26/h</li>
+            <li><span class="feature-icon">💰</span> {{ t('membershipPage.playingCredit', { amount: 200 }) }}</li>
+            <li><span class="feature-icon">⭐</span> {{ t('membershipPage.fasterPoints', { multiplier: '1.2x' }) }}</li>
+            <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
+            <li><span class="feature-icon">📅</span> {{ t('membershipPage.priorityBooking', { hours: 6 }) }}</li>
           </ul>
           <div class="pricing-clarification">
-            <div class="clarification-title">💡 How It Works</div>
+            <div class="clarification-title">💡 {{ t('membershipPage.howItWorks') }}</div>
             <div class="clarification-item">
-              <span class="clarification-label">1. Top up $200:</span>
-              <span class="clarification-value">Get $200 playing credit</span>
+              <span class="clarification-label">{{ t('membershipPage.topUpStep', { amount: 200 }) }}</span>
+              <span class="clarification-value">{{ t('membershipPage.getCredit', { amount: 200 }) }}</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-label">{{ t('membershipPage.playPay') }}</span>
               <span class="clarification-value">$21/h (Q7) | $26/h (Q8)</span>
             </div>
             <div class="clarification-note">
-              <strong>No membership fee!</strong> Your $200 top-up IS your playing money. You just get better rates!
+              {{ t('membershipPage.noMembershipFee') }}
             </div>
           </div>
           <div class="savings-badge">Save $208/year (2h/week) | $2/hour on Q7</div>
-          <button class="btn btn-primary btn-lg" @click="contactUs">Upgrade Now</button>
+          <button class="btn btn-primary btn-lg" @click="contactUs">{{ t('membershipPage.upgradeNow') }}</button>
         </div>
 
         <!-- Pro -->
         <div class="tier-card tier-pro recommended" :class="{ 'mobile-hidden': activeTier !== 'pro' }">
-          <div class="recommended-badge">⭐ POPULAR</div>
+          <div class="recommended-badge">⭐ {{ t('membershipPage.popular') }}</div>
           <div class="tier-header">
             <div class="tier-icon">💎</div>
             <h3 class="tier-name">Pro</h3>
-            <p class="tier-tagline">Best for Serious Players</p>
+            <p class="tier-tagline">{{ t('membershipPage.seriousPlayers') }}</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">Top-up $500+</span>
-            <span class="price-period">Pre-pay for playing - not a membership fee</span>
+            <span class="price-amount">{{ t('membershipPage.topUp', { amount: 500 }) }}</span>
+            <span class="price-period">{{ t('membershipPage.prepaidNote') }}</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
-            <li><span class="feature-icon">💰</span> Your $500 = $500 playing credit (no extra fees)</li>
-            <li><span class="feature-icon">⭐</span> Loyalty Points: 1.4x faster</li>
-            <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
-            <li><span class="feature-icon">📅</span> 12h priority booking</li>
-            <li><span class="feature-icon">🎖️</span> Tournament priority</li>
+            <li><span class="feature-icon">💳</span> <strong>{{ t('membershipPage.memberRates') }}</strong> Q7: $19/h | Q8: $24/h</li>
+            <li><span class="feature-icon">💰</span> {{ t('membershipPage.playingCredit', { amount: 500 }) }}</li>
+            <li><span class="feature-icon">⭐</span> {{ t('membershipPage.fasterPoints', { multiplier: '1.4x' }) }}</li>
+            <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
+            <li><span class="feature-icon">📅</span> {{ t('membershipPage.priorityBooking', { hours: 12 }) }}</li>
+            <li><span class="feature-icon">🎖️</span> {{ t('membershipPage.tournamentPriority') }}</li>
           </ul>
           <div class="pricing-clarification">
-            <div class="clarification-title">💡 How It Works</div>
+            <div class="clarification-title">💡 {{ t('membershipPage.howItWorks') }}</div>
             <div class="clarification-item">
-              <span class="clarification-label">1. Top up $500:</span>
-              <span class="clarification-value">Get $500 playing credit</span>
+              <span class="clarification-label">{{ t('membershipPage.topUpStep', { amount: 500 }) }}</span>
+              <span class="clarification-value">{{ t('membershipPage.getCredit', { amount: 500 }) }}</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-label">{{ t('membershipPage.playPay') }}</span>
               <span class="clarification-value">$19/h (Q7) | $24/h (Q8)</span>
             </div>
             <div class="clarification-note">
-              <strong>No membership fee!</strong> Your $500 top-up IS your playing money. You just get better rates!
+              {{ t('membershipPage.noMembershipFee') }}
             </div>
           </div>
           <div class="savings-badge">Save $416/year (2h/week) | $4/hour on Q7</div>
-          <button class="btn btn-success btn-lg" @click="contactUs">Upgrade Now</button>
+          <button class="btn btn-success btn-lg" @click="contactUs">{{ t('membershipPage.upgradeNow') }}</button>
         </div>
 
         <!-- Pro Max -->
         <div class="tier-card tier-pro-max vip" :class="{ 'mobile-hidden': activeTier !== 'pro_max' }">
-          <div class="vip-badge">👑 LIMITED SEATS</div>
+          <div class="vip-badge">👑 {{ t('membershipPage.limitedSeats') }}</div>
           <div class="tier-header">
             <div class="tier-icon">🌟</div>
             <h3 class="tier-name">Pro Max</h3>
-            <p class="tier-tagline">Ultimate VIP Experience</p>
+            <p class="tier-tagline">{{ t('membershipPage.vipExperience') }}</p>
           </div>
           <div class="tier-price">
-            <span class="price-amount">Top-up $1000+</span>
-            <span class="price-period">Pre-pay for playing - not a membership fee</span>
+            <span class="price-amount">{{ t('membershipPage.topUp', { amount: 1000 }) }}</span>
+            <span class="price-period">{{ t('membershipPage.prepaidNote') }}</span>
           </div>
           <ul class="tier-features">
-            <li><span class="feature-icon">💳</span> <strong>Member Rates:</strong> Q7: $17/h | Q8: $22/h</li>
-            <li><span class="feature-icon">💰</span> Your $1000 = $1000 playing credit (no extra fees)</li>
-            <li><span class="feature-icon">⭐</span> Loyalty Points: 1.6x fastest</li>
-            <li><span class="feature-icon">🎯</span> Premium cue sticks</li>
-            <li><span class="feature-icon">📅</span> 24h VIP priority booking</li>
-            <li><span class="feature-icon">🎂</span> Birthday gift (exclusive)</li>
+            <li><span class="feature-icon">💳</span> <strong>{{ t('membershipPage.memberRates') }}</strong> Q7: $17/h | Q8: $22/h</li>
+            <li><span class="feature-icon">💰</span> {{ t('membershipPage.playingCredit', { amount: 1000 }) }}</li>
+            <li><span class="feature-icon">⭐</span> {{ t('membershipPage.fasterPoints', { multiplier: '1.6x' }) }}</li>
+            <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
+            <li><span class="feature-icon">📅</span> {{ t('membershipPage.vipPriorityBooking') }}</li>
+            <li><span class="feature-icon">🎂</span> {{ t('membershipPage.birthdayGift') }}</li>
           </ul>
           <div class="pricing-clarification pricing-clarification-vip">
             <div class="clarification-title">💡 How VIP Works</div>
@@ -215,7 +214,7 @@
             </div>
           </div>
           <div class="savings-badge premium">Save $624/year (2h/week) | ⚠️ Limited Slots</div>
-          <button class="btn btn-warning btn-lg" @click="contactUs">Apply for VIP</button>
+          <button class="btn btn-warning btn-lg" @click="contactUs">{{ t('membershipPage.applyVip') }}</button>
         </div>
       </div>
     </section>
@@ -567,10 +566,12 @@
 
 <script>
 import { ref } from 'vue'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'MembershipPage',
   setup() {
+    const { t } = useI18n()
     const activeTier = ref('plus') // Default to Plus (most popular)
 
     const tierTabs = [
@@ -590,6 +591,7 @@ export default {
 
     return {
       activeTier,
+      t,
       tierTabs,
       scrollToSignup,
       contactUs
@@ -1939,4 +1941,3 @@ export default {
   }
 }
 </style>
-

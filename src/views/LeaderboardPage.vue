@@ -14,13 +14,13 @@
         <div class="leaderboard-hero-content">
           <div class="hero-badge">
             <span class="badge-icon">🏆</span>
-            <span class="badge-text">Live Ranking System</span>
+            <span class="badge-text">{{ t('leaderboardPage.badge') }}</span>
           </div>
           <h1 class="hero-title">
-            Heyball Ranking <span class="title-highlight">Leaderboard</span>
+            {{ t('leaderboardPage.titleBefore') }} <span class="title-highlight">{{ t('leaderboardPage.titleHighlight') }}</span>
           </h1>
           <p class="hero-subtitle">
-            Compete, climb the ranks, and earn your place among the elite
+            {{ t('leaderboardPage.subtitle') }}
           </p>
         </div>
       </section>
@@ -34,14 +34,14 @@
         :class="{ active: divisionFilter === 'pro' }"
         @click="divisionFilter = 'pro'"
       >
-        👔 Pro Division
+        👔 {{ t('leaderboardPage.proDivision') }}
       </button>
       <button 
         class="category-tab"
         :class="{ active: divisionFilter === 'student' }"
         @click="divisionFilter = 'student'"
       >
-        🎓 Student Division
+        🎓 {{ t('leaderboardPage.studentDivision') }}
       </button>
     </div>
 
@@ -52,27 +52,27 @@
         :class="{ active: activeTab === 'year' }"
         @click="activeTab = 'year'"
       >
-        🏆 Current Year ({{ currentYear }})
+        🏆 {{ t('leaderboardPage.currentYear', { year: currentYear }) }}
       </button>
       <button 
         class="tab-button"
         :class="{ active: activeTab === 'monthly' }"
         @click="activeTab = 'monthly'"
       >
-        📅 Monthly
+        📅 {{ t('leaderboardPage.monthly') }}
       </button>
       <button 
         class="tab-button"
         :class="{ active: activeTab === 'annual' }"
         @click="activeTab = 'annual'"
       >
-        🏅 Annual
+        🏅 {{ t('leaderboardPage.annual') }}
       </button>
     </div>
 
     <!-- Month Selector for Monthly Tab -->
     <div v-if="activeTab === 'monthly'" class="month-selector">
-      <label for="month-select" class="selector-label">Select Month:</label>
+      <label for="month-select" class="selector-label">{{ t('leaderboardPage.selectMonth') }}</label>
       <select id="month-select" name="month-select" v-model="selectedMonth" @change="loadMonthlyRankings" class="month-select">
         <option v-for="month in availableMonths" :key="month.value" :value="month.value">
           {{ month.label }}
@@ -82,7 +82,7 @@
 
     <!-- Year Selector for Annual Tab -->
     <div v-if="activeTab === 'annual'" class="year-selector">
-      <label for="year-select" class="selector-label">Select Year:</label>
+      <label for="year-select" class="selector-label">{{ t('leaderboardPage.selectYear') }}</label>
       <select id="year-select" name="year-select" v-model="selectedYear" @change="loadAnnualRankings" class="year-select">
         <option v-for="year in availableYears" :key="year" :value="year">
           {{ year }}
@@ -94,10 +94,10 @@
     <div v-if="authStore.isAdmin" class="export-section">
       <div class="export-buttons">
         <button class="btn btn-primary" @click="exportToCSV" :disabled="loading || rankedPlayers.length === 0">
-          📥 Export to CSV
+          📥 {{ t('leaderboardPage.exportCsv') }}
         </button>
         <button class="btn btn-success" @click="exportToExcel" :disabled="loading || rankedPlayers.length === 0">
-          📊 Export to Excel
+          📊 {{ t('leaderboardPage.exportExcel') }}
         </button>
       </div>
       <p class="export-hint">Export current leaderboard data for {{ divisionFilter === 'pro' ? 'Pro' : 'Student' }} Division - {{ getPeriodLabel() }}</p>
@@ -130,19 +130,19 @@
               <p class="points">{{ getDisplayPoints(topThree[1]) }} pts</p>
               <div class="player-stats-top3">
                 <div class="stat-row">
-                  <span class="stat-label">W/L:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winsLosses') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[1], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[1], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winRate') }}</span>
                   <span class="stat-value">{{ calculateWinRateForYear(topThree[1], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-label">🎯 {{ t('leaderboardPage.breakAndRun') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[1], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-label">📅 {{ t('leaderboardPage.events') }}</span>
                   <span class="stat-value">{{ activeTab === 'year' ? (topThree[1].tournaments_played_current_year || 0) : (topThree[1].tournaments_played || 0) }}</span>
                 </div>
               </div>
@@ -150,7 +150,7 @@
             <template v-else>
               <div class="empty-placeholder">
                 <div class="empty-icon">🥈</div>
-                <div class="empty-text">No Data</div>
+                <div class="empty-text">{{ t('leaderboardPage.noData') }}</div>
               </div>
             </template>
           </div>
@@ -175,19 +175,19 @@
               <p class="points">{{ getDisplayPoints(topThree[0]) }} pts</p>
               <div class="player-stats-top3">
                 <div class="stat-row">
-                  <span class="stat-label">W/L:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winsLosses') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[0], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[0], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winRate') }}</span>
                   <span class="stat-value">{{ calculateWinRateForYear(topThree[0], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-label">🎯 {{ t('leaderboardPage.breakAndRun') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[0], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-label">📅 {{ t('leaderboardPage.events') }}</span>
                   <span class="stat-value">{{ activeTab === 'year' ? (topThree[0].tournaments_played_current_year || 0) : (topThree[0].tournaments_played || 0) }}</span>
                 </div>
               </div>
@@ -195,7 +195,7 @@
             <template v-else>
               <div class="empty-placeholder">
                 <div class="empty-icon">🏆</div>
-                <div class="empty-text">No Data</div>
+                <div class="empty-text">{{ t('leaderboardPage.noData') }}</div>
               </div>
             </template>
           </div>
@@ -220,19 +220,19 @@
               <p class="points">{{ getDisplayPoints(topThree[2]) }} pts</p>
               <div class="player-stats-top3">
                 <div class="stat-row">
-                  <span class="stat-label">W/L:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winsLosses') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[2], divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(topThree[2], divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">Win Rate:</span>
+                  <span class="stat-label">{{ t('leaderboardPage.winRate') }}</span>
                   <span class="stat-value">{{ calculateWinRateForYear(topThree[2], activeTab === 'year' ? currentYear : null) }}%</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">🎯 Break & Run:</span>
+                  <span class="stat-label">🎯 {{ t('leaderboardPage.breakAndRun') }}</span>
                   <span class="stat-value">{{ getDivisionValueForYear(topThree[2], divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                 </div>
                 <div class="stat-row">
-                  <span class="stat-label">📅 Events:</span>
+                  <span class="stat-label">📅 {{ t('leaderboardPage.events') }}</span>
                   <span class="stat-value">{{ activeTab === 'year' ? (topThree[2].tournaments_played_current_year || 0) : (topThree[2].tournaments_played || 0) }}</span>
                 </div>
               </div>
@@ -240,7 +240,7 @@
             <template v-else>
               <div class="empty-placeholder">
                 <div class="empty-icon">🥉</div>
-                <div class="empty-text">No Data</div>
+                <div class="empty-text">{{ t('leaderboardPage.noData') }}</div>
               </div>
             </template>
           </div>
@@ -250,13 +250,13 @@
       <!-- Full Rankings List -->
       <div class="card mt-4">
         <div class="card-header">
-          <h2 class="card-title">🎖️ Full Rankings</h2>
+          <h2 class="card-title">🎖️ {{ t('leaderboardPage.fullRankings') }}</h2>
           <div class="season-info">
-            <span v-if="activeTab === 'year'">Year {{ currentYear }}</span>
+            <span v-if="activeTab === 'year'">{{ t('leaderboardPage.year', { year: currentYear }) }}</span>
             <span v-else-if="activeTab === 'monthly'">
               {{ availableMonths.find(m => m.value === selectedMonth)?.label || (currentMonthName + ' ' + currentYear) }}
             </span>
-            <span v-else-if="activeTab === 'annual'">Year {{ selectedYear }}</span>
+            <span v-else-if="activeTab === 'annual'">{{ t('leaderboardPage.year', { year: selectedYear }) }}</span>
           </div>
         </div>
         <div class="card-body">
@@ -297,19 +297,19 @@
                 <!-- Stats Row -->
                 <div class="player-stats-row">
                   <span class="stat-badge">
-                    <span class="stat-label">W/L:</span>
+                    <span class="stat-label">{{ t('leaderboardPage.winsLosses') }}</span>
                     <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'wins', activeTab === 'year' ? currentYear : null) }}/{{ getDivisionValueForYear(player, divisionFilter, 'losses', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                   <span class="stat-badge">
-                    <span class="stat-label">Win:</span>
+                    <span class="stat-label">{{ t('leaderboardPage.winRate') }}</span>
                     <span class="stat-value">{{ calculateWinRateForYear(player, activeTab === 'year' ? currentYear : null) }}%</span>
                   </span>
                   <span class="stat-badge highlight">
-                    <span class="stat-label">🎯 B&R:</span>
+                    <span class="stat-label">🎯 {{ t('leaderboardPage.breakAndRun') }}</span>
                     <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'break_and_run_count', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                   <span class="stat-badge">
-                    <span class="stat-label">📅 Events:</span>
+                    <span class="stat-label">📅 {{ t('leaderboardPage.events') }}</span>
                     <span class="stat-value">{{ getDivisionValueForYear(player, divisionFilter, 'tournaments_played', activeTab === 'year' ? currentYear : null) }}</span>
                   </span>
                 </div>
@@ -318,14 +318,14 @@
               <!-- Points Section - Right Aligned -->
               <div class="points-section-large">
                 <div class="points-value-large">{{ getDisplayPoints(player) }}</div>
-                <div class="points-label-small">points</div>
+                <div class="points-label-small">{{ t('leaderboardPage.points') }}</div>
                 <button 
                   v-if="canViewHistory(player)"
                   class="btn-history" 
                   @click="openPointHistory(player)"
-                  title="View Point History"
+                  :title="t('leaderboardPage.viewPointHistory')"
                 >
-                  📊 History
+                  📊 {{ t('leaderboardPage.history') }}
                 </button>
               </div>
             </div>
@@ -488,6 +488,7 @@ import { supabase } from '../config/supabase'
 import { useAuthStore } from '../stores/authStore'
 import SkeletonLeaderboard from '../components/skeleton/SkeletonLeaderboard.vue'
 import { getRankIcon } from '../utils/rankIcons'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'LeaderboardPage',
@@ -495,6 +496,7 @@ export default {
     SkeletonLeaderboard
   },
   setup() {
+    const { t } = useI18n()
     const authStore = useAuthStore()
     const loading = ref(true)
     const players = ref([])
@@ -1285,6 +1287,7 @@ export default {
 
     return {
       loading,
+      t,
       players,
       activeTab,
       divisionFilter, // 🎯 新增：组别过滤
@@ -3232,4 +3235,3 @@ export default {
   }
 }
 </style>
-
