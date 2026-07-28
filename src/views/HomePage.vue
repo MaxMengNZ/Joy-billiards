@@ -87,39 +87,39 @@
           <div class="pricing-card lite">
             <div class="tier-name">Lite</div>
             <div class="tier-rows">
-              <div class="tier-row"><strong>$23</strong><span>Q7 / hour</span></div>
-              <div class="tier-row"><strong>$28</strong><span>Q8 / hour</span></div>
+              <div class="tier-row"><strong>$23</strong><span>Q7 / {{ t('home.perHour') }}</span></div>
+              <div class="tier-row"><strong>$28</strong><span>Q8 / {{ t('home.perHour') }}</span></div>
             </div>
-            <p class="tier-note">Great for casual play — no minimum top-up.</p>
+            <p class="tier-note">{{ t('home.liteNote') }}</p>
           </div>
           <div class="pricing-card plus">
-            <div class="tier-name">Plus · Top up $200+</div>
+            <div class="tier-name">Plus · {{ t('home.topUp', { amount: 200 }) }}</div>
             <div class="tier-rows">
-              <div class="tier-row"><strong>$21</strong><span>Q7 / hour</span></div>
-              <div class="tier-row"><strong>$26</strong><span>Q8 / hour</span></div>
+              <div class="tier-row"><strong>$21</strong><span>Q7 / {{ t('home.perHour') }}</span></div>
+              <div class="tier-row"><strong>$26</strong><span>Q8 / {{ t('home.perHour') }}</span></div>
             </div>
-            <p class="tier-note">Includes cue rental + 6h priority booking.</p>
+            <p class="tier-note">{{ t('home.plusNote') }}</p>
           </div>
           <div class="pricing-card pro">
-            <div class="tier-name">Pro · Top up $500+</div>
+            <div class="tier-name">Pro · {{ t('home.topUp', { amount: 500 }) }}</div>
             <div class="tier-rows">
-              <div class="tier-row"><strong>$19</strong><span>Q7 / hour</span></div>
-              <div class="tier-row"><strong>$24</strong><span>Q8 / hour</span></div>
+              <div class="tier-row"><strong>$19</strong><span>Q7 / {{ t('home.perHour') }}</span></div>
+              <div class="tier-row"><strong>$24</strong><span>Q8 / {{ t('home.perHour') }}</span></div>
             </div>
-            <p class="tier-note">Priority entry to invitation events.</p>
+            <p class="tier-note">{{ t('home.proNote') }}</p>
           </div>
           <div class="pricing-card pro-max">
-            <div class="tier-name">Pro Max · Top up $1000+</div>
+            <div class="tier-name">Pro Max · {{ t('home.topUp', { amount: 1000 }) }}</div>
             <div class="tier-rows">
-              <div class="tier-row"><strong>$17</strong><span>Q7 / hour</span></div>
-              <div class="tier-row"><strong>$22</strong><span>Q8 / hour</span></div>
+              <div class="tier-row"><strong>$17</strong><span>Q7 / {{ t('home.perHour') }}</span></div>
+              <div class="tier-row"><strong>$22</strong><span>Q8 / {{ t('home.perHour') }}</span></div>
             </div>
-            <p class="tier-note">VIP experiences, gifts, and the lowest rates guaranteed.</p>
+            <p class="tier-note">{{ t('home.proMaxNote') }}</p>
           </div>
         </div>
         <div class="pricing-actions">
-          <router-link to="/membership" class="btn btn-primary btn-lg">Explore Memberships</router-link>
-          <a href="tel:0221660688" class="btn btn-outline btn-lg">Reserve a Table</a>
+          <router-link to="/membership" class="btn btn-primary btn-lg">{{ t('home.exploreMemberships') }}</router-link>
+          <a href="tel:0221660688" class="btn btn-outline btn-lg">{{ t('home.reserveTable') }}</a>
         </div>
       </div>
     </section>
@@ -135,13 +135,13 @@
         <div class="stats-header">
           <div class="stats-badge">
             <span class="badge-icon">📊</span>
-            <span class="badge-text">Live Statistics Dashboard</span>
+            <span class="badge-text">{{ t('home.statsBadge') }}</span>
           </div>
           <h2 class="stats-title">
-            Our <span class="title-highlight">Community</span> at a Glance
+            {{ t('home.statsTitleBefore') }} <span class="title-highlight">{{ t('home.statsTitleHighlight') }}</span> {{ t('home.statsTitleAfter') }}
           </h2>
           <p class="stats-subtitle">
-            Real-time statistics updated every 30 seconds
+            {{ t('home.statsSubtitle') }}
           </p>
         </div>
         
@@ -151,32 +151,32 @@
             <div class="stat-card-glow"></div>
             <div class="stat-icon">👥</div>
             <div class="stat-number">{{ stats.totalPlayers }}</div>
-            <div class="stat-label">Registered Players</div>
-            <div class="stat-badge-mini">Active</div>
+            <div class="stat-label">{{ t('home.registeredPlayers') }}</div>
+            <div class="stat-badge-mini">{{ t('home.active') }}</div>
           </div>
           <div class="stat-card stat-card-winners">
             <div class="stat-card-shine"></div>
             <div class="stat-card-glow"></div>
             <div class="stat-icon">🎯</div>
             <div class="stat-number">{{ stats.totalBreakAndRun }}</div>
-            <div class="stat-label">Break and Run</div>
-            <div class="stat-badge-mini">Perfect</div>
+            <div class="stat-label">{{ t('home.breakAndRun') }}</div>
+            <div class="stat-badge-mini">{{ t('home.perfect') }}</div>
           </div>
           <div class="stat-card stat-card-tournaments">
             <div class="stat-card-shine"></div>
             <div class="stat-card-glow"></div>
             <div class="stat-icon">🏆</div>
             <div class="stat-number">{{ stats.totalTournaments }}</div>
-            <div class="stat-label">Tournaments Held</div>
-            <div class="stat-badge-mini">Events</div>
+            <div class="stat-label">{{ t('home.tournamentsHeld') }}</div>
+            <div class="stat-badge-mini">{{ t('home.events') }}</div>
           </div>
           <div class="stat-card stat-card-matches">
             <div class="stat-card-shine"></div>
             <div class="stat-card-glow"></div>
             <div class="stat-icon">⚔️</div>
             <div class="stat-number">{{ stats.totalMatches }}</div>
-            <div class="stat-label">Matches Played</div>
-            <div class="stat-badge-mini">Games</div>
+            <div class="stat-label">{{ t('home.matchesPlayed') }}</div>
+            <div class="stat-badge-mini">{{ t('home.games') }}</div>
           </div>
         </div>
       </div>
@@ -192,13 +192,13 @@
         <div class="membership-header">
           <div class="membership-badge">
             <span class="badge-icon">💳</span>
-            <span class="badge-text">Exclusive Member Benefits</span>
+            <span class="badge-text">{{ t('home.benefitsBadge') }}</span>
           </div>
           <h2 class="membership-title">
-            Join Our <span class="title-highlight">Premium</span> Membership
+            {{ t('home.benefitsTitleBefore') }} <span class="title-highlight">{{ t('home.benefitsTitleHighlight') }}</span>
           </h2>
           <p class="membership-subtitle">
-            Unlock exclusive benefits, discounts, and VIP access to tournaments
+            {{ t('home.benefitsSubtitle') }}
           </p>
         </div>
         
@@ -209,10 +209,10 @@
             <div class="tier-icon">🎱</div>
           </div>
           <h3 class="tier-name">Lite</h3>
-          <p class="tier-price">Free</p>
+          <p class="tier-price">{{ t('home.free') }}</p>
           <div class="tier-highlights">
-            <p>✅ Free registration</p>
-            <p>📋 Standard rates</p>
+            <p>✅ {{ t('home.freeRegistration') }}</p>
+            <p>📋 {{ t('home.standardRates') }}</p>
           </div>
           <div class="tier-arrow">→</div>
         </router-link>
@@ -225,8 +225,8 @@
           <h3 class="tier-name">Plus</h3>
           <p class="tier-price">≥ $200 NZD</p>
           <div class="tier-highlights">
-            <p>💰 Discounted rates</p>
-            <p>🎁 +5% bonus</p>
+            <p>💰 {{ t('home.discountedRates') }}</p>
+            <p>🎁 {{ t('home.bonusCredit') }}</p>
           </div>
           <div class="tier-arrow">→</div>
         </router-link>
@@ -239,8 +239,8 @@
           <h3 class="tier-name">Pro</h3>
           <p class="tier-price">≥ $500 NZD</p>
           <div class="tier-highlights">
-            <p>💰 Pro rates</p>
-            <p>⚡ Reserved slots for headline tournaments</p>
+            <p>💰 {{ t('home.proRates') }}</p>
+            <p>⚡ {{ t('home.reservedTournamentSlots') }}</p>
           </div>
           <div class="tier-arrow">→</div>
         </router-link>
@@ -254,8 +254,8 @@
           <h3 class="tier-name">Pro Max</h3>
           <p class="tier-price">≥ $1000 NZD</p>
           <div class="tier-highlights">
-            <p>👑 VIP access</p>
-            <p>🎁 Gift box</p>
+            <p>👑 {{ t('home.vipAccess') }}</p>
+            <p>🎁 {{ t('home.giftBox') }}</p>
           </div>
           <div class="tier-arrow">→</div>
         </router-link>
@@ -263,9 +263,9 @@
 
         <div class="membership-cta text-center">
           <router-link to="/membership" class="btn btn-primary btn-lg membership-detail-btn">
-            📖 View Full Membership Details & Benefits
+            📖 {{ t('home.fullMembershipDetails') }}
           </router-link>
-          <p class="cta-hint">Compare all tiers, see pricing examples, and learn more about how it works</p>
+          <p class="cta-hint">{{ t('home.membershipHint') }}</p>
         </div>
       </div>
     </section>
@@ -281,13 +281,13 @@
         <div class="features-header">
           <div class="features-badge">
             <span class="badge-icon">⚡</span>
-            <span class="badge-text">Powered by Advanced Technology</span>
+            <span class="badge-text">{{ t('home.technologyBadge') }}</span>
           </div>
           <h2 class="features-title">
-            🎯 Tournament System <span class="title-highlight">Features</span>
+            🎯 {{ t('home.featuresTitleBefore') }} <span class="title-highlight">{{ t('home.featuresTitleHighlight') }}</span>
           </h2>
           <p class="features-subtitle">
-            State-of-the-art tournament management with real-time tracking and automated workflows
+            {{ t('home.featuresSubtitle') }}
           </p>
         </div>
         
@@ -297,8 +297,8 @@
             <div class="feature-icon-wrapper">
               <div class="feature-icon">📊</div>
             </div>
-            <h3>Player Statistics</h3>
-            <p>Track wins, losses, and performance metrics for all players with real-time updates and detailed analytics</p>
+            <h3>{{ t('home.playerStatistics') }}</h3>
+            <p>{{ t('home.playerStatisticsDesc') }}</p>
             <div class="feature-arrow">→</div>
           </div>
           
@@ -307,8 +307,8 @@
             <div class="feature-icon-wrapper">
               <div class="feature-icon">🎯</div>
             </div>
-            <h3>Tournament Types</h3>
-            <p>Single elimination, double elimination, round robin, and Swiss formats with automatic bracket generation</p>
+            <h3>{{ t('home.tournamentTypes') }}</h3>
+            <p>{{ t('home.tournamentTypesDesc') }}</p>
             <div class="feature-arrow">→</div>
           </div>
           
@@ -317,8 +317,8 @@
             <div class="feature-icon-wrapper">
               <div class="feature-icon">📅</div>
             </div>
-            <h3>Schedule Management</h3>
-            <p>Automated match scheduling and real-time bracket updates for seamless tournament organization</p>
+            <h3>{{ t('home.scheduleManagement') }}</h3>
+            <p>{{ t('home.scheduleManagementDesc') }}</p>
             <div class="feature-arrow">→</div>
           </div>
           
@@ -327,8 +327,8 @@
             <div class="feature-icon-wrapper">
               <div class="feature-icon">🏅</div>
             </div>
-            <h3>Ranking System</h3>
-            <p>9-tier ranking system with automatic level progression, monthly and annual leaderboards</p>
+            <h3>{{ t('home.rankingSystem') }}</h3>
+            <p>{{ t('home.rankingSystemDesc') }}</p>
             <div class="feature-arrow">→</div>
           </div>
         </div>
@@ -346,13 +346,13 @@
         <div class="contact-header">
           <div class="contact-badge">
             <span class="badge-icon">📍</span>
-            <span class="badge-text">Hamilton's Premier Billiards Venue</span>
+            <span class="badge-text">{{ t('home.venueBadge') }}</span>
           </div>
           <h2 class="contact-main-title">
-            Visit <span class="title-highlight">Joy Billiards</span> NZ
+            {{ t('home.visitTitleBefore') }} <span class="title-highlight">Joy Billiards</span> {{ t('home.visitTitleAfter') }}
           </h2>
           <p class="contact-main-subtitle">
-            Experience world-class Heyball in the heart of Hamilton - <strong>Now Open for Trial Operation!</strong>
+            {{ t('home.visitSubtitle') }} <strong>{{ t('home.nowOpen') }}</strong>
           </p>
         </div>
         
@@ -362,16 +362,16 @@
             <div class="contact-icon-wrapper">
               <div class="contact-icon">🏢</div>
             </div>
-            <h3 class="contact-title">Location</h3>
+            <h3 class="contact-title">{{ t('home.location') }}</h3>
             <div class="contact-info">
               <p class="location-text">88 Tristram Street</p>
-              <p class="location-text">Hamilton Central</p>
-              <p class="location-text">New Zealand</p>
+              <p class="location-text">{{ t('home.hamiltonCentral') }}</p>
+              <p class="location-text">{{ t('home.newZealand') }}</p>
             </div>
             <div class="contact-action">
               <button class="btn-contact btn-contact-primary" @click="openMaps">
                 <span class="btn-icon">🗺️</span>
-                <span>Get Directions</span>
+                <span>{{ t('home.getDirections') }}</span>
               </button>
             </div>
           </div>
@@ -381,14 +381,14 @@
             <div class="contact-icon-wrapper">
               <div class="contact-icon">📞</div>
             </div>
-            <h3 class="contact-title">Contact Us</h3>
+            <h3 class="contact-title">{{ t('home.contactUs') }}</h3>
             <div class="contact-info">
               <div class="contact-item">
-                <span class="contact-label">Phone</span>
+                <span class="contact-label">{{ t('home.phone') }}</span>
                 <a href="tel:0221660688" class="contact-link">022 166 0688</a>
               </div>
               <div class="contact-item">
-                <span class="contact-label">Email</span>
+                <span class="contact-label">{{ t('home.email') }}</span>
                 <a href="mailto:info@joybilliards.co.nz" class="contact-link">info@joybilliards.co.nz</a>
               </div>
             </div>
@@ -399,26 +399,26 @@
             <div class="contact-icon-wrapper">
               <div class="contact-icon">⏰</div>
             </div>
-            <h3 class="contact-title">Opening Hours</h3>
+            <h3 class="contact-title">{{ t('home.openingHours') }}</h3>
             <div class="contact-info">
               <div class="hours-list">
                 <div class="hours-item">
-                  <span class="hours-day">Mon - Thu</span>
+                  <span class="hours-day">{{ t('home.monThu') }}</span>
                   <span class="hours-time">11:00 AM - 1:00 AM</span>
                 </div>
                 <div class="hours-item">
-                  <span class="hours-day">Fri - Sat</span>
+                  <span class="hours-day">{{ t('home.friSat') }}</span>
                   <span class="hours-time">11:00 AM - 2:00 AM</span>
                 </div>
                 <div class="hours-item hours-item-highlight">
-                  <span class="hours-day">Sunday</span>
+                  <span class="hours-day">{{ t('home.sunday') }}</span>
                   <span class="hours-time">11:00 AM - 1:00 AM</span>
                 </div>
               </div>
             </div>
             <div class="hours-note">
               <span class="note-icon">✨</span>
-              <span>Extended hours on weekends</span>
+              <span>{{ t('home.weekendHours') }}</span>
             </div>
           </div>
         </div>
@@ -2601,5 +2601,4 @@ export default {
   }
 }
 </style>
-
 
