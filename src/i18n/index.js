@@ -85,12 +85,20 @@ export function t(key, params = {}) {
   )
 }
 
+export function list(key) {
+  const loc = locale.value
+  let value = lookup(messages[loc], key)
+  if (value == null) value = lookup(messages.en, key)
+  return Array.isArray(value) ? value : []
+}
+
 export function useI18n() {
   const isZh = computed(() => locale.value === 'zh')
   return {
     locale,
     isZh,
     t,
+    list,
     setLocale,
     toggleLocale() {
       setLocale(locale.value === 'zh' ? 'en' : 'zh')

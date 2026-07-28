@@ -14,13 +14,13 @@
         <div class="profile-hero-content">
           <div class="hero-badge">
             <span class="badge-icon">👤</span>
-            <span class="badge-text">Personal Dashboard</span>
+            <span class="badge-text">{{ t('profilePage.badge') }}</span>
           </div>
           <h1 class="hero-title">
-            Welcome, <span class="title-highlight">{{ profile?.name }}</span>
+            {{ t('profilePage.welcome') }}<span class="title-highlight">{{ profile?.name }}</span>
           </h1>
           <p class="hero-subtitle">
-            Manage your profile, track your performance, and view your achievements
+            {{ t('profilePage.subtitle') }}
           </p>
         </div>
       </section>
@@ -43,17 +43,17 @@
           </div>
 
           <div class="card-number">
-            <p class="card-label">Membership Card Number</p>
+            <p class="card-label">{{ t('profilePage.cardNumber') }}</p>
             <p class="card-number-value">{{ profile?.membership_card_number || 'JB-XXXX-XXXXXX' }}</p>
           </div>
 
           <div class="card-info">
             <div class="info-item">
-              <p class="info-label">Member Name</p>
+              <p class="info-label">{{ t('profilePage.memberName') }}</p>
               <p class="info-value">{{ profile?.name }}</p>
             </div>
             <div class="info-item">
-              <p class="info-label">Member Since</p>
+              <p class="info-label">{{ t('profilePage.memberSince') }}</p>
               <p class="info-value">{{ formatDate(profile?.created_at) }}</p>
             </div>
           </div>
@@ -61,10 +61,10 @@
           <div class="card-footer-section">
             <div class="points">
               <span class="points-icon">💎</span>
-              <span class="points-value">{{ profile?.loyalty_points?.toFixed(2) || '0.00' }} Loyalty Points</span>
+              <span class="points-value">{{ profile?.loyalty_points?.toFixed(2) || '0.00' }} {{ t('profilePage.points') }}</span>
             </div>
             <div class="expires">
-              <span>Valid Until: {{ formatExpiry(profile?.membership_expires_at) }}</span>
+              <span>{{ t('profilePage.validUntil') }} {{ formatExpiry(profile?.membership_expires_at) }}</span>
             </div>
           </div>
         </div>
@@ -72,53 +72,18 @@
         <!-- Membership Benefits -->
         <div class="membership-benefits card">
           <div class="card-header">
-            <h2 class="card-title">{{ formatMembershipLevel(profile?.membership_level) }} Benefits</h2>
+            <h2 class="card-title">{{ t('profilePage.benefits', { level: formatMembershipLevel(profile?.membership_level) }) }}</h2>
           </div>
           <div class="card-body">
             <ul class="benefits-list">
-              <template v-if="profile?.membership_level === 'lite'">
-                <li>✅ Free registration - permanent</li>
-                <li>💰 Standard rates: Q7 $23/h, Q8 $28/h</li>
-                <li>🎯 Basic cue sticks</li>
-                <li>📊 Basic statistics tracking</li>
-                <li>📅 Same-day booking (2h advance)</li>
-                <li>💠 Loyalty Points: 1.0x (1 NZD = 1 Point)</li>
-              </template>
-              <template v-else-if="profile?.membership_level === 'plus'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $21/h | Q8: $26/h</li>
-                <li>✨ Simple & transparent pricing - no calculations needed</li>
-                <li>🎯 Premium cue sticks (free rental)</li>
-                <li>📅 6h advance priority booking</li>
-                <li>💠 Loyalty Points: 1.2x (1 NZD = 1.2 Points) ⬆️ 20% faster</li>
-                <li>⏰ 12 month validity (rolling from last recharge)</li>
-              </template>
-              <template v-else-if="profile?.membership_level === 'pro'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $19/h | Q8: $24/h</li>
-                <li>✨ Simple & transparent pricing - no calculations needed</li>
-                <li>🎯 Premium cue sticks (free rental)</li>
-                <li>📅 12h advance priority booking (1h pre-authorization)</li>
-                <li>🎖️ Tournament priority access</li>
-                <li>💠 Loyalty Points: 1.4x (1 NZD = 1.4 Points) ⬆️ 40% faster</li>
-                <li>⏰ 12 month validity (rolling from last recharge)</li>
-              </template>
-              <template v-else-if="profile?.membership_level === 'pro_max'">
-                <li>💳 <strong>Member Rates:</strong> Q7: $17/h | Q8: $22/h</li>
-                <li>✨ Simple & transparent pricing - lowest rates guaranteed</li>
-                <li>🎯 Premium cue sticks (free rental)</li>
-                <li>📅 24h VIP priority booking (1h pre-authorization)</li>
-                <li>👑 Highest priority - exclusive VIP status</li>
-                <li>🎖️ Tournament priority access</li>
-                <li>🎂 Birthday month special gift (exclusive)</li>
-                <li>💠 Loyalty Points: 1.6x (1 NZD = 1.6 Points) ⬆️ 60% fastest</li>
-                <li>⏰ 12 month validity (rolling from last recharge)</li>
-              </template>
+              <li v-for="(benefit, index) in membershipBenefits" :key="index">✓ {{ benefit }}</li>
             </ul>
             <div class="upgrade-section" v-if="profile?.membership_level !== 'pro_max'">
               <p class="upgrade-text">
-                💎 Upgrade to {{ getNextMembershipLevel(profile?.membership_level) }} for more benefits!
+                💎 {{ t('profilePage.upgrade', { level: getNextMembershipLevel(profile?.membership_level) }) }}
               </p>
               <button class="btn btn-warning" @click="showUpgradeInfo">
-                Learn More
+                {{ t('profilePage.learnMore') }}
               </button>
             </div>
           </div>
@@ -130,18 +95,18 @@
         <div class="col col-2">
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">📋 Personal Information</h2>
+              <h2 class="card-title">📋 {{ t('profilePage.personalInfo') }}</h2>
               <button 
                 class="btn btn-primary btn-sm" 
                 @click="isEditing = !isEditing"
               >
-                {{ isEditing ? 'Cancel' : 'Edit' }}
+                {{ isEditing ? t('common.cancel') : t('profilePage.edit') }}
               </button>
             </div>
             <div class="card-body">
               <form @submit.prevent="saveProfile">
                 <div class="form-group">
-                  <label for="profile-name" class="form-label">Full Name</label>
+                  <label for="profile-name" class="form-label">{{ t('auth.fullName') }}</label>
                   <input
                     id="profile-name"
                     name="profile-name"
@@ -154,7 +119,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="profile-email" class="form-label">Email</label>
+                  <label for="profile-email" class="form-label">{{ t('auth.email') }}</label>
                   <input
                     id="profile-email"
                     name="profile-email"
@@ -163,11 +128,11 @@
                     v-model="editForm.email"
                     disabled
                   >
-                  <small class="form-text">Email cannot be changed</small>
+                  <small class="form-text">{{ t('profilePage.emailLocked') }}</small>
                 </div>
 
                 <div class="form-group">
-                  <label for="profile-phone" class="form-label">Phone</label>
+                  <label for="profile-phone" class="form-label">{{ t('auth.phone') }}</label>
                   <input
                     id="profile-phone"
                     name="profile-phone"
@@ -179,7 +144,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="profile-birthday" class="form-label">Date of Birth</label>
+                  <label for="profile-birthday" class="form-label">{{ t('auth.birthday') }}</label>
                   <input
                     id="profile-birthday"
                     name="profile-birthday"
@@ -189,11 +154,11 @@
                     :disabled="!isEditing"
                     placeholder="DD/MM/YYYY"
                   >
-                  <small class="form-text">Format: DD/MM/YYYY (e.g., 15/03/2000)</small>
+                  <small class="form-text">{{ t('auth.birthdayHint') }}</small>
                 </div>
 
                 <div class="form-group">
-                  <label for="profile-address" class="form-label">Address</label>
+                  <label for="profile-address" class="form-label">{{ t('profilePage.address') }}</label>
                   <textarea
                     id="profile-address"
                     name="profile-address"
@@ -201,12 +166,12 @@
                     v-model="editForm.address"
                     :disabled="!isEditing"
                     rows="2"
-                    placeholder="Enter your address"
+                    :placeholder="t('profilePage.addressPlaceholder')"
                   ></textarea>
                 </div>
 
                 <div class="form-group">
-                  <label for="profile-id-card" class="form-label">ID Card / Driver License</label>
+                  <label for="profile-id-card" class="form-label">{{ t('profilePage.idCard') }}</label>
                   <input
                     id="profile-id-card"
                     name="profile-id-card"
@@ -214,14 +179,14 @@
                     class="form-control"
                     v-model="editForm.id_card"
                     :disabled="!isEditing"
-                    placeholder="e.g., AA123456 or DL12345678"
+                    :placeholder="t('profilePage.idPlaceholder')"
                   >
-                  <small class="form-text">For verification and VIP services</small>
+                  <small class="form-text">{{ t('profilePage.idHint') }}</small>
                 </div>
 
                 <div class="form-actions" v-if="isEditing">
                   <button type="submit" class="btn btn-success">
-                    Save Changes
+                    {{ t('profilePage.saveChanges') }}
                   </button>
                 </div>
               </form>
@@ -232,9 +197,9 @@
         <div class="col col-2">
           <div class="card">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-              <h2 class="card-title">📊 Statistics</h2>
+              <h2 class="card-title">📊 {{ t('profilePage.statistics') }}</h2>
               <div class="year-selector-profile">
-                <label for="profile-year-select" class="selector-label" style="margin-right: 10px;">View:</label>
+                <label for="profile-year-select" class="selector-label" style="margin-right: 10px;">{{ t('profilePage.view') }}</label>
                 <select 
                   id="profile-year-select" 
                   name="profile-year-select" 
@@ -242,8 +207,8 @@
                   class="year-select"
                   style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;"
                 >
-                  <option value="all">All Years (Total)</option>
-                  <option :value="currentYear">{{ currentYear }} (Current Year)</option>
+                  <option value="all">{{ t('profilePage.allYears') }}</option>
+                  <option :value="currentYear">{{ currentYear }}（{{ t('profilePage.currentYear') }}）</option>
                 </select>
               </div>
             </div>
@@ -253,101 +218,101 @@
                   <div class="stat-icon">🏆</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.wins || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.wins || 0), 0)) || 0) }}</div>
-                    <div class="stat-label">Wins {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.wins') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">📉</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.losses || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.losses || 0), 0)) || 0) }}</div>
-                    <div class="stat-label">Losses {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.losses') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">🎮</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ statsYearFilter === 'all' ? ((profile?.wins || 0) + (profile?.losses || 0)) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.wins || 0) + (s.losses || 0), 0)) || 0) }}</div>
-                    <div class="stat-label">Matches Played {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.matches') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">📈</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ calculateWinRate }}%</div>
-                    <div class="stat-label">Win Rate {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.winRate') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">🎯</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ statsYearFilter === 'all' ? (profile?.break_and_run_count || 0) : ((profile?.year_stats?.filter(s => s.year === parseInt(statsYearFilter)).reduce((sum, s) => sum + (s.break_and_run_count || 0), 0)) || 0) }}</div>
-                    <div class="stat-label">Break & Run {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.breakRun') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">⭐</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ currentYearPoints }}</div>
-                    <div class="stat-label">Ranking Points ({{ currentYear }})</div>
+                    <div class="stat-label">{{ t('profilePage.rankingPoints') }}（{{ currentYear }}）</div>
                   </div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-icon">📅</div>
                   <div class="stat-content">
                     <div class="stat-value">{{ tournamentsPlayedFiltered }}</div>
-                    <div class="stat-label">Events Played {{ statsYearFilter === 'all' ? '(Total)' : `(${statsYearFilter})` }}</div>
+                    <div class="stat-label">{{ t('profilePage.eventsPlayed') }} {{ statsYearFilter === 'all' ? `(${t('profilePage.total')})` : `(${statsYearFilter})` }}</div>
                   </div>
                 </div>
               </div>
 
               <div class="division-stats-grid">
                 <div class="division-card pro">
-                  <div class="division-header">👔 Pro Division</div>
+                  <div class="division-header">👔 {{ t('profilePage.proDivision') }}</div>
                   <div class="division-body">
                     <div class="division-row">
-                      <span>Wins</span>
+                      <span>{{ t('profilePage.wins') }}</span>
                       <strong>{{ proStats.wins }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Losses</span>
+                      <span>{{ t('profilePage.losses') }}</span>
                       <strong>{{ proStats.losses }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Matches</span>
+                      <span>{{ t('profilePage.matches') }}</span>
                       <strong>{{ proStats.matches }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Win Rate</span>
+                      <span>{{ t('profilePage.winRate') }}</span>
                       <strong>{{ proStats.winRate }}%</strong>
                     </div>
                     <div class="division-row">
-                      <span>Break & Run</span>
+                      <span>{{ t('profilePage.breakRun') }}</span>
                       <strong>{{ proStats.breakAndRun }}</strong>
                     </div>
                   </div>
                 </div>
 
                 <div class="division-card student">
-                  <div class="division-header">🎓 Student Division</div>
+                  <div class="division-header">🎓 {{ t('profilePage.studentDivision') }}</div>
                   <div class="division-body">
                     <div class="division-row">
-                      <span>Wins</span>
+                      <span>{{ t('profilePage.wins') }}</span>
                       <strong>{{ studentStats.wins }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Losses</span>
+                      <span>{{ t('profilePage.losses') }}</span>
                       <strong>{{ studentStats.losses }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Matches</span>
+                      <span>{{ t('profilePage.matches') }}</span>
                       <strong>{{ studentStats.matches }}</strong>
                     </div>
                     <div class="division-row">
-                      <span>Win Rate</span>
+                      <span>{{ t('profilePage.winRate') }}</span>
                       <strong>{{ studentStats.winRate }}%</strong>
                     </div>
                     <div class="division-row">
-                      <span>Break & Run</span>
+                      <span>{{ t('profilePage.breakRun') }}</span>
                       <strong>{{ studentStats.breakAndRun }}</strong>
                     </div>
                   </div>
@@ -355,7 +320,7 @@
               </div>
 
               <div class="skill-badge-section mt-3">
-                <p class="stat-label">Current Skill Level</p>
+                <p class="stat-label">{{ t('profilePage.skillLevel') }}</p>
                 <span class="badge badge-lg" :class="getSkillBadgeClass(profile?.skill_level)">
                   {{ formatSkillLevel(profile?.skill_level) }}
                 </span>
@@ -366,26 +331,26 @@
           <!-- Account Settings -->
           <div class="card mt-3">
             <div class="card-header">
-              <h2 class="card-title">🔐 Account Settings</h2>
+              <h2 class="card-title">🔐 {{ t('profilePage.accountSettings') }}</h2>
             </div>
             <div class="card-body">
               <div class="setting-item">
-                <span class="setting-label">Role:</span>
+                <span class="setting-label">{{ t('profilePage.role') }}</span>
                 <span class="badge" :class="profile?.role === 'admin' ? 'badge-warning' : 'badge-info'">
-                  {{ profile?.role === 'admin' ? '👑 Administrator' : '🎯 Player' }}
+                  {{ profile?.role === 'admin' ? `👑 ${t('profilePage.admin')}` : `🎯 ${t('profilePage.player')}` }}
                 </span>
               </div>
               <div class="setting-item mt-2">
-                <span class="setting-label">Status:</span>
+                <span class="setting-label">{{ t('profilePage.status') }}</span>
                 <span class="badge" :class="profile?.is_active ? 'badge-success' : 'badge-danger'">
-                  {{ profile?.is_active ? 'Active' : 'Inactive' }}
+                  {{ profile?.is_active ? t('profilePage.active') : t('profilePage.inactive') }}
                 </span>
               </div>
               <button class="btn btn-secondary btn-sm mt-3" @click="showChangePassword = true">
-                Change Password
+                {{ t('profilePage.changePassword') }}
               </button>
               <button class="btn btn-danger btn-sm mt-2" @click="handleLogout" style="width: 100%;">
-                🚪 Logout
+                🚪 {{ t('profilePage.logout') }}
               </button>
             </div>
           </div>
@@ -395,16 +360,16 @@
       <!-- My Tournaments Section -->
       <div class="card mt-3 tournaments-section">
         <div class="card-header">
-          <h2 class="card-title">🎯 My Registered Tournaments</h2>
+          <h2 class="card-title">🎯 {{ t('profilePage.myTournaments') }}</h2>
           <router-link to="/tournaments" class="btn btn-primary btn-sm">
-            Browse Tournaments
+            {{ t('profilePage.browseTournaments') }}
           </router-link>
         </div>
         <div class="card-body">
           <div v-if="upcomingTournaments.length === 0" class="text-center p-3">
-            <p class="text-secondary">You haven't registered for any upcoming tournaments.</p>
+            <p class="text-secondary">{{ t('profilePage.noTournaments') }}</p>
             <router-link to="/tournaments" class="btn btn-success mt-2">
-              Register for a Tournament
+              {{ t('profilePage.registerTournament') }}
             </router-link>
           </div>
           <div v-else class="tournaments-list">
@@ -416,25 +381,25 @@
                 </span>
               </div>
               <div class="tournament-details">
-                <p><strong>📅 Date:</strong> {{ formatTournamentDate(reg.tournament.start_date) }}</p>
-                <p><strong>📍 Type:</strong> {{ formatTournamentType(reg.tournament.tournament_type) }}</p>
-                <p><strong>💰 Entry Fee:</strong> ${{ reg.tournament.entry_fee }}</p>
-                <p><strong>🏆 Prize Pool:</strong> ${{ reg.tournament.prize_pool }}</p>
-                <p><strong>✅ Registered:</strong> {{ formatDate(reg.registered_at) }}</p>
+                <p><strong>📅 {{ t('profilePage.date') }}</strong> {{ formatTournamentDate(reg.tournament.start_date) }}</p>
+                <p><strong>📍 {{ t('profilePage.type') }}</strong> {{ formatTournamentType(reg.tournament.tournament_type) }}</p>
+                <p><strong>💰 {{ t('profilePage.entryFee') }}</strong> ${{ reg.tournament.entry_fee }}</p>
+                <p><strong>🏆 {{ t('profilePage.prizePool') }}</strong> ${{ reg.tournament.prize_pool }}</p>
+                <p><strong>✅ {{ t('profilePage.registered') }}</strong> {{ formatDate(reg.registered_at) }}</p>
               </div>
               <div class="tournament-actions">
                 <router-link 
                   to="/tournaments" 
                   class="btn btn-primary btn-sm"
                 >
-                  View Calendar
+                  {{ t('profilePage.viewCalendar') }}
                 </router-link>
                 <button 
                   class="btn btn-danger btn-sm"
                   @click="cancelTournamentReg(reg)"
                   v-if="reg.tournament.status === 'registration' || reg.tournament.status === 'upcoming'"
                 >
-                  Cancel Registration
+                  {{ t('profilePage.cancelRegistration') }}
                 </button>
               </div>
             </div>
@@ -443,8 +408,7 @@
           <!-- Tournament Reminder -->
           <div v-if="upcomingTournaments.length > 0" class="tournament-reminder mt-3">
             <div class="alert alert-info">
-              <strong>⏰ Reminder:</strong> You have {{ upcomingTournaments.length }} upcoming tournament(s). 
-              Don't forget to check the schedule!
+              <strong>⏰ {{ t('profilePage.reminder') }}</strong> {{ t('profilePage.reminderText', { count: upcomingTournaments.length }) }}
             </div>
           </div>
         </div>
@@ -455,45 +419,45 @@
     <div v-if="showChangePassword" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Change Password</h2>
-          <button class="btn btn-secondary btn-sm" @click="closePasswordModal">Close</button>
+          <h2>{{ t('profilePage.changePassword') }}</h2>
+          <button class="btn btn-secondary btn-sm" @click="closePasswordModal">{{ t('auth.close') }}</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="new-password" class="form-label">New Password</label>
+            <label for="new-password" class="form-label">{{ t('profilePage.newPassword') }}</label>
             <input
               id="new-password"
               name="new-password"
               type="password"
               class="form-control"
               v-model="newPassword"
-              placeholder="Min 6 characters"
+              :placeholder="t('auth.minPassword')"
               minlength="6"
             >
           </div>
           <div class="form-group">
-            <label for="confirm-new-password" class="form-label">Confirm New Password</label>
+            <label for="confirm-new-password" class="form-label">{{ t('profilePage.confirmNewPassword') }}</label>
             <input
               id="confirm-new-password"
               name="confirm-new-password"
               type="password"
               class="form-control"
               v-model="confirmNewPassword"
-              placeholder="Re-enter new password"
+              :placeholder="t('profilePage.confirmPlaceholder')"
             >
           </div>
           <div v-if="newPassword && confirmNewPassword && newPassword !== confirmNewPassword" class="alert alert-warning">
-            Passwords do not match
+            {{ t('auth.passwordsMismatch') }}
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closePasswordModal" :disabled="isChangingPassword">Cancel</button>
+          <button class="btn btn-secondary" @click="closePasswordModal" :disabled="isChangingPassword">{{ t('common.cancel') }}</button>
           <button 
             class="btn btn-success" 
             @click="handleChangePassword"
             :disabled="!newPassword || newPassword !== confirmNewPassword || isChangingPassword"
           >
-            {{ isChangingPassword ? 'Updating...' : 'Update Password' }}
+            {{ isChangingPassword ? t('profilePage.updating') : t('profilePage.updatePassword') }}
           </button>
         </div>
       </div>
@@ -507,12 +471,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../config/supabase'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'ProfilePage',
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
+    const { t, list } = useI18n()
 
     const loading = ref(true)
     const profile = ref(null)
@@ -526,6 +492,11 @@ export default {
     const isChangingPassword = ref(false)
     const myRegistrations = ref([])
     const upcomingTournaments = ref([])
+    const membershipBenefits = computed(() => {
+      const level = profile.value?.membership_level || 'lite'
+      const key = ['lite', 'plus', 'pro', 'pro_max'].includes(level) ? level : 'lite'
+      return list(`profilePage.${key === 'pro_max' ? 'proMax' : key}Benefits`)
+    })
 
     const editForm = ref({
       name: '',
@@ -1010,7 +981,7 @@ export default {
     }
 
     const handleLogout = async () => {
-      if (confirm('Are you sure you want to logout?')) {
+      if (confirm(t('nav.logoutConfirm'))) {
         await authStore.signOut()
         router.push('/login')
       }
@@ -1022,6 +993,7 @@ export default {
 
     return {
       authStore,
+      t,
       loading,
       profile,
       pointHistory,
@@ -1040,6 +1012,7 @@ export default {
       isChangingPassword,
       myRegistrations,
       upcomingTournaments,
+      membershipBenefits,
       calculateWinRate,
       saveProfile,
       handleChangePassword,
@@ -1718,4 +1691,3 @@ export default {
   }
 }
 </style>
-
