@@ -3,12 +3,15 @@
     <div class="login-container">
       <div class="login-card card">
         <div class="login-header">
+          <div class="login-lang">
+            <LanguageSwitcher />
+          </div>
           <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="login-logo">
-          <p>Tournament Management System</p>
+          <p>{{ t('auth.system') }}</p>
         </div>
 
         <div class="login-body">
-          <h2>Sign In</h2>
+          <h2>{{ t('auth.loginTitle') }}</h2>
 
           <div v-if="passwordChangedMessage" class="alert alert-success">
             ✅ Password updated successfully! Please log in with your new password.
@@ -28,7 +31,7 @@
 
           <form @submit.prevent="handleSignIn">
             <div class="form-group">
-              <label class="form-label">Email</label>
+              <label class="form-label">{{ t('auth.email') }}</label>
               <input
                 type="email"
                 class="form-control"
@@ -40,7 +43,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Password</label>
+              <label class="form-label">{{ t('auth.password') }}</label>
               <input
                 type="password"
                 class="form-control"
@@ -57,24 +60,24 @@
                 class="btn btn-primary btn-lg"
                 :disabled="authStore.loading"
               >
-                {{ authStore.loading ? 'Signing In...' : 'Sign In' }}
+                {{ authStore.loading ? t('auth.signingIn') : t('auth.submitLogin') }}
               </button>
             </div>
           </form>
 
           <div class="login-footer">
             <p>
-              Don't have an account?
-              <router-link to="/register" class="link">Sign Up</router-link>
+              {{ t('auth.noAccount') }}
+              <router-link to="/register" class="link">{{ t('auth.goRegister') }}</router-link>
             </p>
             <p>
               <a href="#" @click.prevent="resendVerification" class="link">
-                📧 Resend verification email
+                📧 {{ t('auth.resend') }}
               </a>
             </p>
             <p>
               <a href="#" @click.prevent="showForgotPassword" class="link">
-                Forgot Password?
+                {{ t('auth.forgot') }}
               </a>
             </p>
           </div>
@@ -129,6 +132,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { createClient } from '@supabase/supabase-js'
+import { useI18n } from '../i18n'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -137,10 +142,12 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default {
   name: 'LoginPage',
+  components: { LanguageSwitcher },
   setup() {
     const router = useRouter()
     const route = useRoute()
     const authStore = useAuthStore()
+    const { t } = useI18n()
 
     const email = ref('')
     const password = ref('')
@@ -263,6 +270,7 @@ export default {
     }
 
     return {
+      t,
       authStore,
       email,
       password,
@@ -307,6 +315,13 @@ export default {
   color: white;
   padding: 2rem;
   text-align: center;
+  position: relative;
+}
+
+.login-lang {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
 }
 
 .login-logo {

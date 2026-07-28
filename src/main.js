@@ -4,6 +4,7 @@ import router from './router'
 import App from './App.vue'
 import './assets/styles/main.css'
 import { logStorageReport, getStorageReport, clearAllCaches } from './utils/storageMonitor'
+import { installI18n } from './i18n'
 
 // Register Service Worker for PWA
 // TEMPORARILY DISABLED to fix website loading issues
@@ -58,6 +59,7 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+installI18n(app)
 app.mount('#app')
 
 // Add storage monitoring tools to window (for debugging)

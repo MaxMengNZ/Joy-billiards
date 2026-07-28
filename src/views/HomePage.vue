@@ -13,12 +13,12 @@
       <div class="trial-banner-content">
         <div class="trial-banner-icon" aria-hidden="true">🎵</div>
         <div class="trial-banner-text">
-          <strong>New: Member Song Queue</strong> · Search Spotify tracks and add them to the venue playlist. Tap to try it.
+          <strong>{{ t('home.bannerTitle') }}</strong> · {{ t('home.bannerBody') }}
         </div>
         <button
           type="button"
           class="trial-banner-close"
-          aria-label="Dismiss announcement"
+          :aria-label="t('common.dismiss')"
           @click.stop="hideSongQueueBanner"
         >
           ×
@@ -35,42 +35,41 @@
       <div class="hero-content">
         <div class="hero-badge">
           <span class="badge-icon">🎉</span>
-          <span class="badge-text">Grand Opening Special</span>
+          <span class="badge-text">{{ t('home.badge') }}</span>
         </div>
         <h1 class="hero-title">
-          Grand Opening of<br>
-          <span class="hero-title-highlight">Joy Billiards NZ</span>
+          {{ t('home.titleLine1') }}<br>
+          <span class="hero-title-highlight">{{ t('home.titleHighlight') }}</span>
         </h1>
         <p class="hero-subtitle">
-          Joy Billiards NZ is the <strong>first and only professional Heyball venue</strong> and the 
-          <strong>exclusive official distributor of JOY Billiards</strong> in New Zealand.
+          {{ t('home.subtitle') }}
         </p>
         <p class="hero-tagline">
-          Premium, tournament-grade tables. Pro-level atmosphere. <strong>Now officially open in Hamilton!</strong>
+          {{ t('home.tagline') }}
         </p>
         <div class="hero-actions">
           <router-link to="/tournaments" class="btn btn-primary btn-lg hero-btn-primary">
-            🏆 View Tournaments
+            🏆 {{ t('home.ctaTournaments') }}
           </router-link>
           <router-link to="/leaderboard" class="btn btn-secondary btn-lg hero-btn-secondary">
-            🏅 View Rankings
+            🏅 {{ t('home.ctaRankings') }}
           </router-link>
           <router-link to="/membership" class="btn btn-outline btn-lg hero-btn-outline">
-            💳 Explore Memberships
+            💳 {{ t('home.ctaMembership') }}
           </router-link>
         </div>
         <div class="hero-features">
           <div class="hero-feature-item">
             <span class="feature-check">✓</span>
-            <span>Official JOY Distributor</span>
+            <span>{{ t('home.featureDistributor') }}</span>
           </div>
           <div class="hero-feature-item">
             <span class="feature-check">✓</span>
-            <span>Tournament-Grade Tables</span>
+            <span>{{ t('home.featureTables') }}</span>
           </div>
           <div class="hero-feature-item">
             <span class="feature-check">✓</span>
-            <span>Professional Environment</span>
+            <span>{{ t('home.featurePro') }}</span>
           </div>
         </div>
       </div>
@@ -79,10 +78,10 @@
     <!-- Pricing Announcement Banner -->
     <section class="pricing-banner">
       <div class="pricing-container">
-        <div class="pricing-badge">Grand Opening · New Pricing</div>
-        <h2 class="pricing-title">All top-ups = your playing credit. No membership fees. Transparent hourly rates.</h2>
+        <div class="pricing-badge">{{ t('home.pricingBadge') }}</div>
+        <h2 class="pricing-title">{{ t('home.pricingTitle') }}</h2>
         <p class="pricing-description">
-          Choose your tier, top up once, and enjoy JOY Q7 / Q8 tables at the best rates in Hamilton. Works for both Pro and Student tournaments.
+          {{ t('home.pricingDesc') }}
         </p>
         <div class="pricing-grid">
           <div class="pricing-card lite">
@@ -432,6 +431,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStatsStore } from '../stores/statsStore'
+import { useI18n } from '../i18n'
 
 const SONG_QUEUE_BANNER_KEY = 'joy_song_queue_banner_dismissed'
 
@@ -440,6 +440,7 @@ export default {
   setup() {
     const router = useRouter()
     const statsStore = useStatsStore()
+    const { t } = useI18n()
     const lastRefreshTime = ref(new Date())
     const isRefreshing = ref(false)
     const showSongQueueBanner = ref(
@@ -506,6 +507,7 @@ export default {
     }
 
     return {
+      t,
       stats,
       openMaps,
       isRefreshing,

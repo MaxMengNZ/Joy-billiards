@@ -2,66 +2,59 @@
   <div class="song-queue-page">
     <section class="song-hero">
       <div class="song-hero-inner">
-        <p class="eyebrow">Member Jukebox</p>
-        <h1>Song Queue</h1>
-        <p class="subtitle">
-          Anyone can watch the live queue. To request songs, members must scan the
-          <strong>in-store Song Queue QR</strong> (shown on the venue TV / counter) — unlock lasts 4 hours.
-        </p>
+        <p class="eyebrow">{{ t('songs.eyebrow') }}</p>
+        <h1>{{ t('songs.title') }}</h1>
+        <p class="subtitle">{{ t('songs.subtitle') }}</p>
         <div class="hero-chips" v-if="authStore.isAuthenticated">
           <span class="chip" v-if="authStore.isMember">
             {{ membershipLabel }}
           </span>
           <span class="chip chip-ok" v-if="songStore.canRequestSongs && !songStore.venuePresence.bypass">
-            Checked in{{ songStore.venueExpiresLabel ? ` · until ${songStore.venueExpiresLabel}` : '' }}
+            {{ t('songs.checkedIn') }}{{ songStore.venueExpiresLabel ? ` · ${t('songs.until', { time: songStore.venueExpiresLabel })}` : '' }}
           </span>
           <span class="chip chip-ok" v-else-if="songStore.venuePresence.bypass">
-            Staff · no check-in needed
+            {{ t('songs.staffBypass') }}
           </span>
           <span class="chip chip-warn" v-else-if="authStore.isMember">
-            Scan venue QR to request songs
+            {{ t('songs.scanToRequest') }}
           </span>
           <span
             class="chip chip-priority"
             v-if="authStore.isProMax && songStore.canRequestSongs"
-            title="Priority jumps regular guests only — later Pro Max cannot cut ahead of an earlier Pro Max priority song"
+            :title="t('songs.priorityTitle')"
           >
-            Priority left today: {{ songStore.priorityQuota.remaining }}/{{ songStore.priorityQuota.limit }}
+            {{ t('songs.priorityLeft', { remaining: songStore.priorityQuota.remaining, limit: songStore.priorityQuota.limit }) }}
           </span>
           <span class="chip chip-warn" v-else-if="authStore.isProMax && !songStore.canRequestSongs">
-            Priority unlocks after venue check-in
+            {{ t('songs.priorityUnlock') }}
           </span>
         </div>
       </div>
     </section>
 
     <div class="song-content">
-      <!-- Check-in first: members who aren't present need clear in-store instructions -->
       <div
         v-if="authStore.isMember && !songStore.canRequestSongs"
         class="panel checkin-panel"
         id="venue-checkin"
       >
-        <h2 class="panel-title">店内扫码后才能点歌 · Scan in-store to request</h2>
+        <h2 class="panel-title">{{ t('songs.checkinTitle') }}</h2>
         <ol class="checkin-steps">
-          <li>找店内电视 / 前台的 <strong>Song Queue QR</strong>（不是网站上的按钮）</li>
-          <li>用手机 <strong>相机</strong> 或微信「扫一扫」扫描</li>
-          <li>扫码后自动登录并解锁，<strong>4 小时内</strong>可自由点歌</li>
+          <li>{{ t('songs.checkinStep1') }}</li>
+          <li>{{ t('songs.checkinStep2') }}</li>
+          <li>{{ t('songs.checkinStep3') }}</li>
         </ol>
-        <p class="hint">
-          Look for the QR on the venue TV / counter. Use your phone camera (or WeChat Scan).
-          There is no scan button on this website — the code is only shown in-store by staff.
-        </p>
+        <p class="hint">{{ t('songs.checkinHint') }}</p>
 
         <div class="manual-checkin">
-          <label class="manual-label" for="manual-checkin-code">Or enter the code shown under the QR</label>
+          <label class="manual-label" for="manual-checkin-code">{{ t('songs.manualLabel') }}</label>
           <div class="manual-row">
             <input
               id="manual-checkin-code"
               v-model="manualCheckinCode"
               type="text"
               class="search-input"
-              placeholder="Paste or type check-in code"
+              :placeholder="t('songs.manualPlaceholder')"
               autocomplete="off"
               @keydown.enter.prevent="submitManualCheckin"
             />
@@ -71,7 +64,7 @@
               :disabled="checkinSubmitting || !manualCheckinCode.trim()"
               @click="submitManualCheckin"
             >
-              {{ checkinSubmitting ? 'Checking in…' : 'Check in' }}
+              {{ checkinSubmitting ? t('songs.checkingIn') : t('songs.checkIn') }}
             </button>
           </div>
         </div>
@@ -83,7 +76,7 @@
             :disabled="songStore.venuePresence.loading"
             @click="refreshPresence"
           >
-            {{ songStore.venuePresence.loading ? 'Checking…' : 'I’ve scanned — refresh' }}
+            {{ songStore.venuePresence.loading ? t('songs.checking') : t('songs.scannedRefresh') }}
           </button>
           <router-link
             v-if="authStore.isAdmin"
@@ -91,32 +84,25 @@
             class="btn btn-primary"
             target="_blank"
           >
-            Staff: open QR screen
+            {{ t('songs.staffOpenQr') }}
           </router-link>
         </div>
       </div>
 
-      <!-- Real Spotify player: currently playing + Spotify queue (public) -->
       <div class="panel spotify-panel">
         <div class="panel-header-row">
-          <h2 class="panel-title">On Spotify</h2>
+          <h2 class="panel-title">{{ t('songs.onSpotify') }}</h2>
           <span class="spotify-live-hint" v-if="songStore.spotifyPlayer.updated_at">
-            Live · updates ~10s
+            {{ t('songs.liveHint') }}
           </span>
         </div>
         <p class="hint">
-          What the venue Spotify is actually playing and what’s already queued there.
-          List shows the top 30 upcoming tracks.
-          <template v-if="songStore.autoQueueEnabled">
-            Website requests move here automatically, one at a time, in priority order.
-          </template>
-          <template v-else>
-            Website requests only appear here after staff uses Play / Queue on Spotify.
-          </template>
+          {{ t('songs.onSpotifyHint') }}
+          {{ songStore.autoQueueEnabled ? t('songs.onSpotifyAuto') : t('songs.onSpotifyManual') }}
         </p>
 
         <div v-if="songStore.spotifyNowPlaying" class="now-playing spotify-now">
-          <span class="badge playing">{{ songStore.spotifyPlayer.is_playing ? 'Playing now' : 'Paused' }}</span>
+          <span class="badge playing">{{ songStore.spotifyPlayer.is_playing ? t('songs.playingNow') : t('songs.paused') }}</span>
           <div class="queue-row">
             <img
               v-if="songStore.spotifyNowPlaying.album_art_url"
@@ -136,12 +122,12 @@
             </div>
           </div>
         </div>
-        <p v-else class="empty-inline">Nothing playing on the venue Spotify right now.</p>
+        <p v-else class="empty-inline">{{ t('songs.nothingPlaying') }}</p>
 
         <p v-if="songStore.spotifyQueueCount" class="queue-count-hint">
-          {{ songStore.spotifyQueueCount }}{{ songStore.spotifyPlayer.queue_may_have_more ? '+' : '' }} in Spotify queue
+          {{ t('songs.spotifyQueueCount', { count: songStore.spotifyQueueCount + (songStore.spotifyPlayer.queue_may_have_more ? '+' : '') }) }}
           <span v-if="songStore.spotifyQueueVisible.length < songStore.spotifyQueueCount" class="queue-count-sub">
-            · showing top {{ songStore.spotifyQueueVisible.length }}
+            · {{ t('songs.showingTop', { n: songStore.spotifyQueueVisible.length }) }}
           </span>
         </p>
         <ol class="queue-list" v-if="songStore.spotifyQueueVisible.length">
@@ -158,25 +144,18 @@
             </div>
           </li>
         </ol>
-        <p v-else class="empty-inline">Spotify queue is empty.</p>
+        <p v-else class="empty-inline">{{ t('songs.spotifyQueueEmpty') }}</p>
       </div>
 
-      <!-- Website Live queue: member requests -->
       <div class="panel">
         <div class="panel-header-row">
-          <h2 class="panel-title">Website live queue</h2>
+          <h2 class="panel-title">{{ t('songs.websiteQueue') }}</h2>
           <button class="btn btn-ghost btn-sm" type="button" @click="refreshQueue" :disabled="songStore.loading">
-            Refresh
+            {{ t('common.refresh') }}
           </button>
         </div>
         <p class="hint">
-          <template v-if="songStore.autoQueueEnabled">
-            Songs requested on this website. They’re sent to Spotify automatically in priority order —
-            Pro Max「优先」只插普通用户的队，不会插到更早的 Pro Max 优先歌前面。
-          </template>
-          <template v-else>
-            Songs requested on this website (waiting for staff to play or queue them on Spotify).
-          </template>
+          {{ songStore.autoQueueEnabled ? t('songs.websiteHintAuto') : t('songs.websiteHintManual') }}
         </p>
 
         <p v-if="actionMessage" class="inline-toast" :class="actionMessageType" role="status">
@@ -185,17 +164,17 @@
 
         <div v-if="mySpotSummary.length" class="my-spots" aria-live="polite">
           <div v-for="spot in mySpotSummary" :key="spot.id" class="my-spot">
-            <strong>Your song</strong>
+            <strong>{{ t('songs.yourSong') }}</strong>
             <span class="my-spot-track">{{ spot.track_name }}</span>
             <span class="my-spot-pos">{{ spot.positionLabel }}</span>
           </div>
         </div>
 
-        <div v-if="songStore.loading && !songStore.queue.length" class="empty-inline">Loading queue…</div>
+        <div v-if="songStore.loading && !songStore.queue.length" class="empty-inline">{{ t('songs.loadingQueue') }}</div>
 
         <div v-if="songStore.nowPlaying" class="now-playing" :class="{ mine: songStore.nowPlaying.is_mine }">
-          <span class="badge playing">Now playing</span>
-          <span v-if="songStore.nowPlaying.is_mine" class="badge yours">Your song</span>
+          <span class="badge playing">{{ t('songs.nowPlaying') }}</span>
+          <span v-if="songStore.nowPlaying.is_mine" class="badge yours">{{ t('songs.yours') }}</span>
           <div class="queue-row">
             <img
               v-if="songStore.nowPlaying.album_art_url"
@@ -206,7 +185,7 @@
             <div class="result-meta">
               <div class="track-name">{{ songStore.nowPlaying.track_name }}</div>
               <div class="artist-name">{{ songStore.nowPlaying.artist_name }}</div>
-              <div class="requester">Requested by {{ requesterName(songStore.nowPlaying) }}</div>
+              <div class="requester">{{ t('songs.requestedBy', { name: requesterName(songStore.nowPlaying) }) }}</div>
               <div v-if="playbackProgress" class="playback-progress">
                 <div class="progress-track">
                   <div class="progress-fill" :style="{ width: playbackProgress.percent + '%' }"></div>
@@ -220,26 +199,26 @@
                 :disabled="songStore.actionBusyId === songStore.nowPlaying.id"
                 @click="setStatus(songStore.nowPlaying.id, 'played')"
               >
-                Mark played
+                {{ t('songs.markPlayed') }}
               </button>
               <button
                 class="btn btn-ghost btn-sm"
                 :disabled="songStore.actionBusyId === songStore.nowPlaying.id"
                 @click="skipCurrentSpotify(songStore.nowPlaying.id)"
               >
-                {{ songStore.actionBusyId === songStore.nowPlaying.id ? 'Skipping…' : 'Skip current on Spotify' }}
+                {{ songStore.actionBusyId === songStore.nowPlaying.id ? t('songs.skipping') : t('songs.skipCurrent') }}
               </button>
             </div>
           </div>
         </div>
 
         <div v-if="!songStore.pendingQueue.length && !songStore.nowPlaying" class="empty-inline">
-          Queue is empty. Be the first to add a song.
+          {{ t('songs.queueEmpty') }}
         </div>
 
         <p v-else-if="songStore.pendingQueue.length" class="queue-count-hint">
-          {{ songStore.pendingCount }} waiting
-          <span v-if="songStore.nowPlaying"> · 1 now playing</span>
+          {{ t('songs.waiting', { count: songStore.pendingCount }) }}
+          <span v-if="songStore.nowPlaying"> · {{ t('songs.onePlaying') }}</span>
         </p>
 
         <ol class="queue-list" v-if="songStore.pendingQueue.length">
@@ -249,19 +228,19 @@
             class="queue-item"
             :class="{ mine: item.is_mine }"
           >
-            <span class="pos" :title="'Queue position #' + (item.queue_position || '')">
+            <span class="pos" :title="'#' + (item.queue_position || '')">
               #{{ item.queue_position || '—' }}
             </span>
             <img v-if="item.album_art_url" :src="item.album_art_url" alt="" class="album-art" />
             <div class="result-meta">
               <div class="track-name">
                 {{ item.track_name }}
-                <span v-if="item.is_priority" class="badge priority">Priority</span>
-                <span v-if="item.is_mine" class="badge yours">Yours</span>
+                <span v-if="item.is_priority" class="badge priority">{{ t('songs.priority') }}</span>
+                <span v-if="item.is_mine" class="badge yours">{{ t('songs.yours') }}</span>
               </div>
               <div class="artist-name">{{ item.artist_name }}</div>
               <div class="requester">
-                Requested by {{ requesterName(item) }}
+                {{ t('songs.requestedBy', { name: requesterName(item) }) }}
                 <span v-if="item.is_mine" class="pos-inline"> · {{ positionHint(item) }}</span>
               </div>
             </div>
@@ -272,7 +251,7 @@
                 :disabled="songStore.actionBusyId === item.id"
                 @click="cancelMine(item.id)"
               >
-                {{ songStore.actionBusyId === item.id ? 'Working…' : 'Cancel' }}
+                {{ songStore.actionBusyId === item.id ? t('common.working') : t('common.cancel') }}
               </button>
               <template v-if="authStore.isAdmin">
                 <button
@@ -280,29 +259,29 @@
                   :disabled="!!songStore.actionBusyId"
                   @click="playNow(item)"
                 >
-                  {{ songStore.actionBusyId === item.id ? 'Playing…' : 'Play on Spotify' }}
+                  {{ songStore.actionBusyId === item.id ? t('songs.playing') : t('songs.playOnSpotify') }}
                 </button>
                 <button
                   class="btn btn-secondary btn-sm"
                   :disabled="!!songStore.actionBusyId"
                   @click="pushSpotify(item)"
                 >
-                  {{ songStore.actionBusyId === item.id ? 'Sending…' : 'Queue on Spotify' }}
+                  {{ songStore.actionBusyId === item.id ? t('songs.sending') : t('songs.queueOnSpotify') }}
                 </button>
                 <button
                   class="btn btn-ghost btn-sm"
                   :disabled="!!songStore.actionBusyId"
                   @click="setStatus(item.id, 'playing')"
-                  title="Only mark as playing on the website (does not control Spotify)"
+                  :title="t('songs.markPlayingTitle')"
                 >
-                  Mark playing
+                  {{ t('songs.markPlaying') }}
                 </button>
                 <button
                   class="btn btn-ghost btn-sm"
                   :disabled="!!songStore.actionBusyId"
                   @click="setStatus(item.id, 'cancelled')"
                 >
-                  Cancel
+                  {{ t('common.cancel') }}
                 </button>
               </template>
             </div>
@@ -310,40 +289,35 @@
         </ol>
       </div>
 
-      <!-- Guest / non-member CTA -->
       <div v-if="!authStore.isAuthenticated" class="gate-card">
-        <h2>Want to add a song?</h2>
-        <p>Sign in with an active membership to request tracks.</p>
-        <router-link to="/login" class="btn btn-primary">Sign in</router-link>
+        <h2>{{ t('songs.wantAdd') }}</h2>
+        <p>{{ t('songs.wantAddBody') }}</p>
+        <router-link to="/login" class="btn btn-primary">{{ t('songs.signIn') }}</router-link>
       </div>
 
       <div v-else-if="!authStore.isMember" class="gate-card">
-        <h2>Membership required to request</h2>
-        <p>You can watch the live queue above. Only active members can add songs.</p>
-        <router-link to="/membership" class="btn btn-primary">View Membership</router-link>
+        <h2>{{ t('songs.memberRequired') }}</h2>
+        <p>{{ t('songs.memberRequiredBody') }}</p>
+        <router-link to="/membership" class="btn btn-primary">{{ t('songs.viewMembership') }}</router-link>
       </div>
 
       <div v-else-if="!songStore.canRequestSongs" class="gate-card">
-        <h2>Almost there</h2>
-        <p>
-          Scroll up to the check-in box, scan the in-store QR (or enter the code), then you can search
-          and request songs for 4 hours.
-        </p>
-        <a class="btn btn-primary" href="#venue-checkin">Go to check-in</a>
+        <h2>{{ t('songs.almostThere') }}</h2>
+        <p>{{ t('songs.almostThereBody') }}</p>
+        <a class="btn btn-primary" href="#venue-checkin">{{ t('songs.goCheckin') }}</a>
       </div>
 
       <template v-else>
-        <!-- Search (members only) -->
         <div class="panel">
-          <h2 class="panel-title">Search songs</h2>
+          <h2 class="panel-title">{{ t('songs.searchTitle') }}</h2>
           <div class="search-row">
             <div class="search-input-wrap">
               <input
                 v-model="searchQuery"
                 type="search"
                 class="search-input"
-                placeholder="Start typing a song name, e.g. rolling…"
-                aria-label="Search songs"
+                :placeholder="t('songs.searchPlaceholder')"
+                :aria-label="t('songs.searchAria')"
                 autocomplete="off"
                 @input="onSearchInput"
                 @keydown.enter.prevent="runSearch"
@@ -351,10 +325,10 @@
               <span v-if="songStore.searching" class="search-spinner" aria-hidden="true">…</span>
             </div>
             <button type="button" class="btn btn-primary" :disabled="songStore.searching || !searchQuery.trim()" @click="runSearch">
-              {{ songStore.searching ? 'Searching…' : 'Search' }}
+              {{ songStore.searching ? t('common.searching') : t('common.search') }}
             </button>
           </div>
-          <p class="hint">Suggestions appear as you type (after 2+ characters).</p>
+          <p class="hint">{{ t('songs.searchHint') }}</p>
           <p v-if="songStore.searchMessage" class="hint" :class="{ 'mock-hint': songStore.searchMock || songStore.searchMessage }">
             {{ songStore.searchMessage }}
           </p>
@@ -378,7 +352,7 @@
                   :disabled="songStore.submitting"
                   @click="addTrack(track, false)"
                 >
-                  Add to queue
+                  {{ t('songs.addToQueue') }}
                 </button>
                 <button
                   v-if="authStore.isProMax"
@@ -386,34 +360,29 @@
                   :disabled="songStore.submitting || songStore.priorityQuota.remaining <= 0"
                   :title="
                     songStore.priorityQuota.remaining <= 0
-                      ? 'Daily priority limit reached'
-                      : 'Jump ahead of regular guests only — not ahead of earlier Pro Max priority songs'
+                      ? t('songs.priorityLimit')
+                      : t('songs.priorityTip')
                   "
                   @click="addTrack(track, true)"
                 >
-                  Priority queue
+                  {{ t('songs.priorityQueue') }}
                 </button>
               </div>
             </div>
           </div>
           <p v-else-if="searched && !songStore.searching && searchQuery.trim().length >= 2" class="empty-inline">
-            No tracks found. Try another spelling.
+            {{ t('songs.noTracks') }}
           </p>
         </div>
 
-        <!-- Admin strip -->
         <div v-if="authStore.isAdmin" class="panel admin-panel">
-          <h2 class="panel-title">Staff controls</h2>
+          <h2 class="panel-title">{{ t('songs.staffControls') }}</h2>
 
           <div class="auto-mode" :class="{ on: songStore.autoQueueEnabled }">
             <div class="auto-mode-text">
-              <strong>{{ songStore.autoQueueEnabled ? 'Auto mode: ON' : 'Auto mode: OFF' }}</strong>
+              <strong>{{ songStore.autoQueueEnabled ? t('songs.autoOn') : t('songs.autoOff') }}</strong>
               <span class="hint">
-                {{
-                  songStore.autoQueueEnabled
-                    ? '自动模式：会员点的歌会按优先级自动进 Spotify，管理员无需逐首审核。'
-                    : '手动模式：每一首都需要管理员点 Play / Queue on Spotify 才会进 Spotify。'
-                }}
+                {{ songStore.autoQueueEnabled ? t('songs.autoOnHint') : t('songs.autoOffHint') }}
               </span>
             </div>
             <button
@@ -425,20 +394,15 @@
             >
               {{
                 songStore.autoQueue.saving
-                  ? 'Saving…'
+                  ? t('common.saving')
                   : songStore.autoQueueEnabled
-                    ? 'Switch to manual'
-                    : 'Switch to auto'
+                    ? t('songs.switchManual')
+                    : t('songs.switchAuto')
               }}
             </button>
           </div>
 
-          <p class="hint">
-            “Play on Spotify” starts that track now on the venue device. “Queue on Spotify” adds it to
-            the queue — Spotify has no API to remove one specific queued track, so undo it manually in
-            the Spotify app. “Skip current on Spotify” advances the currently playing track. “Mark
-            playing” only updates the website (no Spotify control).
-          </p>
+          <p class="hint">{{ t('songs.staffHint') }}</p>
           <button
             v-if="songStore.nextUp"
             class="btn btn-primary"
@@ -446,7 +410,7 @@
             :disabled="!!songStore.actionBusyId"
             @click="playNow(songStore.nextUp)"
           >
-            Play next on Spotify: {{ songStore.nextUp.track_name }}
+            {{ t('songs.playNext', { track: songStore.nextUp.track_name }) }}
           </button>
         </div>
       </template>
@@ -462,6 +426,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useSongQueueStore } from '../stores/songQueueStore'
 import { formatMembershipLevel } from '../utils/membershipDisplay'
+import { useI18n } from '../i18n'
 
 const PENDING_CHECKIN_KEY = 'song_venue_checkin_code'
 
@@ -472,6 +437,7 @@ export default {
     const songStore = useSongQueueStore()
     const route = useRoute()
     const router = useRouter()
+    const { t } = useI18n()
     const searchQuery = ref('')
     const searched = ref(false)
     const actionMessage = ref('')
@@ -498,15 +464,15 @@ export default {
     }
 
     const requesterName = (item) => {
-      if (item?.is_mine) return 'You'
-      return item?.requester_label || item?.user?.name || 'Member'
+      if (item?.is_mine) return t('songs.posYou')
+      return item?.requester_label || item?.user?.name || t('common.member')
     }
 
     const positionHint = (item) => {
       const pos = Number(item?.queue_position)
       if (!Number.isFinite(pos) || pos < 1) return ''
-      if (pos === 1) return 'You’re next'
-      return `#${pos} in line · ${pos - 1} ahead`
+      if (pos === 1) return t('songs.posYoureNext')
+      return t('songs.posInLine', { n: pos, ahead: pos - 1 })
     }
 
     // Real Spotify progress for the On Spotify card
@@ -532,10 +498,10 @@ export default {
     const mySpotSummary = computed(() =>
       songStore.myPending.map((item) => {
         const pos = Number(item.queue_position)
-        let positionLabel = 'In queue'
-        if (pos === 1) positionLabel = 'You’re next up'
+        let positionLabel = t('songs.websiteQueue')
+        if (pos === 1) positionLabel = t('songs.posYoureNext')
         else if (pos > 1) {
-          positionLabel = `#${pos} in queue · ${pos - 1} song${pos - 1 === 1 ? '' : 's'} ahead`
+          positionLabel = t('songs.posInLine', { n: pos, ahead: pos - 1 })
         }
         return {
           id: item.id,
@@ -569,11 +535,14 @@ export default {
       if (songStore.canRequestSongs) {
         flash(
           songStore.venuePresence.bypass
-            ? 'Staff access — you can request songs.'
-            : `Checked in${songStore.venueExpiresLabel ? ` until ${songStore.venueExpiresLabel}` : ''}.`
+            ? t('songs.staffBypass')
+            : t('songs.checkinOk') +
+              (songStore.venueExpiresLabel
+                ? ` (${t('songs.until', { time: songStore.venueExpiresLabel })})`
+                : '')
         )
       } else {
-        flash('Not checked in yet. Scan the venue QR, then try again.', 'warn')
+        flash(t('songs.scanToRequest'), 'warn')
       }
     }
 
@@ -596,7 +565,7 @@ export default {
           } catch {
             /* ignore */
           }
-          flash('Sign in to complete venue check-in…', 'warn')
+          flash(t('songs.signIn') + '…', 'warn')
           await router.push({ path: '/login', query: { redirect: `/songs?checkin=${encodeURIComponent(token)}` } })
           return
         }
@@ -608,10 +577,10 @@ export default {
         }
         manualCheckinCode.value = ''
         await clearCheckinQuery()
-        flash(data?.message || 'Checked in. You can request songs for 4 hours.')
+        flash(data?.message || t('songs.checkinOk'))
         if (authStore.isMember) await songStore.fetchPriorityQuota()
       } catch (err) {
-        flash(err.message || 'Check-in failed', 'error')
+        flash(err.message || t('songs.checkinFailed'), 'error')
       } finally {
         checkinBusy = false
         checkinSubmitting.value = false
@@ -635,14 +604,9 @@ export default {
     const toggleAutoMode = async () => {
       try {
         const enabled = await songStore.setAutoQueueEnabled(!songStore.autoQueueEnabled)
-        flash(
-          enabled
-            ? 'Auto mode on — requests go to Spotify automatically.'
-            : 'Manual mode on — you decide what reaches Spotify.',
-          'success'
-        )
+        flash(enabled ? t('songs.autoEnabledFlash') : t('songs.autoDisabledFlash'), 'success')
       } catch (err) {
-        flash(err.message || 'Could not change mode', 'error')
+        flash(err.message || t('songs.modeChangeFailed'), 'error')
       }
     }
 
@@ -679,10 +643,11 @@ export default {
       try {
         const data = await songStore.submitRequest(track, { isPriority })
         const pos = data?.queue_position_estimate
+        const posText = pos ? t('songs.posSuffix', { n: pos }) : ''
         flash(
           isPriority
-            ? `Priority added${pos ? ` — #${pos}` : ''}. Jumps regular guests only; keeps order behind earlier Pro Max priority songs.`
-            : `Added to queue${pos ? ` — you are #${pos} in line` : ''}.`
+            ? t('songs.addedPriority', { pos: posText })
+            : t('songs.addedNormal', { pos: posText })
         )
       } catch (err) {
         flash(err.message || 'Failed to add song', 'error')
@@ -818,6 +783,7 @@ export default {
     })
 
     return {
+      t,
       authStore,
       songStore,
       searchQuery,

@@ -7,7 +7,7 @@
       :class="{ active: isActive('/') }"
     >
       <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home</span>
+      <span class="nav-label">{{ t('nav.home') }}</span>
     </router-link>
 
     <router-link 
@@ -16,7 +16,7 @@
       :class="{ active: isActive('/leaderboard') }"
     >
       <span class="nav-icon">🏆</span>
-      <span class="nav-label">Leader</span>
+      <span class="nav-label">{{ t('nav.leader') }}</span>
     </router-link>
 
     <router-link 
@@ -25,7 +25,7 @@
       :class="{ active: isActive('/songs') }"
     >
       <span class="nav-icon">🎵</span>
-      <span class="nav-label">Songs</span>
+      <span class="nav-label">{{ t('nav.songs') }}</span>
     </router-link>
 
     <router-link 
@@ -34,7 +34,7 @@
       :class="{ active: isActive('/tournaments') }"
     >
       <span class="nav-icon">🎯</span>
-      <span class="nav-label">Calendar</span>
+      <span class="nav-label">{{ t('nav.calendar') }}</span>
     </router-link>
 
     <!-- More Menu Button -->
@@ -45,7 +45,7 @@
       @blur="closeMoreMenu"
     >
       <span class="nav-icon">⋮</span>
-      <span class="nav-label">More</span>
+      <span class="nav-label">{{ t('nav.more') }}</span>
     </button>
 
     <!-- More Menu Dropdown -->
@@ -57,7 +57,7 @@
         @click="handleMoreNavClick('/membership')"
       >
         <span class="more-icon">💳</span>
-        <span class="more-label">Membership</span>
+        <span class="more-label">{{ t('nav.membership') }}</span>
       </router-link>
 
       <router-link 
@@ -67,7 +67,7 @@
         @click="handleMoreNavClick('/battle')"
       >
         <span class="more-icon">⚔️</span>
-        <span class="more-label">Battle</span>
+        <span class="more-label">{{ t('nav.battle') }}</span>
       </router-link>
 
       <router-link 
@@ -78,7 +78,7 @@
         @click="handleMoreNavClick('/admin')"
       >
         <span class="more-icon">👑</span>
-        <span class="more-label">Admin</span>
+        <span class="more-label">{{ t('nav.admin') }}</span>
       </router-link>
 
       <router-link 
@@ -88,7 +88,7 @@
         @click="handleMoreNavClick('/profile')"
       >
         <span class="more-icon">👤</span>
-        <span class="more-label">Profile</span>
+        <span class="more-label">{{ t('nav.profile') }}</span>
       </router-link>
     </div>
   </nav>
@@ -98,6 +98,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'MobileBottomNav',
@@ -105,6 +106,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const authStore = useAuthStore()
+    const { t } = useI18n()
     const isMobile = ref(false)
     const showMoreMenu = ref(false)
 
@@ -180,6 +182,7 @@ export default {
     })
 
     return {
+      t,
       isMobile,
       isActive,
       authStore,

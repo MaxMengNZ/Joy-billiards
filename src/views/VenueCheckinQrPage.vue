@@ -2,25 +2,22 @@
   <div class="venue-qr-page">
     <header class="venue-qr-header">
       <div>
-        <p class="eyebrow">Staff · 投屏给客人扫</p>
-        <h1>Song Queue Check-in QR</h1>
-        <p class="subtitle">
-          Keep this page open on the venue TV / tablet. Guests scan with their phone camera.
-          Code refreshes every 10 minutes. Check-in unlocks song requests for 4 hours.
-        </p>
+        <p class="eyebrow">{{ t('venueQr.eyebrow') }}</p>
+        <h1>{{ t('venueQr.title') }}</h1>
+        <p class="subtitle">{{ t('venueQr.subtitle') }}</p>
       </div>
       <div class="header-actions">
         <button class="btn btn-ghost" type="button" :disabled="loading" @click="refresh(false)">
-          Refresh
+          {{ t('venueQr.refresh') }}
         </button>
         <button class="btn btn-primary" type="button" :disabled="loading" @click="refresh(true)">
-          New code now
+          {{ t('venueQr.newCode') }}
         </button>
       </div>
     </header>
 
     <div class="venue-qr-card" v-if="checkinUrl">
-      <p class="scan-banner">请用手机相机 / 微信扫一扫</p>
+      <p class="scan-banner">{{ t('venueQr.scanBanner') }}</p>
       <img
         class="qr-image"
         :src="qrImageUrl"
@@ -32,24 +29,22 @@
         {{ countdownLabel }}
       </p>
       <div class="code-block">
-        <p class="code-label">手输验证码 · Manual code</p>
+        <p class="code-label">{{ t('venueQr.manualCode') }}</p>
         <p class="code-value">{{ code }}</p>
         <button class="btn btn-ghost btn-sm" type="button" @click="copyCode">
-          {{ copied ? 'Copied' : 'Copy code' }}
+          {{ copied ? t('common.copied') : t('venueQr.copyCode') }}
         </button>
       </div>
-      <p class="hint">
-        Guests who cannot scan can open Songs → enter this code under “Or enter the code”.
-      </p>
+      <p class="hint">{{ t('venueQr.hint') }}</p>
     </div>
 
-    <p v-else-if="loading" class="status">Loading QR…</p>
+    <p v-else-if="loading" class="status">{{ t('venueQr.loading') }}</p>
     <p v-else-if="error" class="status error">{{ error }}</p>
 
     <ol class="staff-steps">
-      <li>Admin opens this page on the TV / counter tablet and leaves it open.</li>
-      <li>Member opens phone Camera (or WeChat Scan) and scans the big QR.</li>
-      <li>Phone opens Song Queue, signs in if needed, then unlocks for 4 hours.</li>
+      <li>{{ t('venueQr.step1') }}</li>
+      <li>{{ t('venueQr.step2') }}</li>
+      <li>{{ t('venueQr.step3') }}</li>
     </ol>
   </div>
 </template>
@@ -57,11 +52,13 @@
 <script>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useSongQueueStore } from '../stores/songQueueStore'
+import { useI18n } from '../i18n'
 
 export default {
   name: 'VenueCheckinQrPage',
   setup() {
     const songStore = useSongQueueStore()
+    const { t } = useI18n()
     const loading = ref(false)
     const error = ref('')
     const code = ref('')
@@ -90,9 +87,10 @@ export default {
 
     const countdownLabel = computed(() => {
       const s = secondsLeft.value
+      if (s <= 0) return t('venueQr.expired')
       const m = Math.floor(s / 60)
       const r = s % 60
-      return `Expires in ${m}:${String(r).padStart(2, '0')}`
+      return t('venueQr.refreshesIn', { time: `${m}:${String(r).padStart(2, '0')}` })
     })
 
     const clearTimers = () => {
@@ -159,6 +157,7 @@ export default {
     })
 
     return {
+      t,
       loading,
       error,
       code,
