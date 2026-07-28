@@ -100,7 +100,7 @@
           📊 {{ t('leaderboardPage.exportExcel') }}
         </button>
       </div>
-      <p class="export-hint">Export current leaderboard data for {{ divisionFilter === 'pro' ? 'Pro' : 'Student' }} Division - {{ getPeriodLabel() }}</p>
+      <p class="export-hint">{{ t('leaderboardPage.exportHint', { division: divisionFilter === 'pro' ? t('leaderboardPage.proDivision') : t('leaderboardPage.studentDivision'), period: getPeriodLabel() }) }}</p>
     </div>
 
     <!-- Leaderboard -->
@@ -337,26 +337,26 @@
       <div v-if="showHistoryModal" class="modal" @click.self="closeHistoryModal">
         <div class="modal-content history-modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
           <div class="modal-header">
-            <h2>📊 Point History - {{ selectedPlayerHistory?.name || 'Player' }}</h2>
+            <h2>📊 {{ t('leaderboardPage.pointHistoryTitle', { name: selectedPlayerHistory?.name || t('leaderboardPage.player') }) }}</h2>
             <button class="btn btn-secondary btn-sm" @click="closeHistoryModal">Close</button>
           </div>
           <div class="modal-body">
             <div v-if="loadingHistory" class="text-center p-4">
               <div class="spinner"></div>
-              <p>Loading history...</p>
+              <p>{{ t('leaderboardPage.loadingHistory') }}</p>
             </div>
             <div v-else-if="pointHistoryList.length === 0" class="text-center p-4">
-              <p class="text-muted">No point history available for this player.</p>
+              <p class="text-muted">{{ t('leaderboardPage.noHistory') }}</p>
             </div>
             <div v-else>
               <!-- Summary Stats -->
               <div class="history-summary">
                 <div class="summary-item">
-                  <span class="summary-label">Total Records:</span>
+                  <span class="summary-label">{{ t('leaderboardPage.totalRecords') }}</span>
                   <span class="summary-value">{{ pointHistoryList.length }}</span>
                 </div>
                 <div class="summary-item">
-                  <span class="summary-label">Total Points:</span>
+                  <span class="summary-label">{{ t('leaderboardPage.totalPoints') }}</span>
                   <span class="summary-value positive">
                     +{{ pointHistoryList.filter(h => h.points_change > 0).reduce((sum, h) => sum + h.points_change, 0) }}
                   </span>
@@ -496,7 +496,7 @@ export default {
     SkeletonLeaderboard
   },
   setup() {
-    const { t } = useI18n()
+    const { t, isZh } = useI18n()
     const authStore = useAuthStore()
     const loading = ref(true)
     const players = ref([])
@@ -551,7 +551,9 @@ export default {
     const currentYear = nzDate.getFullYear()
     const currentMonth = nzDate.getMonth() + 1
     
-    const currentMonthName = nzDate.toLocaleString('en-US', { month: 'long', timeZone: 'Pacific/Auckland' })
+    const currentMonthName = computed(() =>
+      nzDate.toLocaleString(isZh.value ? 'zh-CN' : 'en-US', { month: 'long', timeZone: 'Pacific/Auckland' })
+    )
     
     // For Annual Rankings - show current year and last year only
     const selectedYear = ref(currentYear)
@@ -561,8 +563,10 @@ export default {
     const selectedMonth = ref(`${currentYear}-${currentMonth}`)
     const availableMonths = computed(() => {
       const months = []
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                         'July', 'August', 'September', 'October', 'November', 'December']
+      const monthNames = isZh.value
+        ? ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+        : ['January', 'February', 'March', 'April', 'May', 'June',
+           'July', 'August', 'September', 'October', 'November', 'December']
       
       // Show current year's months from January to current month (most recent first)
       for (let m = currentMonth; m >= 1; m--) {
@@ -1288,6 +1292,7 @@ export default {
     return {
       loading,
       t,
+      isZh,
       players,
       activeTab,
       divisionFilter, // 🎯 新增：组别过滤

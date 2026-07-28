@@ -137,7 +137,7 @@
               {{ t('membershipPage.noMembershipFee') }}
             </div>
           </div>
-          <div class="savings-badge">Save $208/year (2h/week) | $2/hour on Q7</div>
+          <div class="savings-badge">{{ t('membershipPage.plusSaving') }}</div>
           <button class="btn btn-primary btn-lg" @click="contactUs">{{ t('membershipPage.upgradeNow') }}</button>
         </div>
 
@@ -175,7 +175,7 @@
               {{ t('membershipPage.noMembershipFee') }}
             </div>
           </div>
-          <div class="savings-badge">Save $416/year (2h/week) | $4/hour on Q7</div>
+          <div class="savings-badge">{{ t('membershipPage.proSaving') }}</div>
           <button class="btn btn-success btn-lg" @click="contactUs">{{ t('membershipPage.upgradeNow') }}</button>
         </div>
 
@@ -200,20 +200,20 @@
             <li><span class="feature-icon">🎂</span> {{ t('membershipPage.birthdayGift') }}</li>
           </ul>
           <div class="pricing-clarification pricing-clarification-vip">
-            <div class="clarification-title">💡 How VIP Works</div>
+            <div class="clarification-title">💡 {{ t('membershipPage.vipHowItWorks') }}</div>
             <div class="clarification-item">
-              <span class="clarification-label">1. Top up $1000:</span>
-              <span class="clarification-value">Get $1000 playing credit</span>
+              <span class="clarification-label">{{ t('membershipPage.topUpStep', { amount: 1000 }) }}</span>
+              <span class="clarification-value">{{ t('membershipPage.getCredit', { amount: 1000 }) }}</span>
             </div>
             <div class="clarification-item">
-              <span class="clarification-label">2. Play & pay:</span>
+              <span class="clarification-label">{{ t('membershipPage.playPay') }}</span>
               <span class="clarification-value"><strong>$17/h (Q7) | $22/h (Q8)</strong></span>
             </div>
             <div class="clarification-note clarification-note-vip">
-              <strong>No membership fee!</strong> Your $1000 top-up IS your playing money - you get the lowest rates guaranteed!
+              {{ t('membershipPage.vipNoFee') }}
             </div>
           </div>
-          <div class="savings-badge premium">Save $624/year (2h/week) | ⚠️ Limited Slots</div>
+          <div class="savings-badge premium">{{ t('membershipPage.proMaxSaving') }}</div>
           <button class="btn btn-warning btn-lg" @click="contactUs">{{ t('membershipPage.applyVip') }}</button>
         </div>
       </div>
@@ -221,12 +221,12 @@
 
     <!-- Comparison Table -->
     <section class="comparison-section">
-      <h2 class="section-title">Feature Comparison</h2>
+      <h2 class="section-title">{{ t('membershipPage.featureComparison') }}</h2>
       <div class="table-container">
         <table class="comparison-table">
           <thead>
             <tr>
-              <th class="feature-column">Features</th>
+              <th class="feature-column">{{ t('membershipPage.features') }}</th>
               <th class="tier-column lite">🎱 Lite</th>
               <th class="tier-column plus">⭐ Plus</th>
               <th class="tier-column pro">💎 Pro</th>
@@ -235,74 +235,74 @@
           </thead>
           <tbody>
             <tr>
-              <td class="feature-name">Entry Requirement</td>
-              <td>Free</td>
+              <td class="feature-name">{{ t('membershipPage.entryRequirement') }}</td>
+              <td>{{ t('membershipPage.free') }}</td>
               <td>≥ $200</td>
               <td>≥ $500</td>
               <td class="best">≥ $1000</td>
             </tr>
             <tr>
-              <td class="feature-name">Credit After Top-up</td>
+              <td class="feature-name">{{ t('membershipPage.creditAfterTopUp') }}</td>
               <td>-</td>
               <td>$200</td>
               <td>$500</td>
               <td class="best">$1000</td>
             </tr>
             <tr>
-              <td class="feature-name">Q7 (Silver Leg Table) Rate</td>
-              <td>$23/hour</td>
-              <td class="highlight">$21/hour</td>
-              <td class="highlight">$19/hour</td>
-              <td class="highlight best">$17/hour</td>
+              <td class="feature-name">{{ t('membershipPage.q7Rate') }}</td>
+              <td>$23/{{ t('home.perHour') }}</td>
+              <td class="highlight">$21/{{ t('home.perHour') }}</td>
+              <td class="highlight">$19/{{ t('home.perHour') }}</td>
+              <td class="highlight best">$17/{{ t('home.perHour') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Q8 (Gold Leg Table) Rate</td>
-              <td>$28/hour</td>
-              <td class="highlight">$26/hour</td>
-              <td class="highlight">$24/hour</td>
-              <td class="highlight best">$22/hour</td>
+              <td class="feature-name">{{ t('membershipPage.q8Rate') }}</td>
+              <td>$28/{{ t('home.perHour') }}</td>
+              <td class="highlight">$26/{{ t('home.perHour') }}</td>
+              <td class="highlight">$24/{{ t('home.perHour') }}</td>
+              <td class="highlight best">$22/{{ t('home.perHour') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Priority Booking</td>
-              <td>Same-day 2h</td>
-              <td>6h advance</td>
-              <td class="highlight">12h advance</td>
-              <td class="best">24h VIP</td>
+              <td class="feature-name">{{ t('membershipPage.priorityBookingLabel') }}</td>
+              <td>{{ t('membershipPage.sameDay2h') }}</td>
+              <td>{{ t('membershipPage.advanceHours', { hours: 6 }) }}</td>
+              <td class="highlight">{{ t('membershipPage.advanceHours', { hours: 12 }) }}</td>
+              <td class="best">{{ t('membershipPage.vipPriorityBooking') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Equipment</td>
-              <td>Basic cues</td>
-              <td>Premium cues</td>
-              <td>Premium cues</td>
-              <td class="best">Premium cues</td>
+              <td class="feature-name">{{ t('membershipPage.equipment') }}</td>
+              <td>{{ t('membershipPage.basicCues') }}</td>
+              <td>{{ t('membershipPage.premiumCuesShort') }}</td>
+              <td>{{ t('membershipPage.premiumCuesShort') }}</td>
+              <td class="best">{{ t('membershipPage.premiumCuesShort') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Loyalty Points</td>
+              <td class="feature-name">{{ t('membershipPage.loyaltyPoints', { multiplier: '' }) }}</td>
               <td>1.0x</td>
               <td>1.2x</td>
               <td>1.4x</td>
               <td class="best">1.6x</td>
             </tr>
             <tr>
-              <td class="feature-name">Birthday Gift</td>
+              <td class="feature-name">{{ t('membershipPage.birthdayGiftLabel') }}</td>
               <td>-</td>
               <td>-</td>
               <td>-</td>
-              <td class="best">✅ Exclusive</td>
+              <td class="best">✅ {{ t('membershipPage.exclusive') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Availability</td>
-              <td>Unlimited</td>
-              <td>Unlimited</td>
-              <td>Unlimited</td>
-              <td class="best">⚠️ Limited Slots</td>
+              <td class="feature-name">{{ t('membershipPage.availability') }}</td>
+              <td>{{ t('membershipPage.unlimited') }}</td>
+              <td>{{ t('membershipPage.unlimited') }}</td>
+              <td>{{ t('membershipPage.unlimited') }}</td>
+              <td class="best">⚠️ {{ t('membershipPage.limitedSlots') }}</td>
             </tr>
             <tr>
-              <td class="feature-name">Account Validity</td>
-              <td>Permanent</td>
-              <td>12 months</td>
-              <td>12 months</td>
-              <td>12 months</td>
+              <td class="feature-name">{{ t('membershipPage.accountValidity') }}</td>
+              <td>{{ t('membershipPage.permanent') }}</td>
+              <td>{{ t('membershipPage.months12') }}</td>
+              <td>{{ t('membershipPage.months12') }}</td>
+              <td>{{ t('membershipPage.months12') }}</td>
             </tr>
           </tbody>
         </table>
@@ -311,68 +311,68 @@
 
     <!-- How It Works -->
     <section class="how-it-works-section">
-      <h2 class="section-title">How It Works</h2>
+      <h2 class="section-title">{{ t('membershipPage.howItWorks') }}</h2>
       <div class="steps-grid">
         <div class="step-card">
           <div class="step-number">1</div>
           <div class="step-icon">📝</div>
-          <h3>Register</h3>
-          <p>Create your free Lite account and get your membership card number instantly</p>
+          <h3>{{ t('membershipPage.register') }}</h3>
+          <p>{{ t('membershipPage.registerDesc') }}</p>
         </div>
         <div class="step-card">
           <div class="step-number">2</div>
           <div class="step-icon">💳</div>
-          <h3>Recharge</h3>
-          <p>Add credit to your account (≥$200 for Plus, ≥$500 for Pro, ≥$1000 for Pro Max)</p>
+          <h3>{{ t('membershipPage.recharge') }}</h3>
+          <p>{{ t('membershipPage.rechargeDesc') }}</p>
         </div>
         <div class="step-card">
           <div class="step-number">3</div>
           <div class="step-icon">🎱</div>
-          <h3>Play & Save</h3>
-          <p>Enjoy discounted rates and exclusive benefits every time you play</p>
+          <h3>{{ t('membershipPage.playAndSave') }}</h3>
+          <p>{{ t('membershipPage.playAndSaveDesc') }}</p>
         </div>
         <div class="step-card">
           <div class="step-number">4</div>
           <div class="step-icon">⭐</div>
-          <h3>Earn Points</h3>
-          <p>Earn loyalty points with multipliers (Lite 1.0x → Pro Max 1.6x) and redeem for rewards</p>
+          <h3>{{ t('membershipPage.earnPoints') }}</h3>
+          <p>{{ t('membershipPage.earnPointsDesc') }}</p>
         </div>
       </div>
     </section>
 
     <!-- Benefits Details -->
     <section class="benefits-section">
-      <h2 class="section-title">Membership Benefits Details</h2>
+      <h2 class="section-title">{{ t('membershipPage.benefitsDetails') }}</h2>
       <div class="benefits-grid">
         <div class="benefit-card">
           <div class="benefit-icon">💰</div>
-          <h3>Save Big Anytime</h3>
-          <p>Save up to $6/hour on Q7! Pro Max members save $3,120 per year (10h/week). Member rates apply anytime during opening hours - evenings and weekends included!</p>
+          <h3>{{ t('membershipPage.saveAnytime') }}</h3>
+          <p>{{ t('membershipPage.saveAnytimeDesc') }}</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">💰</div>
-          <h3>Simple Transparent Pricing</h3>
-          <p>No complicated calculations! Top up and enjoy your member discount immediately. What you pay is what you get - clear and fair!</p>
+          <h3>{{ t('membershipPage.transparentPricing') }}</h3>
+          <p>{{ t('membershipPage.transparentPricingDesc') }}</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">📅</div>
-          <h3>Book 24h in Advance</h3>
-          <p>Pro Max VIP members can book up to 24 hours ahead with highest priority. Pro: 12h. Plus: 6h. Secure your favorite table!</p>
+          <h3>{{ t('membershipPage.bookAhead') }}</h3>
+          <p>{{ t('membershipPage.bookAheadDesc') }}</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">👑</div>
-          <h3>Pro Max Limited Slots</h3>
-          <p>Exclusive VIP membership with strictly limited availability! Enjoy 24h priority booking, 1.6x points, and birthday gifts. Apply before slots fill up!</p>
+          <h3>{{ t('membershipPage.proMaxLimited') }}</h3>
+          <p>{{ t('membershipPage.proMaxLimitedDesc') }}</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">🎂</div>
-          <h3>Birthday Surprises</h3>
-          <p>Pro Max members receive exclusive birthday gifts - premium drinks or Joy Billiards merchandise. Celebrate your special day with us!</p>
+          <h3>{{ t('membershipPage.birthdaySurprise') }}</h3>
+          <p>{{ t('membershipPage.birthdaySurpriseDesc') }}</p>
         </div>
         <div class="benefit-card">
           <div class="benefit-icon">😊</div>
-          <h3>First Mistake Forgiven</h3>
-          <p>First time no-show or late cancellation? We've got you covered! No fees for your first mistake (once per 12 months). We understand life happens!</p>
+          <h3>{{ t('membershipPage.firstForgiven') }}</h3>
+          <p>{{ t('membershipPage.firstForgivenDesc') }}</p>
         </div>
       </div>
     </section>
@@ -380,42 +380,42 @@
     <!-- Important Notes -->
     <section class="notes-section">
       <div class="notes-card">
-        <h2 class="card-title">💡 Important Information</h2>
+        <h2 class="card-title">💡 {{ t('membershipPage.importantInfo') }}</h2>
         <div class="notes-content">
           <div class="note-item">
             <span class="note-icon">✨</span>
             <div class="note-text">
-              <strong>Member Rates Anytime:</strong> Discounted member rates (Q7: $21/$19/$17, Q8: $26/$24/$22) apply anytime during opening hours. No time restrictions!
+              <strong>{{ t('membershipPage.memberRatesAnytimeTitle') }}</strong> {{ t('membershipPage.memberRatesAnytimeText') }}
             </div>
           </div>
           <div class="note-item">
             <span class="note-icon">🕐</span>
             <div class="note-text">
-              <strong>Free Hours Restriction:</strong> Free hours (gifted or redeemed with points) ONLY valid Mon-Fri 9AM-5PM. Not valid on evenings, weekends, public holidays, or tournament days.
+              <strong>{{ t('membershipPage.freeHoursTitle') }}</strong> {{ t('membershipPage.freeHoursText') }}
             </div>
           </div>
           <div class="note-item">
             <span class="note-icon">📅</span>
             <div class="note-text">
-              <strong>Booking & Cancellation:</strong> Plus: No deposit. Pro/Pro Max: 1-hour pre-authorization. Cancel <3h = 50% fee. No-show = 100% fee. First violation forgiven.
+              <strong>{{ t('membershipPage.bookingCancellationTitle') }}</strong> {{ t('membershipPage.bookingCancellationText') }}
             </div>
           </div>
           <div class="note-item">
             <span class="note-icon">👑</span>
             <div class="note-text">
-              <strong>Pro Max Limited Slots:</strong> Pro Max membership has strictly limited availability to ensure VIP service quality. A waitlist will be applied once slots are full. Secure your VIP status early!
+              <strong>{{ t('membershipPage.limitedTitle') }}</strong> {{ t('membershipPage.limitedText') }}
             </div>
           </div>
           <div class="note-item">
             <span class="note-icon">❌</span>
             <div class="note-text">
-              <strong>Non-Refundable & Non-Transferable:</strong> Balance cannot be refunded or transferred. Points valid for 12 months. No stacking with other promotions.
+              <strong>{{ t('membershipPage.nonRefundableTitle') }}</strong> {{ t('membershipPage.nonRefundableText') }}
             </div>
           </div>
           <div class="note-item">
             <span class="note-icon">📉</span>
             <div class="note-text">
-              <strong>Auto Tier Adjustment:</strong> Renewal amount determines your tier. Recharge <$500 as Pro → auto-downgrade to Plus. Changes take effect instantly!
+              <strong>{{ t('membershipPage.tierAdjustmentTitle') }}</strong> {{ t('membershipPage.tierAdjustmentText') }}
             </div>
           </div>
         </div>
@@ -424,32 +424,32 @@
 
     <!-- Additional Benefits -->
     <section class="additional-benefits-section">
-      <h2 class="section-title">Additional Member Benefits</h2>
+      <h2 class="section-title">{{ t('membershipPage.additionalBenefits') }}</h2>
       <div class="row">
         <div class="col col-2">
           <div class="benefit-detail-card">
             <div class="benefit-detail-icon">⭐</div>
-            <h3>Loyalty Points System</h3>
-            <p class="benefit-description">Earn points with multipliers (1.0x - 1.6x)</p>
+            <h3>{{ t('membershipPage.loyaltySystem') }}</h3>
+            <p class="benefit-description">{{ t('membershipPage.loyaltySystemDesc') }}</p>
             <ul class="benefit-list">
               <li>Lite: 1.0x | Plus: 1.2x | Pro: 1.4x | Pro Max: 1.6x</li>
-              <li>Redeem for off-peak play vouchers (Mon-Fri 9AM-5PM)</li>
-              <li>Exchange for beverages and snacks</li>
-              <li>Get equipment accessories</li>
-              <li>12-month rolling validity</li>
+              <li>{{ t('membershipPage.redeemOffPeak') }}</li>
+              <li>{{ t('membershipPage.exchangeFood') }}</li>
+              <li>{{ t('membershipPage.equipmentAccessories') }}</li>
+              <li>{{ t('membershipPage.rollingValidity') }}</li>
             </ul>
           </div>
         </div>
         <div class="col col-2">
           <div class="benefit-detail-card">
             <div class="benefit-detail-icon">🎉</div>
-            <h3>Member Events</h3>
-            <p class="benefit-description">Exclusive events for our community</p>
+            <h3>{{ t('membershipPage.memberEvents') }}</h3>
+            <p class="benefit-description">{{ t('membershipPage.memberEventsDesc') }}</p>
             <ul class="benefit-list">
-              <li>Monthly member tournaments</li>
-              <li>Quarterly VIP championships</li>
-              <li>Member-only social nights</li>
-              <li>Special discount days</li>
+              <li>{{ t('membershipPage.monthlyEvents') }}</li>
+              <li>{{ t('membershipPage.quarterlyVip') }}</li>
+              <li>{{ t('membershipPage.socialNights') }}</li>
+              <li>{{ t('membershipPage.discountDays') }}</li>
             </ul>
           </div>
         </div>
@@ -458,48 +458,48 @@
 
     <!-- Pricing Examples -->
     <section class="pricing-examples-section">
-      <h2 class="section-title">Pricing Examples</h2>
+      <h2 class="section-title">{{ t('membershipPage.pricingExamples') }}</h2>
       <div class="examples-grid">
         <div class="example-card">
-          <h3>🎱 Casual Player (2h/week, Q7)</h3>
+          <h3>🎱 {{ t('membershipPage.casualExample') }}</h3>
           <div class="example-calc">
             <div class="calc-row">
-              <span>Lite Member:</span>
-              <span class="price">$23 × 2h × 4 = <strong>$184/month</strong></span>
+              <span>Lite {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$23 × 2h × 4 = <strong>$184{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
             <div class="calc-row highlight">
-              <span>Plus Member:</span>
-              <span class="price">$21 × 2h × 4 = <strong>$168/month</strong></span>
+              <span>Plus {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$21 × 2h × 4 = <strong>$168{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
-            <div class="savings">💰 Save $16/month = $192/year</div>
+            <div class="savings">💰 {{ t('membershipPage.saveMonthly', { month: 16, year: 192 }) }}</div>
           </div>
         </div>
         <div class="example-card">
-          <h3>🏆 Regular Player (10h/week, Q7)</h3>
+          <h3>🏆 {{ t('membershipPage.regularExample') }}</h3>
           <div class="example-calc">
             <div class="calc-row">
-              <span>Lite Member:</span>
-              <span class="price">$23 × 10h × 4 = <strong>$920/month</strong></span>
+              <span>Lite {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$23 × 10h × 4 = <strong>$920{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
             <div class="calc-row highlight">
-              <span>Pro Member:</span>
-              <span class="price">$19 × 10h × 4 = <strong>$760/month</strong></span>
+              <span>Pro {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$19 × 10h × 4 = <strong>$760{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
-            <div class="savings">💰 Save $160/month = $1,920/year</div>
+            <div class="savings">💰 {{ t('membershipPage.saveMonthly', { month: 160, year: '1,920' }) }}</div>
           </div>
         </div>
         <div class="example-card">
-          <h3>💎 Enthusiast (10h/week, Q7)</h3>
+          <h3>💎 {{ t('membershipPage.enthusiastExample') }}</h3>
           <div class="example-calc">
             <div class="calc-row">
-              <span>Lite Member:</span>
-              <span class="price">$23 × 10h × 4 = <strong>$920/month</strong></span>
+              <span>Lite {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$23 × 10h × 4 = <strong>$920{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
             <div class="calc-row highlight best">
-              <span>Pro Max Member:</span>
-              <span class="price">$17 × 10h × 4 = <strong>$680/month</strong></span>
+              <span>Pro Max {{ t('membershipPage.memberSuffix') }}</span>
+              <span class="price">$17 × 10h × 4 = <strong>$680{{ t('membershipPage.perMonth') }}</strong></span>
             </div>
-            <div class="savings premium">💎 Save $240/month = $2,880/year + VIP Perks</div>
+            <div class="savings premium">💎 {{ t('membershipPage.vipSaveMonthly') }}</div>
           </div>
         </div>
       </div>
@@ -507,31 +507,31 @@
 
     <!-- FAQ Section -->
     <section class="faq-section">
-      <h2 class="section-title">Frequently Asked Questions</h2>
+      <h2 class="section-title">{{ t('membershipPage.faq') }}</h2>
       <div class="faq-grid">
         <div class="faq-item">
-          <h3 class="faq-question">💰 Can I use my member rates on weekends?</h3>
-          <p class="faq-answer">YES! Member discounted rates apply anytime - evenings, weekends, and holidays included! Only free hours vouchers are restricted to Mon-Fri 9AM-5PM.</p>
+          <h3 class="faq-question">💰 {{ t('membershipPage.faqWeekendQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqWeekendA') }}</p>
         </div>
         <div class="faq-item">
-          <h3 class="faq-question">👑 How limited is Pro Max membership?</h3>
-          <p class="faq-answer">Pro Max has strictly limited slots to ensure VIP service quality. Once full, a waitlist applies. Secure your spot early for 24h booking, 1.6x points, and birthday gifts!</p>
+          <h3 class="faq-question">👑 {{ t('membershipPage.faqLimitedQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqLimitedA') }}</p>
         </div>
         <div class="faq-item">
-          <h3 class="faq-question">🎁 What if I miss my booking?</h3>
-          <p class="faq-answer">First time forgiven! Your first no-show or late cancellation (within 12 months) is fee-free. We understand life happens. From the second time, standard fees apply.</p>
+          <h3 class="faq-question">🎁 {{ t('membershipPage.faqMissQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqMissA') }}</p>
         </div>
         <div class="faq-item">
-          <h3 class="faq-question">📅 How far in advance can I book?</h3>
-          <p class="faq-answer">Lite: Same-day (2h) | Plus: 6h advance | Pro: 12h advance | Pro Max: 24h VIP priority. Higher tiers = better table availability!</p>
+          <h3 class="faq-question">📅 {{ t('membershipPage.faqBookingQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqBookingA') }}</p>
         </div>
         <div class="faq-item">
-          <h3 class="faq-question">⭐ How fast do I earn points?</h3>
-          <p class="faq-answer">Lite: 1.0x | Plus: 1.2x | Pro: 1.4x | Pro Max: 1.6x. Example: Spend $100 → Pro Max earns 160 points vs Lite's 100 points! Redeem for play vouchers or drinks.</p>
+          <h3 class="faq-question">⭐ {{ t('membershipPage.faqPointsQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqPointsA') }}</p>
         </div>
         <div class="faq-item">
-          <h3 class="faq-question">🎂 Do Pro Max members get birthday perks?</h3>
-          <p class="faq-answer">Yes! Pro Max members receive exclusive birthday gifts during their birthday month - premium drinks or Joy Billiards merchandise. It's our way of celebrating you!</p>
+          <h3 class="faq-question">🎂 {{ t('membershipPage.faqBirthdayQ') }}</h3>
+          <p class="faq-answer">{{ t('membershipPage.faqBirthdayA') }}</p>
         </div>
       </div>
     </section>
@@ -539,23 +539,23 @@
     <!-- Call to Action -->
     <section class="cta-section">
       <div class="cta-content">
-        <h2>Ready to Join Joy Billiards?</h2>
-        <p>Start with a free Lite membership or upgrade to unlock exclusive benefits!</p>
+        <h2>{{ t('membershipPage.ctaTitle') }}</h2>
+        <p>{{ t('membershipPage.ctaDesc') }}</p>
         <div class="cta-info">
           <p class="cta-contact">
             📍 88 Tristram Street, Hamilton Central<br>
             📞 022 166 0688 | 📧 info@joybilliards.co.nz
           </p>
           <p class="cta-hours">
-            ⏰ Mon-Thu: 9AM-1AM | Fri-Sat: 9AM-2AM | Sun: 10AM-1AM
+            ⏰ {{ t('membershipPage.ctaHours') }}
           </p>
         </div>
         <div class="cta-buttons">
           <router-link to="/register" class="btn btn-primary btn-lg">
-            🎱 Join Free Now
+            🎱 {{ t('membershipPage.joinNow') }}
           </router-link>
           <button class="btn btn-warning btn-lg" @click="contactUs">
-            📞 Call Us Now
+            📞 {{ t('membershipPage.callNow') }}
           </button>
         </div>
       </div>
