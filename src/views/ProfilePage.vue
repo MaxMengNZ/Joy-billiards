@@ -478,7 +478,8 @@ export default {
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
-    const { t, list } = useI18n()
+    const { t, list, isZh } = useI18n()
+    const notice = (zh, en) => isZh.value ? zh : en
 
     const loading = ref(true)
     const profile = ref(null)
@@ -698,13 +699,13 @@ export default {
             setTimeout(() => loadProfile(), 1000)
           } else {
             console.error('Profile not found after maximum retries')
-            alert('Unable to load profile. Please contact support.')
+            alert(notice('无法加载个人资料，请联系工作人员。', 'Unable to load profile. Please contact support.'))
             loading.value = false
           }
         }
       } catch (err) {
         console.error('Error loading profile:', err)
-        alert('Error loading profile: ' + err.message)
+        alert(notice('加载个人资料失败：', 'Error loading profile: ') + err.message)
         loading.value = false
       } finally {
         if (profile.value || retryCount.value >= maxRetries) {
@@ -772,10 +773,10 @@ export default {
 
         profile.value = data
         isEditing.value = false
-        alert('Profile updated successfully!')
+        alert(notice('个人资料已保存！', 'Profile updated successfully!'))
       } catch (err) {
         console.error('Error updating profile:', err)
-        alert('Error updating profile: ' + err.message)
+        alert(notice('保存个人资料失败：', 'Error updating profile: ') + err.message)
       }
     }
 
@@ -788,12 +789,12 @@ export default {
       console.log('=== PASSWORD CHANGE START ===')
       
       if (newPassword.value.length < 6) {
-        alert('❌ Password must be at least 6 characters')
+        alert('❌ ' + t('auth.passwordHint'))
         return
       }
 
       if (newPassword.value !== confirmNewPassword.value) {
-        alert('❌ Passwords do not match')
+        alert('❌ ' + t('auth.passwordsMismatch'))
         return
       }
 
@@ -828,7 +829,7 @@ export default {
           // Check if it's a timeout error
           if (errorMsg.includes('timeout')) {
             console.log('Timeout detected - assuming password was updated')
-            alert('⚠️ Request timed out, but your password has likely been updated.\n\nYou will be redirected to the login page.\nPlease try logging in with your NEW password.')
+            alert(notice('⚠️ 请求超时，但密码可能已成功更新。\n\n页面将返回登录页，请尝试使用新密码登录。', '⚠️ Request timed out, but your password may have been updated.\n\nYou will be redirected to sign in. Try your new password.'))
             
             sessionStorage.setItem('passwordChanged', 'true')
             sessionStorage.setItem('passwordTimeout', 'true')
@@ -839,7 +840,7 @@ export default {
             return
           }
           
-          alert('❌ Error updating password: ' + errorMsg)
+          alert('❌ ' + notice('更新密码失败：', 'Error updating password: ') + errorMsg)
           isChangingPassword.value = false
         }
       } catch (error) {
@@ -848,7 +849,7 @@ export default {
         // If it's a timeout error, assume password was updated (Supabase behavior)
         if (error.message && error.message.includes('timeout')) {
           console.log('Timeout detected - assuming password was updated')
-          alert('⚠️ Request timed out, but your password has likely been updated.\n\nYou will be redirected to the login page.\nPlease try logging in with your NEW password.')
+          alert(notice('⚠️ 请求超时，但密码可能已成功更新。\n\n页面将返回登录页，请尝试使用新密码登录。', '⚠️ Request timed out, but your password may have been updated.\n\nYou will be redirected to sign in. Try your new password.'))
           
           sessionStorage.setItem('passwordChanged', 'true')
           sessionStorage.setItem('passwordTimeout', 'true')
@@ -859,7 +860,7 @@ export default {
           return
         }
         
-        alert('❌ Error: ' + (error.message || 'Unknown error'))
+        alert('❌ ' + notice('发生错误：', 'Error: ') + (error.message || notice('未知错误', 'Unknown error')))
         isChangingPassword.value = false
       }
     }
@@ -871,7 +872,7 @@ export default {
     }
 
     const showUpgradeInfo = () => {
-      alert('Contact Joy Billiards staff to upgrade your membership!\n📞 022 166 0688')
+      alert(notice('请联系 Joy Billiards 工作人员升级会员！\n📞 022 166 0688', 'Contact Joy Billiards staff to upgrade your membership!\n📞 022 166 0688'))
     }
 
     const formatMembershipLevel = (level) => {
@@ -963,7 +964,7 @@ export default {
     }
 
     const cancelTournamentReg = async (registration) => {
-      if (!confirm(`Cancel registration for ${registration.tournament.name}?`)) return
+      if (!confirm(notice(`确定取消报名“${registration.tournament.name}”吗？`, `Cancel registration for ${registration.tournament.name}?`))) return
 
       try {
         const { error } = await supabase
@@ -973,10 +974,10 @@ export default {
 
         if (error) throw error
 
-        alert('Registration cancelled successfully!')
+        alert(notice('报名已取消。', 'Registration cancelled.'))
         await loadProfile()
       } catch (err) {
-        alert('Error cancelling registration: ' + err.message)
+        alert(notice('取消报名失败：', 'Error cancelling registration: ') + err.message)
       }
     }
 
