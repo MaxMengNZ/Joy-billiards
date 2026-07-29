@@ -18,6 +18,9 @@
           <span class="chip chip-warn" v-else-if="authStore.isMember">
             {{ t('songs.scanToRequest') }}
           </span>
+          <span class="chip" v-if="authStore.isMember && songStore.canRequestSongs">
+            {{ t('songs.dailyLeft', { remaining: songStore.dailyQuota.remaining, limit: songStore.dailyQuota.limit }) }}
+          </span>
           <span
             class="chip chip-priority"
             v-if="authStore.isProMax && songStore.canRequestSongs"
@@ -349,7 +352,8 @@
               <div class="result-actions">
                 <button
                   class="btn btn-secondary btn-sm"
-                  :disabled="songStore.submitting"
+                  :disabled="songStore.submitting || songStore.dailyQuota.remaining <= 0"
+                  :title="songStore.dailyQuota.remaining <= 0 ? t('songs.dailyLimit') : ''"
                   @click="addTrack(track, false)"
                 >
                   {{ t('songs.addToQueue') }}
@@ -357,11 +361,17 @@
                 <button
                   v-if="authStore.isProMax"
                   class="btn btn-priority btn-sm"
-                  :disabled="songStore.submitting || songStore.priorityQuota.remaining <= 0"
-                  :title="
+                  :disabled="
+                    songStore.submitting ||
+                    songStore.dailyQuota.remaining <= 0 ||
                     songStore.priorityQuota.remaining <= 0
-                      ? t('songs.priorityLimit')
-                      : t('songs.priorityTip')
+                  "
+                  :title="
+                    songStore.dailyQuota.remaining <= 0
+                      ? t('songs.dailyLimit')
+                      : songStore.priorityQuota.remaining <= 0
+                        ? t('songs.priorityLimit')
+                        : t('songs.priorityTip')
                   "
                   @click="addTrack(track, true)"
                 >

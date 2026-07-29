@@ -74,7 +74,8 @@ export const useSongQueueStore = defineStore('songQueue', {
     searchResults: [],
     searchMock: false,
     searchMessage: null,
-    priorityQuota: { used: 0, limit: 5, remaining: 5, is_pro_max: false },
+    priorityQuota: { used: 0, limit: 10, remaining: 10, is_pro_max: false },
+    dailyQuota: { used: 0, limit: 3, remaining: 3 },
     loading: false,
     searching: false,
     submitting: false,
@@ -357,10 +358,15 @@ export const useSongQueueStore = defineStore('songQueue', {
         if (error) throw error
         if (data) {
           this.priorityQuota = {
-            used: data.used ?? 0,
-            limit: data.limit ?? 5,
-            remaining: data.remaining ?? 0,
+            used: data.priority_used ?? data.used ?? 0,
+            limit: data.priority_limit ?? data.limit ?? 0,
+            remaining: data.priority_remaining ?? data.remaining ?? 0,
             is_pro_max: !!data.is_pro_max
+          }
+          this.dailyQuota = {
+            used: data.daily_used ?? 0,
+            limit: data.daily_limit ?? 3,
+            remaining: data.daily_remaining ?? 0
           }
         }
       } catch (err) {
@@ -541,6 +547,16 @@ export const useSongQueueStore = defineStore('songQueue', {
       if (isPriority && !auth.isAdmin && !this.venuePresence.present) {
         throw new Error('Priority queue requires venue check-in.')
       }
+      if (this.dailyQuota.remaining <= 0) {
+        throw new Error(
+          `Daily song request limit reached (${this.dailyQuota.limit}). Come back tomorrow or upgrade your membership.`
+        )
+      }
+      if (isPriority && this.priorityQuota.remaining <= 0) {
+        throw new Error(
+          `Daily priority limit reached (${this.priorityQuota.limit}). You can still use the normal queue.`
+        )
+      }
 
       this.submitting = true
       this.error = null
@@ -559,7 +575,18 @@ export const useSongQueueStore = defineStore('songQueue', {
         if (error) throw error
         if (data?.priority_left_today != null) {
           this.priorityQuota.remaining = data.priority_left_today
-          this.priorityQuota.used = this.priorityQuota.limit - data.priority_left_today
+          this.priorityQuota.used = Math.max(
+            0,
+            (this.priorityQuota.limit || 0) - data.priority_left_today
+          )
+        }
+        if (data?.daily_left_today != null) {
+          this.dailyQuota.remaining = data.daily_left_today
+          if (data.daily_limit != null) this.dailyQuota.limit = data.daily_limit
+          this.dailyQuota.used = Math.max(
+            0,
+            (this.dailyQuota.limit || 0) - data.daily_left_today
+          )
         }
         // Optimistic insert if RPC returned the row
         if (data?.request) {

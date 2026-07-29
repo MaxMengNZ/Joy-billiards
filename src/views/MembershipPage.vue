@@ -99,6 +99,7 @@
             <li><span class="feature-icon">🎯</span> {{ t('membershipPage.basicCues') }}</li>
             <li><span class="feature-icon">📊</span> {{ t('membershipPage.basicStats') }}</li>
             <li><span class="feature-icon">📅</span> {{ t('membershipPage.sameDayBooking') }}</li>
+            <li><span class="feature-icon">🎵</span> {{ t('membershipPage.songsPerDay', { count: 3 }) }}</li>
             <li><span class="feature-icon">💰</span> {{ t('membershipPage.loyaltyPoints', { multiplier: '1.0x' }) }}</li>
           </ul>
           <div class="lite-note">{{ t('membershipPage.allPricesGst') }}</div>
@@ -122,6 +123,7 @@
             <li><span class="feature-icon">⭐</span> {{ t('membershipPage.fasterPoints', { multiplier: '1.2x' }) }}</li>
             <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
             <li><span class="feature-icon">📅</span> {{ t('membershipPage.priorityBooking', { hours: 6 }) }}</li>
+            <li><span class="feature-icon">🎵</span> {{ t('membershipPage.songsPerDay', { count: 5 }) }}</li>
           </ul>
           <div class="pricing-clarification">
             <div class="clarification-title">💡 {{ t('membershipPage.howItWorks') }}</div>
@@ -160,6 +162,7 @@
             <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
             <li><span class="feature-icon">📅</span> {{ t('membershipPage.priorityBooking', { hours: 12 }) }}</li>
             <li><span class="feature-icon">🎖️</span> {{ t('membershipPage.tournamentPriority') }}</li>
+            <li><span class="feature-icon">🎵</span> {{ t('membershipPage.songsPerDay', { count: 7 }) }}</li>
           </ul>
           <div class="pricing-clarification">
             <div class="clarification-title">💡 {{ t('membershipPage.howItWorks') }}</div>
@@ -198,6 +201,7 @@
             <li><span class="feature-icon">🎯</span> {{ t('membershipPage.premiumCues') }}</li>
             <li><span class="feature-icon">📅</span> {{ t('membershipPage.vipPriorityBooking') }}</li>
             <li><span class="feature-icon">🎂</span> {{ t('membershipPage.birthdayGift') }}</li>
+            <li><span class="feature-icon">🎵</span> {{ t('membershipPage.songsPerDayProMax') }}</li>
           </ul>
           <div class="pricing-clarification pricing-clarification-vip">
             <div class="clarification-title">💡 {{ t('membershipPage.vipHowItWorks') }}</div>
@@ -282,6 +286,13 @@
               <td>1.2x</td>
               <td>1.4x</td>
               <td class="best">1.6x</td>
+            </tr>
+            <tr>
+              <td class="feature-name">{{ t('membershipPage.songRequestsLabel') }}</td>
+              <td>{{ t('membershipPage.songsPerDayShort', { count: 3 }) }}</td>
+              <td>{{ t('membershipPage.songsPerDayShort', { count: 5 }) }}</td>
+              <td class="highlight">{{ t('membershipPage.songsPerDayShort', { count: 7 }) }}</td>
+              <td class="best">{{ t('membershipPage.songsPerDayProMaxShort') }}</td>
             </tr>
             <tr>
               <td class="feature-name">{{ t('membershipPage.birthdayGiftLabel') }}</td>

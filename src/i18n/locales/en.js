@@ -230,6 +230,11 @@ export default {
     fasterPoints: 'Loyalty Points: {multiplier}',
     premiumCues: 'Premium cue sticks',
     priorityBooking: '{hours}-hour priority booking',
+    songsPerDay: '{count} song requests per day',
+    songsPerDayProMax: '15 song requests per day (includes 10 priority jumps)',
+    songsPerDayShort: '{count}/day',
+    songsPerDayProMaxShort: '15/day · 10 priority',
+    songRequestsLabel: 'Song Requests (per day)',
     tournamentPriority: 'Tournament priority',
     howItWorks: 'How It Works',
     topUpStep: '1. Top up ${amount}:',
@@ -364,10 +369,10 @@ export default {
     reminder: 'Reminder:', reminderText: 'You have {count} upcoming tournament(s). Check the schedule before you play.',
     newPassword: 'New Password', confirmNewPassword: 'Confirm New Password', confirmPlaceholder: 'Re-enter your new password',
     updating: 'Updating…', updatePassword: 'Update Password',
-    liteBenefits: ['Free registration, permanent','Standard rates: Q7 $23/h, Q8 $28/h','Basic cue sticks','Basic statistics','Same-day booking, 2 hours ahead','1.0x loyalty points'],
-    plusBenefits: ['Member rates: Q7 $21/h, Q8 $26/h','Transparent top-ups with no annual fee','Free premium cue rental','6-hour priority booking','1.2x loyalty points','Valid for 12 months after top-up'],
-    proBenefits: ['Member rates: Q7 $19/h, Q8 $24/h','Transparent top-ups with no annual fee','Free premium cue rental','12-hour priority booking','Tournament priority','1.4x loyalty points','Valid for 12 months after top-up'],
-    proMaxBenefits: ['Lowest rates: Q7 $17/h, Q8 $22/h','Transparent top-ups with no annual fee','Free premium cue rental','24-hour VIP priority booking','Highest booking priority','Tournament priority','Birthday reward','1.6x loyalty points','Valid for 12 months after top-up']
+    liteBenefits: ['Free registration, permanent','Standard rates: Q7 $23/h, Q8 $28/h','Basic cue sticks','Basic statistics','Same-day booking, 2 hours ahead','3 song requests per day','1.0x loyalty points'],
+    plusBenefits: ['Member rates: Q7 $21/h, Q8 $26/h','Transparent top-ups with no annual fee','Free premium cue rental','6-hour priority booking','5 song requests per day','1.2x loyalty points','Valid for 12 months after top-up'],
+    proBenefits: ['Member rates: Q7 $19/h, Q8 $24/h','Transparent top-ups with no annual fee','Free premium cue rental','12-hour priority booking','Tournament priority','7 song requests per day','1.4x loyalty points','Valid for 12 months after top-up'],
+    proMaxBenefits: ['Lowest rates: Q7 $17/h, Q8 $22/h','Transparent top-ups with no annual fee','Free premium cue rental','24-hour VIP priority booking','Highest booking priority','Tournament priority','15 song requests per day (includes 10 priority jumps)','Birthday reward','1.6x loyalty points','Valid for 12 months after top-up']
   },
   leaderboardPage: {
     badge: 'Live Ranking System',
@@ -477,6 +482,8 @@ export default {
     staffBypass: 'Staff · no check-in needed',
     scanToRequest: 'Scan venue QR to request songs',
     priorityLeft: 'Priority left today: {remaining}/{limit}',
+    dailyLeft: 'Songs left today: {remaining}/{limit}',
+    dailyLimit: 'Daily song request limit reached',
     priorityUnlock: 'Priority unlocks after venue check-in',
     priorityTitle:
       'Priority jumps regular guests only — later Pro Max cannot cut ahead of an earlier Pro Max priority song',
@@ -547,6 +554,7 @@ export default {
     addToQueue: 'Add to queue',
     priorityQueue: 'Priority queue',
     priorityLimit: 'Daily priority limit reached',
+    dailyLimitReached: 'Daily song limit reached. Come back tomorrow or upgrade.',
     priorityTip:
       'Jump ahead of regular guests only — not ahead of earlier Pro Max priority songs',
     noTracks: 'No tracks found. Try another spelling.',
