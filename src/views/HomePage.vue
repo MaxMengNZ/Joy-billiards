@@ -404,15 +404,15 @@
               <div class="hours-list">
                 <div class="hours-item">
                   <span class="hours-day">{{ t('home.monThu') }}</span>
-                  <span class="hours-time">11:00 AM - 1:00 AM</span>
+                  <span class="hours-time">12:00 PM - 1:00 AM</span>
                 </div>
                 <div class="hours-item">
                   <span class="hours-day">{{ t('home.friSat') }}</span>
-                  <span class="hours-time">11:00 AM - 2:00 AM</span>
+                  <span class="hours-time">12:00 PM - 2:00 AM</span>
                 </div>
                 <div class="hours-item hours-item-highlight">
                   <span class="hours-day">{{ t('home.sunday') }}</span>
-                  <span class="hours-time">11:00 AM - 1:00 AM</span>
+                  <span class="hours-time">12:00 PM - 1:00 AM</span>
                 </div>
               </div>
             </div>
@@ -2601,4 +2601,3 @@ export default {
   }
 }
 </style>
-
