@@ -179,7 +179,11 @@ export default {
     const isMobileMenuOpen = ref(false)
     const currentYear = computed(() => new Date().getFullYear())
     const isAuthPage = computed(() => {
-      return route.path === '/login' || route.path === '/register'
+      return (
+        route.path === '/login' ||
+        route.path === '/register' ||
+        route.path === '/reset-password'
+      )
     })
     
     const isTVDisplayPage = computed(() => {

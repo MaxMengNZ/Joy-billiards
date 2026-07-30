@@ -306,13 +306,43 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const normalized = String(email || '').trim().toLowerCase()
+        if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+          throw new Error('Please enter a valid email address')
+        }
+
+        const COOLDOWN_MS = 60_000
+        const storageKey = `joy_pw_reset_at:${normalized}`
+        let lastAt = 0
+        try {
+          lastAt = Number(localStorage.getItem(storageKey) || 0) || 0
+        } catch {
+          lastAt = 0
+        }
+        const elapsed = Date.now() - lastAt
+        if (lastAt && elapsed < COOLDOWN_MS) {
+          const waitSec = Math.ceil((COOLDOWN_MS - elapsed) / 1000)
+          return {
+            success: false,
+            error: `Please wait ${waitSec}s before requesting another reset email`,
+            cooldownSeconds: waitSec,
+            code: 'cooldown'
+          }
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(normalized, {
           redirectTo: `${window.location.origin}/reset-password`
         })
 
         if (error) throw error
 
-        return { success: true }
+        try {
+          localStorage.setItem(storageKey, String(Date.now()))
+        } catch {
+          /* ignore */
+        }
+
+        return { success: true, cooldownSeconds: 60 }
       } catch (err) {
         this.error = err.message
         console.error('Reset password error:', err)

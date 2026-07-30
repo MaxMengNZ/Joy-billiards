@@ -22,6 +22,12 @@ const routes = [
     meta: { title: 'Sign Up', requiresGuest: true }
   },
   {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPasswordPage.vue'),
+    meta: { title: 'Reset Password' }
+  },
+  {
     path: '/auth/callback',
     name: 'EmailConfirm',
     component: () => import('../views/EmailConfirmPage.vue'),

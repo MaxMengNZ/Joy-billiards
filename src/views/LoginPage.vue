@@ -113,13 +113,26 @@
           <div v-if="resetSuccess" class="alert alert-success mt-2">
             {{ t('auth.resetSent') }}
           </div>
+          <div v-else-if="resetError" class="alert alert-danger mt-2">
+            {{ resetError }}
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="showResetModal = false">
             {{ t('common.cancel') }}
           </button>
-          <button class="btn btn-primary" @click="handleResetPassword">
-            {{ t('auth.sendResetLink') }}
+          <button
+            class="btn btn-primary"
+            :disabled="resetCooldowning || resetCooldownSeconds > 0"
+            @click="handleResetPassword"
+          >
+            {{
+              resetSending
+                ? t('auth.sendingReset')
+                : resetCooldownSeconds > 0
+                  ? t('auth.resetCooldown', { seconds: resetCooldownSeconds })
+                  : t('auth.sendResetLink')
+            }}
           </button>
         </div>
       </div>
@@ -128,7 +141,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { createClient } from '@supabase/supabase-js'
@@ -154,27 +167,58 @@ export default {
     const showResetModal = ref(false)
     const resetEmail = ref('')
     const resetSuccess = ref(false)
+    const resetError = ref('')
+    const resetSending = ref(false)
+    const resetCooldownSeconds = ref(0)
     const passwordChangedMessage = ref(false)
     const verificationSent = ref(false)
     const verificationError = ref('')
+    let cooldownTimer = null
+
+    const syncResetCooldown = (rawEmail = resetEmail.value) => {
+      const normalized = String(rawEmail || '').trim().toLowerCase()
+      if (!normalized) {
+        resetCooldownSeconds.value = 0
+        return
+      }
+      let lastAt = 0
+      try {
+        lastAt = Number(localStorage.getItem(`joy_pw_reset_at:${normalized}`) || 0) || 0
+      } catch {
+        lastAt = 0
+      }
+      if (!lastAt) {
+        resetCooldownSeconds.value = 0
+        return
+      }
+      const remaining = Math.ceil((60_000 - (Date.now() - lastAt)) / 1000)
+      resetCooldownSeconds.value = remaining > 0 ? remaining : 0
+    }
+
+    const startCooldownTicker = () => {
+      if (cooldownTimer) clearInterval(cooldownTimer)
+      syncResetCooldown()
+      cooldownTimer = setInterval(() => {
+        syncResetCooldown()
+        if (resetCooldownSeconds.value <= 0 && cooldownTimer) {
+          clearInterval(cooldownTimer)
+          cooldownTimer = null
+        }
+      }, 1000)
+    }
 
     onMounted(() => {
-      // Check if password was just changed
-      if (sessionStorage.getItem('passwordChanged') === 'true') {
+      if (route.query.passwordChanged === '1' || sessionStorage.getItem('passwordChanged') === 'true') {
         passwordChangedMessage.value = true
         sessionStorage.removeItem('passwordChanged')
-        
-        // Check if it was a timeout
-        const wasTimeout = sessionStorage.getItem('passwordTimeout') === 'true'
-        if (wasTimeout) {
-          sessionStorage.removeItem('passwordTimeout')
-        }
-        
-        // Auto-hide message after 8 seconds for timeout cases
         setTimeout(() => {
           passwordChangedMessage.value = false
         }, 8000)
       }
+    })
+
+    onUnmounted(() => {
+      if (cooldownTimer) clearInterval(cooldownTimer)
     })
 
     const handleSignIn = async () => {
@@ -217,21 +261,34 @@ export default {
     const showForgotPassword = () => {
       resetEmail.value = email.value
       resetSuccess.value = false
+      resetError.value = ''
       showResetModal.value = true
+      startCooldownTicker()
     }
 
     const handleResetPassword = async () => {
+      resetError.value = ''
+      resetSuccess.value = false
       if (!resetEmail.value) {
-        alert('Please enter your email address')
+        resetError.value = t('auth.enterEmail')
         return
       }
 
-      const result = await authStore.resetPassword(resetEmail.value)
-      if (result.success) {
-        resetSuccess.value = true
-        setTimeout(() => {
-          showResetModal.value = false
-        }, 3000)
+      resetSending.value = true
+      try {
+        const result = await authStore.resetPassword(resetEmail.value)
+        if (result.success) {
+          resetSuccess.value = true
+          startCooldownTicker()
+        } else if (result.code === 'cooldown') {
+          resetError.value = t('auth.resetCooldownHint', { seconds: result.cooldownSeconds || resetCooldownSeconds.value || 60 })
+          startCooldownTicker()
+        } else {
+          resetError.value = result.error || t('auth.resetSendFailed')
+          startCooldownTicker()
+        }
+      } finally {
+        resetSending.value = false
       }
     }
 
@@ -277,6 +334,9 @@ export default {
       showResetModal,
       resetEmail,
       resetSuccess,
+      resetError,
+      resetSending,
+      resetCooldownSeconds,
       passwordChangedMessage,
       verificationSent,
       verificationError,
