@@ -105,6 +105,11 @@
           </div>
           <div class="footer-links">
             <p>&copy; {{ currentYear }} {{ t('footer.rights') }}</p>
+            <div class="legal-links">
+              <router-link to="/privacy-policy">Privacy Policy</router-link>
+              <router-link to="/terms-of-service">Terms of Service</router-link>
+              <router-link to="/account-deletion">Delete Account</router-link>
+            </div>
             
             <!-- Social Media Icons -->
             <div class="social-media-links">
@@ -307,6 +312,25 @@ export default {
   margin-bottom: 8px;
 }
 
+.legal-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 10px 0 4px;
+}
+
+.legal-links a {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .social-icon {
   display: inline-flex;
   align-items: center;
@@ -468,4 +492,3 @@ export default {
   }
 }
 </style>
-

@@ -130,6 +130,27 @@ const routes = [
     meta: { title: 'TV Display - Joy Billiards', requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: () => import('../views/LegalPage.vue'),
+    props: { kind: 'privacy' },
+    meta: { title: 'Privacy Policy' }
+  },
+  {
+    path: '/terms-of-service',
+    name: 'TermsOfService',
+    component: () => import('../views/LegalPage.vue'),
+    props: { kind: 'terms' },
+    meta: { title: 'Terms of Service' }
+  },
+  {
+    path: '/account-deletion',
+    name: 'AccountDeletion',
+    component: () => import('../views/LegalPage.vue'),
+    props: { kind: 'deletion' },
+    meta: { title: 'Account Deletion' }
+  },
+  {
     path: '/error/:type?',
     name: 'Error',
     component: () => import('../views/ErrorPage.vue'),
@@ -203,4 +224,3 @@ router.beforeEach(async (to, from, next) => {
 })
 
 export default router
-
