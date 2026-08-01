@@ -28,6 +28,12 @@ const routes = [
     meta: { title: 'Reset Password' }
   },
   {
+    path: '/app-reset',
+    name: 'AppPasswordResetBridge',
+    component: () => import('../views/AppPasswordResetBridge.vue'),
+    meta: { title: 'Secure Password Reset' }
+  },
+  {
     path: '/auth/callback',
     name: 'EmailConfirm',
     component: () => import('../views/EmailConfirmPage.vue'),

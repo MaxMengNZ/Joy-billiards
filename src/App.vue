@@ -187,7 +187,8 @@ export default {
       return (
         route.path === '/login' ||
         route.path === '/register' ||
-        route.path === '/reset-password'
+        route.path === '/reset-password' ||
+        route.path === '/app-reset'
       )
     })
     
