@@ -118,6 +118,20 @@ const routes = [
     meta: { title: 'Membership Benefits' }
   },
   {
+    path: '/app/player/:id',
+    name: 'SharedPlayer',
+    component: () => import('../views/AppSharePage.vue'),
+    props: { kind: 'player' },
+    meta: { title: 'JOY Player Card' }
+  },
+  {
+    path: '/app/monthly-honours',
+    name: 'SharedMonthlyHonours',
+    component: () => import('../views/AppSharePage.vue'),
+    props: { kind: 'honours' },
+    meta: { title: 'JOY Monthly Honours' }
+  },
+  {
     path: '/wechat',
     name: 'WeChat',
     component: () => import('../views/WeChatQRPage.vue'),
