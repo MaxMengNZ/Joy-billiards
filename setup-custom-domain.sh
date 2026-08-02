@@ -21,10 +21,10 @@ echo "2️⃣ Vercel域名配置:"
 echo "   • 登录 https://vercel.com/dashboard"
 echo "   • 选择 joy-billiards 项目"
 echo "   • Settings → Domains"
-echo "   • 添加: rank.joybilliards.co.nz"
+echo "   • 添加: club.joybilliards.co.nz"
 echo ""
 echo "3️⃣ 环境变量更新:"
-echo "   VITE_SITE_URL=https://rank.joybilliards.co.nz"
+echo "   VITE_SITE_URL=https://club.joybilliards.co.nz"
 echo ""
 echo "4️⃣ 推送更新到Vercel:"
 echo "   正在推送当前配置..."
@@ -35,7 +35,7 @@ git commit -m "🌐 Add custom domain configuration
 
 - Update vercel.json with enhanced security headers
 - Add domain setup guide
-- Prepare for rank.joybilliards.co.nz subdomain"
+- Prepare for club.joybilliards.co.nz subdomain"
 
 echo "✅ 配置已提交到Git"
 echo ""

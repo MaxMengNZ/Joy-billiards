@@ -68,7 +68,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 ### 2. 添加域名
 
-输入：`rank.joybilliards.co.nz`
+输入：`club.joybilliards.co.nz`
 
 点击：**"Add"**
 
@@ -79,7 +79,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 ```
 ⚠️ Invalid Configuration
 Add a CNAME record with your DNS provider for:
-rank.joybilliards.co.nz → cname.vercel-dns.com
+club.joybilliards.co.nz → cd60c57240194f2c.vercel-dns-017.com
 ```
 
 ### 4. 在 Squarespace 配置 DNS
@@ -118,7 +118,7 @@ TTL: 3600
 
 ### 2. 自定义域名（DNS 生效后）
 
-访问：`https://rank.joybilliards.co.nz`
+访问：`https://club.joybilliards.co.nz`
 
 ### 3. 测试功能
 

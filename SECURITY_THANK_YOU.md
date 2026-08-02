@@ -159,5 +159,4 @@ const { data } = await supabase.from('public_users').select('*')
 
 **Joy Billiards NZ Team**  
 📍 88 Tristram Street, Hamilton Central  
-🌐 https://rank.joybilliards.co.nz
-
+🌐 https://club.joybilliards.co.nz

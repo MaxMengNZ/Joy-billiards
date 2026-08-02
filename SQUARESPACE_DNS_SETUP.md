@@ -2,13 +2,13 @@
 
 ## 📋 概述
 - **你的域名**: `joybilliards.co.nz` (通过Squarespace管理)
-- **目标**: 设置 `rank.joybilliards.co.nz` 子域名指向Vercel
+- **目标**: 设置 `club.joybilliards.co.nz` 子域名指向Vercel
 - **现有设置**: `www.joybilliards.co.nz` → Squarespace商城
 
 ## 🎯 配置目标
 ```
 www.joybilliards.co.nz     → Squarespace商城 (保持不变)
-rank.joybilliards.co.nz    → Vercel台球比赛系统 (新增)
+club.joybilliards.co.nz    → Vercel Joy Club App 入口 (新增)
 ```
 
 ## 📝 详细配置步骤
@@ -70,7 +70,7 @@ rank.joybilliards.co.nz    → Vercel台球比赛系统 (新增)
 
 ### 如果域名不生效：
 1. 等待DNS传播（通常5-30分钟）
-2. 使用在线工具测试：`ping rank.joybilliards.co.nz`
+2. 使用在线工具测试：`ping club.joybilliards.co.nz`
 3. 检查Vercel中是否已添加域名
 
 ## 📞 Squarespace客服支持
@@ -84,8 +84,8 @@ rank.joybilliards.co.nz    → Vercel台球比赛系统 (新增)
 
 ### 方法1: 命令行测试
 ```bash
-ping rank.joybilliards.co.nz
-nslookup rank.joybilliards.co.nz
+ping club.joybilliards.co.nz
+nslookup club.joybilliards.co.nz
 ```
 
 ### 方法2: 在线工具
@@ -93,7 +93,7 @@ nslookup rank.joybilliards.co.nz
 - [What's My DNS](https://www.whatsmydns.net/)
 
 ### 方法3: 浏览器测试
-直接在浏览器中访问 `https://rank.joybilliards.co.nz`
+直接在浏览器中访问 `https://club.joybilliards.co.nz`
 
 ## 🎉 配置完成后的下一步
 1. 在Vercel中添加自定义域名
@@ -112,4 +112,4 @@ nslookup rank.joybilliards.co.nz
 - [ ] 测试域名解析
 - [ ] 在Vercel中添加域名
 
-配置完成后，你的台球比赛系统就可以通过 `rank.joybilliards.co.nz` 访问了！
+配置完成后，Joy Club App 公开入口就可以通过 `club.joybilliards.co.nz` 访问了！

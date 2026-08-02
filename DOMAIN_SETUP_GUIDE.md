@@ -6,7 +6,7 @@
 
 ## 🎯 推荐子域名方案
 
-### 1️⃣ 最佳方案: `rank.joybilliards.co.nz`
+### 1️⃣ 最佳方案: `club.joybilliards.co.nz`
 ```
 ✅ 简短、专业、易记
 ✅ 明确表示这是排名/比赛系统  
@@ -37,14 +37,14 @@ TTL: 3600 (或默认值)
 1. 登录 [Vercel Dashboard](https://vercel.com/dashboard)
 2. 选择你的 `joy-billiards` 项目
 3. 进入 **Settings** → **Domains**
-4. 添加自定义域名: `rank.joybilliards.co.nz`
+4. 添加自定义域名: `club.joybilliards.co.nz`
 5. 等待DNS验证完成
 
 ### 步骤 3: 环境变量更新
 在Vercel项目设置中更新环境变量:
 ```
-VITE_SITE_URL=https://rank.joybilliards.co.nz
-VITE_API_BASE_URL=https://rank.joybilliards.co.nz
+VITE_SITE_URL=https://club.joybilliards.co.nz
+VITE_API_BASE_URL=https://club.joybilliards.co.nz
 ```
 
 ### 步骤 4: 重定向配置
@@ -81,7 +81,7 @@ VITE_API_BASE_URL=https://rank.joybilliards.co.nz
 
 ```
 www.joybilliards.co.nz     → Squarespace商城 (主站)
-rank.joybilliards.co.nz    → 台球比赛系统 (子站)
+club.joybilliards.co.nz    → Joy Club App 公开入口 (子站)
 ```
 
 ### 导航建议:
