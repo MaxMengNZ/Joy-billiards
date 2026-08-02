@@ -5,7 +5,7 @@
       <p class="eyebrow">{{ document.eyebrow }}</p>
       <h1>{{ document.title }}</h1>
       <p class="subtitle">{{ document.subtitle }}</p>
-      <p class="updated">Last updated 1 August 2026 · Version 1.0</p>
+      <p class="updated">Last updated 2 August 2026 · Version 1.1</p>
 
       <section v-for="section in document.sections" :key="section.title">
         <h2>{{ section.title }}</h2>
@@ -33,9 +33,9 @@ const documents = {
   privacy: {
     eyebrow: 'PRIVACY & DATA',
     title: 'Privacy Policy · 隐私政策',
-    subtitle: 'How we collect, use, protect and delete personal information in the JOY Billiards App.',
+    subtitle: 'How we collect, use, protect and delete personal information in the Joy Club App.',
     sections: [
-      { title: 'Who we are and scope', body: ['The App is operated by JOY BILLIARDS NEW ZEALAND LIMITED (Company No. 9336374; NZBN 9429052786860), trading as Joy Billiards New Zealand (“JOY”, “we”, “us”). Our Registered Office and Address for Service are 88 Tristram Street, Hamilton 3204, New Zealand.', 'This policy applies to the JOY Billiards App, member accounts and related membership, tournament, venue service, store and notification functions. We handle personal information under the New Zealand Privacy Act 2020 and its Information Privacy Principles.'] },
+      { title: 'Who we are and scope', body: ['The Joy Club App is operated by JOY BILLIARDS NEW ZEALAND LIMITED (Company No. 9336374; NZBN 9429052786860), trading as Joy Billiards New Zealand (“JOY”, “we”, “us”). Our Registered Office and Address for Service are 88 Tristram Street, Hamilton 3204, New Zealand.', 'This policy applies to the Joy Club App, member accounts and related membership, tournament, venue service, store and notification functions. We handle personal information under the New Zealand Privacy Act 2020 and its Information Privacy Principles.'] },
       { title: 'Information we collect', body: ['We may collect your name, date of birth, email address, phone number, encrypted authentication information, member number, membership level, profile image and review status.', 'We may also collect member consumption points and their ledger, tournament entries, matches, results, ranking points, win/loss statistics, bookings, repairs, coaching requests, song queues, store orders and service communications. Member consumption points and tournament ranking points are separate systems.', 'Camera access is used only when you choose to scan a code. Photo access is used only when you choose an avatar or product image. We may process push tokens, notification preferences and necessary diagnostic information.'] },
       { title: 'Why we use information', body: ['We use information where reasonably necessary to create and protect accounts, generate member numbers, provide membership and points, administer tournaments and rankings, process bookings, requests and orders, send service and security notifications, prevent fraud or duplicate awards, and meet legal obligations.', 'We do not sell personal information. Marketing choices are separate from essential account, security, order and service notices.'] },
       { title: 'Public information and profile images', body: ['An approved avatar, display name, limited member-number information, tournament entry, results, rankings and statistics may be displayed in the App, on JOY websites or at JOY events. Email, phone number, date of birth, full identity information and member consumption points are not displayed publicly.', 'Profile images are subject to review and may currently be changed once per calendar month. Completed sporting results may be retained in de-identified form to preserve the integrity of tournament records.'] },
@@ -48,7 +48,7 @@ const documents = {
   terms: {
     eyebrow: 'TERMS & MEMBERSHIP',
     title: 'Terms of Service · 用户协议',
-    subtitle: 'Rules for the JOY Billiards App, member accounts, tournaments, bookings, services and store.',
+    subtitle: 'Rules for the Joy Club App, member accounts, tournaments, bookings, services and store.',
     sections: [
       { title: 'Agreement and eligibility', body: ['These terms are provided by JOY BILLIARDS NEW ZEALAND LIMITED (Company No. 9336374; NZBN 9429052786860), trading as Joy Billiards New Zealand. By registering, signing in or continuing to use account functions, you agree to these terms and the Privacy Policy.', 'You must be at least 13. A user under 18 should obtain parent or guardian consent, particularly for purchases, paid tournaments and in-person services. Account information must be truthful and kept secure.'] },
       { title: 'Membership, points and rankings', body: ['Membership benefits and eligibility are governed by the membership rules shown in the App or venue. Material adverse changes will be communicated reasonably.', 'Member consumption points expire 12 months after the date each entry is credited. Refunds, reversed transactions and corrections may reverse associated points. Tournament ranking points are a separate sporting record and are not subject to this member-points expiry rule.', 'Points are not cash, stored-value balance or transferable property unless a specific lawful offer says otherwise. Verifiable transaction or result errors may be corrected with a reason and audit record, and users may request manual review.'] },
@@ -65,7 +65,7 @@ const documents = {
     title: 'Account Deletion · 删除账户',
     subtitle: 'How to permanently delete a JOY Billiards account and associated personal information.',
     sections: [
-      { title: 'Delete in the App', body: ['Sign in to the JOY Billiards App, open “My”, choose “Delete Account & Personal Data”, review the consequences and complete the confirmation steps. This requests permanent deletion rather than simply signing you out or deactivating the account.'] },
+      { title: 'Delete in the App', body: ['Sign in to the Joy Club App, open “My”, choose “Delete Account & Personal Data”, review the consequences and complete the confirmation steps. This requests permanent deletion rather than simply signing you out or deactivating the account.'] },
       { title: 'If you cannot access the App', body: ['Email info@joybilliards.co.nz from the email address registered to the account with the subject “Account deletion request”. Include your display name and member number if known. Do not send your password. We may ask for limited information to verify that the account belongs to you. You may also call +64 22 166 0688 for assistance.'] },
       { title: 'What is deleted', body: ['After verification, we delete or de-identify the account profile, contact details, avatar and associated personal information that is no longer required. Processing is generally completed within 30 days. You will lose access to the account and deletion may not be reversible.'] },
       { title: 'What may be retained', body: ['We may retain records where required by tax, accounting, fraud-prevention, dispute or other New Zealand law. Completed tournament records may be retained without direct identity details where reasonably necessary to preserve sporting results. Secure backups may remain until normal backup rotation completes and are not used for ordinary business purposes.', 'Deleting an account does not remove outstanding payment obligations or non-excludable refund and consumer rights. For questions, contact the Privacy Officer at info@joybilliards.co.nz.'] }
