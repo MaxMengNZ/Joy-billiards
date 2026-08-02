@@ -1,7 +1,7 @@
 <template>
   <ErrorBoundary>
     <div id="app" class="app-container">
-      <header class="app-header" v-if="!isAuthPage && !isTVDisplayPage">
+      <header class="app-header" v-if="!isAuthPage && !isTVDisplayPage && !isSharePage">
         <div class="header-content">
           <div class="logo-section">
             <router-link to="/" class="logo-link">
@@ -96,7 +96,7 @@
         </router-view>
       </main>
 
-      <footer class="app-footer">
+      <footer v-if="!isSharePage" class="app-footer">
         <div class="footer-content">
           <div class="contact-info">
             <h3>{{ t('footer.brand') }}</h3>
@@ -145,10 +145,10 @@
       </footer>
 
       <!-- Mobile Bottom Navigation -->
-      <MobileBottomNav v-if="!isAuthPage && !isTVDisplayPage" />
+      <MobileBottomNav v-if="!isAuthPage && !isTVDisplayPage && !isSharePage" />
       
       <!-- Floating Social Media Button (Mobile Only) -->
-      <TestFloatingButton v-if="!isAuthPage && !isBattlePage" />
+      <TestFloatingButton v-if="!isAuthPage && !isBattlePage && !isSharePage" />
     </div>
   </ErrorBoundary>
 </template>
@@ -198,6 +198,10 @@ export default {
     
     const isBattlePage = computed(() => {
       return route.path === '/battle'
+    })
+
+    const isSharePage = computed(() => {
+      return route.path.startsWith('/app/player/') || route.path === '/app/monthly-honours'
     })
 
     onMounted(async () => {
@@ -258,6 +262,7 @@ export default {
       isMobileMenuOpen,
       currentYear,
       isAuthPage,
+      isSharePage,
       isTVDisplayPage,
       isBattlePage,
       toggleMobileMenu,
