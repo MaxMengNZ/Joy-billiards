@@ -114,12 +114,14 @@ const medal = computed(() => {
 const loadPlayer = async () => {
   const playerId = props.kind === 'honours' ? route.query.player : route.params.id
   if (!playerId) return
-  const [{ data: user }, { data: results }, { data: monthlyAwards }] = await Promise.all([
-    supabase.from('users').select('name,avatar_url,ranking_level,wins,losses').eq('id', String(playerId)).maybeSingle(),
-    supabase.rpc('get_public_player_results', { p_user_id: String(playerId) }),
+  const [{ data: publicUser }, { data: results }, { data: avatars }, { data: monthlyAwards }] = await Promise.all([
+    supabase.from('public_users').select('id,name,ranking_level,wins,losses').eq('id', String(playerId)).maybeSingle(),
+    supabase.from('ranking_point_history').select('reason').eq('user_id', String(playerId)),
+    supabase.rpc('get_public_member_avatars', { p_user_ids: [String(playerId)] }),
     supabase.from('monthly_ranking_awards').select('year,month,division,placement,points').eq('user_id', String(playerId)).order('year', { ascending: false }).order('month', { ascending: false }),
   ])
-  if (user) Object.assign(profile, user)
+  if (publicUser) Object.assign(profile, publicUser)
+  if (Array.isArray(avatars) && avatars[0]?.avatar_url) profile.avatar_url = avatars[0].avatar_url
   const ranks = (Array.isArray(results) ? results : []).map(entry => {
     const match = String(entry.reason || '').match(/Rank\s+(\d+)$/i)
     return match ? Number(match[1]) : null
