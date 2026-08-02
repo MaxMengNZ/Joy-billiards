@@ -2,12 +2,31 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import { useAuthStore } from '../stores/authStore'
 
+const CLUB_HOST = 'club.joybilliards.co.nz'
+const RANK_HOST = 'rank.joybilliards.co.nz'
+const currentHost = typeof window === 'undefined' ? '' : window.location.hostname.toLowerCase()
+const isClubHost = currentHost === CLUB_HOST
+const clubPublicPaths = [
+  /^\/$/,
+  /^\/app\/player\/[^/]+$/,
+  /^\/app\/monthly-honours$/,
+  /^\/privacy-policy$/,
+  /^\/terms-of-service$/,
+  /^\/account-deletion$/,
+  /^\/reset-password$/,
+  /^\/app-reset$/,
+  /^\/auth\/callback$/,
+  /^\/verify-email$/,
+  /^\/register$/,
+]
+const legacyClubPaths = clubPublicPaths.filter(pattern => !pattern.test('/') && !pattern.test('/register'))
+
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomePage,
-    meta: { title: 'Joy Billiards Tournament System' }
+    component: isClubHost ? () => import('../views/ClubLandingPage.vue') : HomePage,
+    meta: { title: isClubHost ? 'Joy Club App' : 'Joy Billiards Tournament System' }
   },
   {
     path: '/login',
@@ -201,6 +220,18 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   try {
+    // Keep the Club subdomain app-first: public support and share pages only.
+    if (isClubHost && !clubPublicPaths.some(pattern => pattern.test(to.path))) {
+      next('/')
+      return
+    }
+
+    // Preserve old QR codes and review URLs while moving public App pages to Club.
+    if (currentHost === RANK_HOST && legacyClubPaths.some(pattern => pattern.test(to.path))) {
+      window.location.replace(`https://${CLUB_HOST}${to.fullPath}${window.location.hash || ''}`)
+      return
+    }
+
     document.title = `${to.meta.title} - Joy Billiards NZ` || 'Joy Billiards Tournament System'
     
     // Check if route requires authentication
