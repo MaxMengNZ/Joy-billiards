@@ -39,6 +39,7 @@
       <footer>
         <strong>JOY BILLIARDS NEW ZEALAND</strong>
         <span>88 Tristram Street, Hamilton Central</span>
+        <span><a href="mailto:info@joybilliards.co.nz">info@joybilliards.co.nz</a> · <a href="tel:+64221660688">+64 22 166 0688</a></span>
         <nav>
           <router-link to="/privacy-policy">隐私政策</router-link>
           <router-link to="/terms-of-service">用户协议</router-link>
