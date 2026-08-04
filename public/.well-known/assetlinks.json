@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "nz.co.joybilliards.app",
+      "sha256_cert_fingerprints": [
+        "5C:F4:47:24:93:86:AE:DB:BB:DE:74:6D:30:F2:E1:3E:B0:CE:73:B7:98:D2:87:47:3B:75:31:B5:B6:97:00:47"
+      ]
+    }
+  }
+]
