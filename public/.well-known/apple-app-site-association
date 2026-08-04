@@ -1,0 +1,23 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["9GDG4TJ6B5.nz.co.joybilliards.app"],
+        "components": [
+          {
+            "/": "/app/*",
+            "comment": "Joy Club player, honours, and campaign share links"
+          },
+          {
+            "/": "/reset-password",
+            "comment": "Joy Club password recovery"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["9GDG4TJ6B5.nz.co.joybilliards.app"]
+  }
+}
