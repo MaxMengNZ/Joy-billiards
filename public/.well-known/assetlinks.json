@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "nz.co.joybilliards.app",
       "sha256_cert_fingerprints": [
-        "5C:F4:47:24:93:86:AE:DB:BB:DE:74:6D:30:F2:E1:3E:B0:CE:73:B7:98:D2:87:47:3B:75:31:B5:B6:97:00:47"
+        "5C:F4:47:24:93:86:AE:DB:BB:DE:74:6D:30:F2:E1:3E:B0:CE:73:B7:98:D2:87:47:3B:75:31:B5:B6:97:00:47",
+        "97:C9:34:7B:05:F0:FA:C0:7E:24:B3:8E:23:DB:0F:D2:90:55:28:9B:25:08:D4:06:5B:9E:4B:3E:B2:69:F5:85"
       ]
     }
   }
