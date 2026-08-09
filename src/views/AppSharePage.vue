@@ -51,11 +51,18 @@
         <router-link class="secondary-action" :to="registerLink">
           免费注册 JOY 账号
         </router-link>
-        <a class="store-action" href="https://apps.apple.com/app/id6796553031" target="_blank" rel="noopener">
-          <span class="apple">●</span>
-          <span><small>Download on the</small>App Store</span>
+        <a
+          v-for="option in downloadOptions"
+          :key="option.platform"
+          class="store-action"
+          :href="option.url"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="apple">{{ option.platform === 'ios' ? '●' : '▶' }}</span>
+          <span><small>{{ option.platform === 'ios' ? 'Download on the' : 'GET IT ON' }}</small>{{ option.label }}</span>
         </a>
-        <p class="app-hint">尚未正式上架时，可先完成注册；已受邀的测试用户请通过 TestFlight 安装。</p>
+        <p class="app-hint">下载入口已根据当前设备自动匹配 iPhone 或 Android 版本。</p>
       </section>
 
       <footer>
@@ -71,10 +78,12 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../config/supabase'
+import { downloadOptionsForClient } from '../utils/appDownload'
 
 const props = defineProps({ kind: { type: String, default: 'player' } })
 const route = useRoute()
 const router = useRouter()
+const downloadOptions = downloadOptionsForClient()
 const loading = ref(true)
 const profile = reactive({ name: props.kind === 'honours' ? 'JOY 月榜荣耀球员' : 'JOY 球员', avatar_url: '', ranking_level: '', wins: 0, losses: 0 })
 const performance = reactive({ events: 0, champions: 0, podiums: 0, monthlyHonours: 0, placement: Number(route.query.place) || 1, division: String(route.query.division || ''), points: Number(route.query.points) || 0 })
@@ -98,7 +107,7 @@ const displayStats = computed(() => props.kind === 'honours'
       { value: performance.podiums, label: 'PODIUMS' },
     ])
 const registerLink = computed(() => ({
-  path: '/register',
+  path: '/join',
   query: {
     source: props.kind === 'honours' ? 'monthly-honours-share' : 'player-card-share',
     ...(route.params.id ? { ref: String(route.params.id) } : {}),

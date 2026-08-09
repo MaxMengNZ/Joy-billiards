@@ -18,6 +18,8 @@ const clubPublicPaths = [
   /^\/auth\/callback$/,
   /^\/verify-email$/,
   /^\/register$/,
+  /^\/join$/,
+  /^\/login$/,
 ]
 const legacyClubPaths = clubPublicPaths.filter(pattern => !pattern.test('/') && !pattern.test('/register'))
 
@@ -39,6 +41,12 @@ const routes = [
     name: 'Register',
     component: () => import('../views/RegisterPage.vue'),
     meta: { title: 'Sign Up', requiresGuest: true }
+  },
+  {
+    path: '/join',
+    name: 'JoyClubInviteRegister',
+    component: () => import('../views/AppInviteRegisterPage.vue'),
+    meta: { title: 'Join Joy Club' }
   },
   {
     path: '/reset-password',
