@@ -22,3 +22,31 @@ export const downloadOptionsForClient = (platform = detectClientPlatform()) => {
     { platform: 'android', label: 'Google Play', url: ANDROID_PLAY_STORE_URL },
   ]
 }
+
+export const openAppLoginWithDownloadFallback = (platform = detectClientPlatform()) => {
+  if (typeof window === 'undefined') return false
+
+  if (platform === 'android') {
+    const fallbackUrl = encodeURIComponent(ANDROID_PLAY_STORE_URL)
+    window.location.href = `intent:///login#Intent;scheme=joybilliardsapp;package=nz.co.joybilliards.app;S.browser_fallback_url=${fallbackUrl};end`
+    return true
+  }
+
+  if (platform === 'ios') {
+    let appOpened = false
+    const trackAppOpen = () => {
+      if (document.visibilityState === 'hidden') appOpened = true
+    }
+    document.addEventListener('visibilitychange', trackAppOpen)
+    window.location.href = 'joybilliardsapp:///login'
+    window.setTimeout(() => {
+      document.removeEventListener('visibilitychange', trackAppOpen)
+      if (!appOpened && document.visibilityState === 'visible') {
+        window.location.href = IOS_APP_STORE_URL
+      }
+    }, 1400)
+    return true
+  }
+
+  return false
+}
