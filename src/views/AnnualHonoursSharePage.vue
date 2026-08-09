@@ -3,7 +3,7 @@
     <div class="glow glow-gold" />
     <div class="glow glow-red" />
     <div class="year-watermark">
-      {{ year }}
+      {{ record.year }}
     </div>
 
     <section class="page-shell">
@@ -142,6 +142,7 @@
           <span><small>{{ option.platform === 'ios' ? 'Download on the' : 'GET IT ON' }}</small>{{ option.label }}</span>
         </a>
         <router-link
+          v-if="playerLink"
           class="secondary-action"
           :to="playerLink"
         >
@@ -184,6 +185,7 @@ import { supabase } from '../config/supabase'
 import { downloadOptionsForClient } from '../utils/appDownload'
 
 const route = useRoute()
+const shareToken = computed(() => String(route.params.token || ''))
 const loading = ref(true)
 const errorMessage = ref('')
 const year = Number(route.query.year) || new Date().getFullYear()
@@ -218,10 +220,22 @@ const honourTitleEnglish = computed(() => {
   if (record.placement === 3) return `${record.year} JOY ${group} ANNUAL BRONZE`
   return `${record.year} JOY ${group} ANNUAL TOP 10 ELITE · NO. ${record.placement}`
 })
-const playerLink = computed(() => `/app/player/${encodeURIComponent(record.user_id)}`)
-const registerLink = computed(() => ({ path: '/join', query: { source: 'annual-honours-share', ref: record.user_id } }))
+const playerLink = computed(() => record.user_id ? `/app/player/${encodeURIComponent(record.user_id)}` : '')
+const registerLink = computed(() => ({
+  path: '/join',
+  query: {
+    source: 'annual-honours-share',
+    ...(shareToken.value ? { invite: shareToken.value } : { ref: record.user_id }),
+  },
+}))
 
 const loadHonour = async () => {
+  if (shareToken.value) {
+    const { data, error } = await supabase.rpc('resolve_public_app_share', { p_token: shareToken.value })
+    if (error || !data || data.kind !== 'annual_honour' || !data.award) throw new Error(copy.value.invalid)
+    Object.assign(record, data.award, { user_id: '' })
+    return
+  }
   if (!playerId || !Number.isInteger(year)) throw new Error(copy.value.invalid)
   const { data, error } = await supabase.rpc('get_public_annual_honour', { p_year: year, p_user_id: playerId })
   if (error) throw error
@@ -231,6 +245,10 @@ const loadHonour = async () => {
 }
 
 const openApp = () => {
+  if (shareToken.value) {
+    window.location.href = `joybilliardsapp:///shared/${encodeURIComponent(shareToken.value)}`
+    return
+  }
   window.location.href = `joybilliardsapp:///annual-honours?year=${record.year}`
 }
 

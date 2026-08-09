@@ -201,7 +201,7 @@ export default {
 
     const isSharePage = computed(() => {
       const isClubDomain = typeof window !== 'undefined' && window.location.hostname.toLowerCase() === 'club.joybilliards.co.nz'
-      return isClubDomain || route.path.startsWith('/app/player/') || route.path === '/app/monthly-honours' || route.path === '/app/annual-honours' || route.path === '/join'
+      return isClubDomain || route.path.startsWith('/share/') || route.path.startsWith('/app/player/') || route.path === '/app/monthly-honours' || route.path === '/app/annual-honours' || route.path === '/join'
     })
 
     onMounted(async () => {

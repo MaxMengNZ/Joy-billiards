@@ -85,10 +85,13 @@ const route = useRoute()
 const router = useRouter()
 const downloadOptions = downloadOptionsForClient()
 const loading = ref(true)
+const shareToken = computed(() => String(route.params.token || ''))
 const profile = reactive({ name: props.kind === 'honours' ? 'JOY 月榜荣耀球员' : 'JOY 球员', avatar_url: '', ranking_level: '', wins: 0, losses: 0 })
-const performance = reactive({ events: 0, champions: 0, podiums: 0, monthlyHonours: 0, placement: Number(route.query.place) || 1, division: String(route.query.division || ''), points: Number(route.query.points) || 0 })
+const performance = reactive({ events: 0, champions: 0, podiums: 0, monthlyHonours: 0, placement: Number(route.query.place) || 1, division: String(route.query.division || ''), points: Number(route.query.points) || 0, year: 0, month: 0 })
 const year = Number(route.query.year) || new Date().getFullYear()
 const month = Number(route.query.month) || new Date().getMonth() + 1
+const displayYear = computed(() => Number(performance.year) || year)
+const displayMonth = computed(() => Number(performance.month) || month)
 
 const initials = computed(() => profile.name.trim().slice(0, 2).toUpperCase() || 'JOY')
 const matches = computed(() => Number(profile.wins || 0) + Number(profile.losses || 0))
@@ -98,7 +101,7 @@ const displayStats = computed(() => props.kind === 'honours'
       { value: `#${performance.placement}`, label: 'OFFICIAL RANK' },
       { value: performance.division ? performance.division.toUpperCase() : 'JOY', label: 'DIVISION' },
       { value: performance.points, label: 'RANKING PTS' },
-      { value: `${year}.${String(month).padStart(2, '0')}`, label: 'HONOUR MONTH' },
+      { value: `${displayYear.value}.${String(displayMonth.value).padStart(2, '0')}`, label: 'HONOUR MONTH' },
     ]
   : [
       { value: matches.value, label: 'MATCHES' },
@@ -110,11 +113,11 @@ const registerLink = computed(() => ({
   path: '/join',
   query: {
     source: props.kind === 'honours' ? 'monthly-honours-share' : 'player-card-share',
-    ...(route.params.id ? { ref: String(route.params.id) } : {}),
+    ...(shareToken.value ? { invite: shareToken.value } : route.params.id ? { ref: String(route.params.id) } : {}),
   },
 }))
 const subtitle = computed(() => props.kind === 'honours'
-  ? `${year} 年 ${month} 月 · ${performance.division ? performance.division.toUpperCase() + ' · ' : ''}JOY OFFICIAL PODIUM`
+  ? `${displayYear.value} 年 ${displayMonth.value} 月 · ${performance.division ? performance.division.toUpperCase() + ' · ' : ''}JOY OFFICIAL PODIUM`
   : String(profile.ranking_level || 'JOY PLAYER').replaceAll('_', ' ').toUpperCase())
 const medal = computed(() => {
   const place = performance.placement
@@ -122,6 +125,16 @@ const medal = computed(() => {
 })
 
 const loadPlayer = async () => {
+  if (shareToken.value) {
+    const { data, error } = await supabase.rpc('resolve_public_app_share', { p_token: shareToken.value })
+    if (error || !data) throw error || new Error('Share link is invalid or expired')
+    if (props.kind === 'honours' && data.kind !== 'monthly_honour') throw new Error('Invalid share type')
+    if (props.kind === 'player' && !['player', 'invite'].includes(data.kind)) throw new Error('Invalid share type')
+    if (data.player) Object.assign(profile, data.player)
+    if (data.performance) Object.assign(performance, data.performance)
+    if (data.award) Object.assign(performance, data.award)
+    return
+  }
   const playerId = props.kind === 'honours' ? route.query.player : route.params.id
   if (!playerId) return
   const [{ data: publicUser }, { data: results }, { data: avatars }, { data: monthlyAwards }] = await Promise.all([
@@ -151,8 +164,12 @@ const loadPlayer = async () => {
 }
 
 const openApp = () => {
+  if (shareToken.value) {
+    window.location.href = `joybilliardsapp:///shared/${encodeURIComponent(shareToken.value)}`
+    return
+  }
   const path = props.kind === 'honours'
-    ? `/monthly-honours?year=${year}&month=${month}`
+    ? `/monthly-honours?year=${displayYear.value}&month=${displayMonth.value}`
     : `/player/${encodeURIComponent(String(route.params.id || ''))}`
   window.location.href = `joybilliardsapp:///${path.replace(/^\//, '')}`
 }

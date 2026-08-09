@@ -10,6 +10,7 @@ const clubPublicPaths = [
   /^\/app\/player\/[^/]+$/,
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
+  /^\/share\/(player|monthly|annual)\/[0-9a-f-]+$/i,
   /^\/privacy-policy$/,
   /^\/terms-of-service$/,
   /^\/account-deletion$/,
@@ -145,6 +146,26 @@ const routes = [
     name: 'Membership',
     component: () => import('../views/MembershipPage.vue'),
     meta: { title: 'Membership Benefits' }
+  },
+  {
+    path: '/share/player/:token',
+    name: 'SecureSharedPlayer',
+    component: () => import('../views/AppSharePage.vue'),
+    props: { kind: 'player' },
+    meta: { title: 'JOY Player Card' }
+  },
+  {
+    path: '/share/monthly/:token',
+    name: 'SecureSharedMonthlyHonours',
+    component: () => import('../views/AppSharePage.vue'),
+    props: { kind: 'honours' },
+    meta: { title: 'JOY Monthly Honours' }
+  },
+  {
+    path: '/share/annual/:token',
+    name: 'SecureSharedAnnualHonours',
+    component: () => import('../views/AnnualHonoursSharePage.vue'),
+    meta: { title: 'JOY Annual Honours' }
   },
   {
     path: '/app/player/:id',

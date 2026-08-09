@@ -163,6 +163,7 @@ import { supabase } from '../config/supabase'
 import { downloadOptionsForClient, openAppLoginWithDownloadFallback } from '../utils/appDownload'
 
 const route = useRoute()
+const secureInviteToken = computed(() => String(route.query.invite || ''))
 const isZh = /^zh\b/i.test(navigator.language || '')
 const copy = {
   zh: { invitedBy: '来自 JOY 球员的邀请', invitesYou: '邀请你加入 Joy Club', title: '创建会员账户', intro: '免费加入 Lite 会员，获得专属会员编号，开启你的 JOY 球员档案。', name: '真实姓名 *', nameHint: '用于赛事名单与球员档案', birthday: '出生日期 *', birthdayNote: '注册后不可自行修改', phone: '手机号码 *', email: '邮箱 *', emailHint: '用于登录与安全验证', emailChecking: '正在确认邮箱…', emailAvailable: '邮箱可以使用', password: '密码 *', passwordHint: '至少 8 位，包含字母和数字', confirm: '确认密码 *', confirmHint: '请再次输入密码', showPassword: '显示或隐藏密码', agree: '我已阅读并同意', terms: '《用户协议》', and: '与', privacy: '《隐私政策》', submit: '免费注册 Joy Club', hasAccount: '已有账户？打开 Joy Club App 登录', successTitle: '账户创建成功', successText: '验证邮件已经发送，请点击邮件中的链接完成验证后登录 App。', resend: '没有收到？重新发送验证邮件', resending: '正在发送…', resendIn: '秒后可重新发送', goLogin: '已完成验证？打开 App 登录', memberId: '专属会员编号', tournaments: '赛事与球员档案', rewards: '积分与会员权益', getApp: '下载 Joy Club App', deviceHint: '已根据当前设备显示正确版本', invalidEmail: '请输入真实有效的邮箱地址', duplicateEmail: '该邮箱已经注册，请直接登录或使用忘记密码。', emailCheckFailed: '暂时无法检查邮箱，请稍后再试。', invalidBirthday: '请按 DD/MM/YYYY 填写真实生日，注册人须年满 13 周岁。', invalidPassword: '密码至少 8 位，并且必须同时包含字母和数字。', mismatch: '两次输入的密码不一致。', acceptTerms: '请先同意用户协议和隐私政策。', required: '请完整填写所有必填信息。', registerFailed: '注册失败，请稍后重试。', resendSuccess: '验证邮件已重新发送，请检查收件箱和垃圾邮件。' },
@@ -274,7 +275,8 @@ const submit = async () => {
           terms_accepted_at: new Date().toISOString(),
           terms_version: '2026-08-01-v1',
           privacy_version: '2026-08-01-v1',
-          referred_by: route.query.ref ? String(route.query.ref) : null,
+          referral_share_token: secureInviteToken.value || null,
+          legacy_referral_source: secureInviteToken.value ? null : (route.query.ref ? String(route.query.ref) : null),
         },
       },
     })
@@ -309,6 +311,15 @@ const resend = async () => {
 }
 
 onMounted(async () => {
+  if (secureInviteToken.value) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(secureInviteToken.value)) return
+    const { data, error } = await supabase.rpc('resolve_public_app_share', { p_token: secureInviteToken.value })
+    if (!error && data?.inviter?.name) {
+      inviter.name = data.inviter.name
+      inviter.avatar = data.inviter.avatar_url || ''
+    }
+    return
+  }
   const referrer = route.query.ref ? String(route.query.ref) : ''
   if (!referrer) return
   const [{ data: player }, { data: avatars }] = await Promise.all([

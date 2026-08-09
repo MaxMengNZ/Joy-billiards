@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /share/
+Disallow: /join
+Disallow: /reset-password
+Disallow: /app-reset
+Disallow: /auth/
+Disallow: /admin
+
+Sitemap: https://club.joybilliards.co.nz/sitemap.xml
