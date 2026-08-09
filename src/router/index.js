@@ -39,8 +39,10 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/RegisterPage.vue'),
-    meta: { title: 'Sign Up', requiresGuest: true }
+    component: isClubHost
+      ? () => import('../views/AppInviteRegisterPage.vue')
+      : () => import('../views/RegisterPage.vue'),
+    meta: { title: isClubHost ? 'Join Joy Club' : 'Sign Up', requiresGuest: true }
   },
   {
     path: '/join',

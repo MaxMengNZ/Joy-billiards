@@ -28,7 +28,7 @@
         <button type="button" class="primary" @click="openApp">
           <span>打开 Joy Club App</span><span aria-hidden="true">↗</span>
         </button>
-        <router-link class="secondary" to="/register">创建 JOY 账号</router-link>
+        <router-link class="secondary" to="/join">创建 JOY 账号</router-link>
         <a class="store" href="https://apps.apple.com/app/id6796553031" target="_blank" rel="noopener">
           <span class="apple">●</span>
           <span><small>Download on the</small>App Store</span>
