@@ -88,7 +88,7 @@
         </div>
       </header>
 
-      <main class="app-main">
+      <main class="app-main" :class="{ 'share-main': isSharePage }">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" :key="$route.fullPath" />
@@ -155,7 +155,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { testConnection } from './config/supabase'
 import { useAuthStore } from './stores/authStore'
 import ErrorBoundary from './components/ErrorBoundary.vue'
@@ -176,7 +176,6 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const router = useRouter()
     const authStore = useAuthStore()
     const { t } = useI18n()
     
@@ -202,7 +201,7 @@ export default {
 
     const isSharePage = computed(() => {
       const isClubDomain = typeof window !== 'undefined' && window.location.hostname.toLowerCase() === 'club.joybilliards.co.nz'
-      return isClubDomain || route.path.startsWith('/app/player/') || route.path === '/app/monthly-honours'
+      return isClubDomain || route.path.startsWith('/app/player/') || route.path === '/app/monthly-honours' || route.path === '/app/annual-honours'
     })
 
     onMounted(async () => {
@@ -275,6 +274,12 @@ export default {
 </script>
 
 <style scoped>
+.app-main.share-main {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
 .mobile-lang-row {
   display: flex;
   justify-content: flex-end;
