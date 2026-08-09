@@ -69,11 +69,12 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../config/supabase'
 
 const props = defineProps({ kind: { type: String, default: 'player' } })
 const route = useRoute()
+const router = useRouter()
 const loading = ref(true)
 const profile = reactive({ name: props.kind === 'honours' ? 'JOY 月榜荣耀球员' : 'JOY 球员', avatar_url: '', ranking_level: '', wins: 0, losses: 0 })
 const performance = reactive({ events: 0, champions: 0, podiums: 0, monthlyHonours: 0, placement: Number(route.query.place) || 1, division: String(route.query.division || ''), points: Number(route.query.points) || 0 })
@@ -148,6 +149,13 @@ const openApp = () => {
 }
 
 onMounted(async () => {
+  if (props.kind === 'player' && route.query.honour === 'annual' && route.params.id) {
+    await router.replace({
+      path: '/app/annual-honours',
+      query: { ...route.query, player: String(route.params.id) },
+    })
+    return
+  }
   try { await loadPlayer() } catch (error) { console.warn('Unable to load shared player preview', error) }
   finally { loading.value = false }
 })
