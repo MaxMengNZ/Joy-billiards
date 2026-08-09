@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
-import { useAuthStore } from '../stores/authStore'
 
 const CLUB_HOST = 'club.joybilliards.co.nz'
 const RANK_HOST = 'rank.joybilliards.co.nz'
@@ -10,6 +9,7 @@ const clubPublicPaths = [
   /^\/$/,
   /^\/app\/player\/[^/]+$/,
   /^\/app\/monthly-honours$/,
+  /^\/app\/annual-honours$/,
   /^\/privacy-policy$/,
   /^\/terms-of-service$/,
   /^\/account-deletion$/,
@@ -149,6 +149,12 @@ const routes = [
     component: () => import('../views/AppSharePage.vue'),
     props: { kind: 'honours' },
     meta: { title: 'JOY Monthly Honours' }
+  },
+  {
+    path: '/app/annual-honours',
+    name: 'SharedAnnualHonours',
+    component: () => import('../views/AnnualHonoursSharePage.vue'),
+    meta: { title: 'JOY Annual Honours' }
   },
   {
     path: '/wechat',
