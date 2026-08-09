@@ -328,4 +328,10 @@ onBeforeUnmount(() => clearInterval(cooldownTimer))
 .login-link{width:100%}
 .success-panel .app-login-link{height:auto;margin-top:15px;padding:0;background:transparent;color:#d43d47;font-size:9px;font-weight:900}
 .success-panel .success-notice{margin:8px auto;color:#2e835b}
+.join-page,.join-page *{box-sizing:border-box}
+.join-shell,.register-card,.register-card form,.field-grid,.field,.input-shell{width:100%;max-width:100%;min-width:0}
+.field-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.input-shell{overflow:hidden}
+.input-shell input{width:0;max-width:100%;flex:1 1 0}
+@media(max-width:430px){.field-grid{grid-template-columns:minmax(0,1fr)}.input-shell input{font-size:16px}}
 </style>
