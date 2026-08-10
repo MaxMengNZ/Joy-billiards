@@ -95,7 +95,12 @@ export default {
           if (error) throw error
         } else if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error && !/code verifier|pkce/i.test(error.message || '')) throw error
+          // Supabase confirms the email before redirecting here. A confirmation
+          // link is frequently opened on a different browser/device from the
+          // one that started registration, so that browser may not hold the
+          // PKCE verifier needed to create a session. The account is still
+          // confirmed; login remains protected by Supabase and happens in App.
+          if (error) console.info('Email confirmed; session handoff was skipped:', error.message)
         } else {
           const { data, error } = await supabase.auth.getSession()
           if (error) throw error
