@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
+import { canUseLegacyRankWebsite } from '../utils/rankWebsiteAccess'
 
 const CLUB_HOST = 'club.joybilliards.co.nz'
 const RANK_HOST = 'rank.joybilliards.co.nz'
@@ -289,6 +290,11 @@ router.beforeEach(async (to, from, next) => {
         // Don't show alert on mobile, just redirect silently
         // The login page will show appropriate message if needed
         next('/login')
+        return
+      }
+
+      if (currentHost === RANK_HOST && !canUseLegacyRankWebsite(authStore)) {
+        window.location.replace(`https://${CLUB_HOST}/`)
         return
       }
       
