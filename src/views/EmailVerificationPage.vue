@@ -12,7 +12,9 @@
             <i class="fas fa-check-circle"></i>
             <strong>{{ t('verification.confirmed') }}</strong>
             <p>{{ t('verification.confirmedDesc') }}</p>
-            <router-link to="/login" class="btn btn-primary">{{ t('verification.goLogin') }}</router-link>
+            <button type="button" class="btn btn-primary" @click="openAppLogin">
+              {{ t('verification.goLogin') }}
+            </button>
           </div>
 
           <div v-else-if="verificationError" class="alert alert-danger">
@@ -44,44 +46,78 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { createClient } from '@supabase/supabase-js'
+import { useRoute } from 'vue-router'
+import { supabase } from '../config/supabase'
 import { useI18n } from '../i18n'
+import { openAppLoginWithDownloadFallback } from '../utils/appDownload'
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
+const confirmationType = (value) => {
+  if (!value || value === 'signup' || value === 'email') return 'email'
+  return value
+}
 
 export default {
   name: 'EmailVerificationPage',
   setup() {
     const route = useRoute()
-    const router = useRouter()
     const { t } = useI18n()
     
     const verificationSuccess = ref(false)
     const verificationError = ref('')
     const resending = ref(false)
 
-    const verifyEmail = async (token) => {
+    const completeVerification = async () => {
       try {
-        const { data, error } = await supabase.rpc('verify_email', { token })
-        
-        if (error) {
-          throw error
-        }
-        
-        if (data) {
-          verificationSuccess.value = true
-          verificationError.value = ''
+        const query = new URLSearchParams(window.location.search)
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+        const authError = query.get('error_description') || hash.get('error_description')
+        if (authError) throw new Error(decodeURIComponent(authError.replace(/\+/g, ' ')))
+
+        const tokenHash = query.get('token_hash') || hash.get('token_hash')
+        const code = query.get('code')
+        const accessToken = hash.get('access_token') || query.get('access_token')
+        const refreshToken = hash.get('refresh_token') || query.get('refresh_token')
+
+        if (tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: confirmationType(query.get('type') || hash.get('type')),
+          })
+          if (error) throw error
+        } else if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (error) throw error
+        } else if (code) {
+          // PKCE registrations created inside the native App keep the verifier
+          // on that device. Reaching this callback means Supabase has already
+          // accepted the email confirmation; exchanging the sign-in session is
+          // optional because the member will sign in inside Joy Club.
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error && !/code verifier|pkce/i.test(error.message || '')) throw error
         } else {
-          verificationError.value = t('verification.invalidLink')
+          // Supabase may consume an implicit callback before Vue mounts. Accept
+          // the resulting confirmed session instead of showing a false error.
+          const { data, error } = await supabase.auth.getSession()
+          if (error) throw error
+          if (!data.session?.user?.email_confirmed_at) {
+            throw new Error(t('verification.missingToken'))
+          }
         }
+
+        verificationSuccess.value = true
+        verificationError.value = ''
+        window.history.replaceState({}, document.title, window.location.pathname)
       } catch (err) {
         console.error('Email verification error:', err)
-        verificationError.value = t('verification.genericFailed')
+        verificationError.value = err.message || t('verification.genericFailed')
       }
+    }
+
+    const openAppLogin = () => {
+      if (!openAppLoginWithDownloadFallback()) window.location.href = '/#app-download'
     }
 
     const resendVerification = async () => {
@@ -104,21 +140,15 @@ export default {
       }
     }
 
-    onMounted(() => {
-      const token = route.query.token
-      if (token) {
-        verifyEmail(token)
-      } else {
-        verificationError.value = t('verification.missingToken')
-      }
-    })
+    onMounted(completeVerification)
 
     return {
       verificationSuccess,
       t,
       verificationError,
       resending,
-      resendVerification
+      resendVerification,
+      openAppLogin
     }
   }
 }
