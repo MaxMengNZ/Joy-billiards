@@ -23,6 +23,7 @@ const clubPublicPaths = [
   /^\/login$/,
 ]
 const legacyClubPaths = clubPublicPaths.filter(pattern => !pattern.test('/') && !pattern.test('/register'))
+  .filter(pattern => !pattern.test('/login'))
 
 const routes = [
   {

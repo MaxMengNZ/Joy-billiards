@@ -165,6 +165,7 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import { setupGlobalErrorHandler } from './utils/errorHandler'
 import { ConnectionMonitor } from './utils/supabaseWithRetry'
 import { useI18n } from './i18n'
+import { CLUB_HOME_URL, canUseLegacyRankWebsite, isRankWebsiteHost } from './utils/rankWebsiteAccess'
 
 export default {
   name: 'App',
@@ -210,6 +211,18 @@ export default {
       
       // Initialize auth
       await authStore.initialize()
+
+      // The legacy Rank website remains available only to Max's verified
+      // administrator account. All other signed-in members continue into the
+      // App-first Club experience.
+      if (
+        isRankWebsiteHost(window.location.hostname) &&
+        authStore.user &&
+        !canUseLegacyRankWebsite(authStore)
+      ) {
+        window.location.replace(CLUB_HOME_URL)
+        return
+      }
       
       // Test connection
       isConnected.value = await testConnection()
