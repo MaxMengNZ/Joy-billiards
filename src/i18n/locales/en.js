@@ -480,7 +480,7 @@ export default {
   verification: {
     title: 'Email Verification', confirming: 'Confirming your email…', confirmed: 'Email Confirmed!',
     confirmedDesc: 'Your account is verified. You can now sign in and use all features.',
-    goLogin: 'Go to Sign In', failed: 'Verification Failed', backLogin: 'Back to Sign In', tryAgain: 'Try Again',
+    goLogin: 'Open Joy Club App', failed: 'Verification Failed', backLogin: 'Back to Sign In', tryAgain: 'Try Again',
     sending: 'Sending…', resend: 'Resend Verification Email', waiting: 'Please wait while we verify your email.',
     invalidLink: 'This verification link is invalid or expired. Request a new verification email.',
     genericFailed: 'Email verification failed. Try again or request a new verification email.',

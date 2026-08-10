@@ -480,7 +480,7 @@ export default {
   verification: {
     title: '邮箱验证', confirming: '正在验证邮箱…', confirmed: '邮箱验证成功！',
     confirmedDesc: '你的账户已完成验证，现在可以登录并使用全部功能。',
-    goLogin: '前往登录', failed: '验证失败', backLogin: '返回登录', tryAgain: '重新注册',
+    goLogin: '打开 Joy Club App', failed: '验证失败', backLogin: '返回登录', tryAgain: '重新注册',
     sending: '发送中…', resend: '重新发送验证邮件', waiting: '请稍候，我们正在验证你的邮箱。',
     invalidLink: '验证链接无效或已过期，请重新获取验证邮件。',
     genericFailed: '邮箱验证失败，请重试或重新获取验证邮件。',

@@ -1,52 +1,60 @@
 <template>
-  <div class="verification-page">
-    <div class="verification-container">
-      <div class="verification-card card">
-        <div class="verification-header">
-          <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards" class="verification-logo">
-          <h2>{{ t('verification.title') }}</h2>
+  <main class="verification-page">
+    <div class="ambient ambient-red"></div>
+    <div class="ambient ambient-gold"></div>
+
+    <section class="verification-shell">
+      <header class="brand-row">
+        <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards New Zealand">
+        <div><strong>JOY CLUB</strong><span>PLAY · ENJOY · BELONG</span></div>
+      </header>
+
+      <article class="verification-card">
+        <p class="eyebrow">{{ pageCopy.eyebrow }}</p>
+
+        <div v-if="verificationSuccess" class="status-panel">
+          <div class="status-icon success-icon"><span>✓</span></div>
+          <h1>{{ t('verification.confirmed') }}</h1>
+          <p>{{ t('verification.confirmedDesc') }}</p>
+          <button type="button" class="primary-action" @click="openAppLogin">
+            <span>{{ t('verification.goLogin') }}</span><b>→</b>
+          </button>
+          <small>{{ pageCopy.ready }}</small>
         </div>
 
-        <div class="verification-body">
-          <div v-if="verificationSuccess" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            <strong>{{ t('verification.confirmed') }}</strong>
-            <p>{{ t('verification.confirmedDesc') }}</p>
-            <button type="button" class="btn btn-primary" @click="openAppLogin">
-              {{ t('verification.goLogin') }}
-            </button>
-          </div>
-
-          <div v-else-if="verificationError" class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>{{ t('verification.failed') }}</strong>
-            <p>{{ verificationError }}</p>
-            <button @click="resendVerification" class="btn btn-outline-primary" :disabled="resending">
-              {{ resending ? t('verification.sending') : t('verification.resend') }}
-            </button>
-          </div>
-
-          <div v-else class="verification-pending">
-            <div class="spinner-container">
-              <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <h3>{{ t('verification.confirming') }}</h3>
-            <p>{{ t('verification.waiting') }}</p>
-          </div>
+        <div v-else-if="verificationError" class="status-panel">
+          <div class="status-icon error-icon"><span>!</span></div>
+          <h1>{{ t('verification.failed') }}</h1>
+          <p>{{ verificationError }}</p>
+          <router-link class="primary-action" to="/register">
+            <span>{{ pageCopy.retry }}</span><b>→</b>
+          </router-link>
+          <small>{{ pageCopy.support }}</small>
         </div>
-      </div>
 
-      <div class="venue-info">
-        <p>📍 88 Tristram Street, Hamilton Central</p>
-        <p>📞 022 166 0688</p>
-      </div>
-    </div>
-  </div>
+        <div v-else class="status-panel">
+          <div class="status-icon pending-icon"><span></span></div>
+          <h1>{{ t('verification.confirming') }}</h1>
+          <p>{{ t('verification.waiting') }}</p>
+        </div>
+
+        <div class="trust-row">
+          <div><b>✓</b><span>{{ pageCopy.secure }}</span></div>
+          <i></i>
+          <div><b>JOY</b><span>{{ pageCopy.profile }}</span></div>
+        </div>
+      </article>
+
+      <footer>
+        <strong>JOY BILLIARDS NEW ZEALAND</strong>
+        <span>88 Tristram Street, Hamilton Central</span>
+      </footer>
+    </section>
+  </main>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, ref } from 'vue'
 import { supabase } from '../config/supabase'
 import { useI18n } from '../i18n'
 import { openAppLoginWithDownloadFallback } from '../utils/appDownload'
@@ -59,12 +67,13 @@ const confirmationType = (value) => {
 export default {
   name: 'EmailVerificationPage',
   setup() {
-    const route = useRoute()
     const { t } = useI18n()
-    
+    const isZh = /^zh\b/i.test(navigator.language || '')
+    const pageCopy = isZh
+      ? { eyebrow: 'JOY 安全验证', secure: '安全账户', profile: '会员档案已就绪', ready: '验证完成后即可使用你的 JOY 会员档案与全部功能', retry: '返回注册页面', support: '仍需帮助？请联系 info@joybilliards.co.nz' }
+      : { eyebrow: 'JOY SECURE VERIFICATION', secure: 'Secure account', profile: 'Member profile ready', ready: 'Your JOY member profile and all account features are now ready', retry: 'Return to registration', support: 'Need help? Contact info@joybilliards.co.nz' }
     const verificationSuccess = ref(false)
     const verificationError = ref('')
-    const resending = ref(false)
 
     const completeVerification = async () => {
       try {
@@ -79,40 +88,25 @@ export default {
         const refreshToken = hash.get('refresh_token') || query.get('refresh_token')
 
         if (tokenHash) {
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: confirmationType(query.get('type') || hash.get('type')),
-          })
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: confirmationType(query.get('type') || hash.get('type')) })
           if (error) throw error
         } else if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
+          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
           if (error) throw error
         } else if (code) {
-          // PKCE registrations created inside the native App keep the verifier
-          // on that device. Reaching this callback means Supabase has already
-          // accepted the email confirmation; exchanging the sign-in session is
-          // optional because the member will sign in inside Joy Club.
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (error && !/code verifier|pkce/i.test(error.message || '')) throw error
         } else {
-          // Supabase may consume an implicit callback before Vue mounts. Accept
-          // the resulting confirmed session instead of showing a false error.
           const { data, error } = await supabase.auth.getSession()
           if (error) throw error
-          if (!data.session?.user?.email_confirmed_at) {
-            throw new Error(t('verification.missingToken'))
-          }
+          if (!data.session?.user?.email_confirmed_at) throw new Error(t('verification.missingToken'))
         }
 
         verificationSuccess.value = true
-        verificationError.value = ''
         window.history.replaceState({}, document.title, window.location.pathname)
-      } catch (err) {
-        console.error('Email verification error:', err)
-        verificationError.value = err.message || t('verification.genericFailed')
+      } catch (error) {
+        console.error('Email verification error:', error)
+        verificationError.value = error.message || t('verification.genericFailed')
       }
     }
 
@@ -120,195 +114,52 @@ export default {
       if (!openAppLoginWithDownloadFallback()) window.location.href = '/#app-download'
     }
 
-    const resendVerification = async () => {
-      resending.value = true
-      try {
-        const { error } = await supabase.rpc('send_email_verification', { 
-          user_email: route.query.email || '' 
-        })
-        
-        if (error) {
-          throw error
-        }
-        
-        verificationError.value = t('verification.sent')
-      } catch (err) {
-        console.error('Resend verification error:', err)
-        verificationError.value = t('verification.resendFailed')
-      } finally {
-        resending.value = false
-      }
-    }
-
     onMounted(completeVerification)
-
-    return {
-      verificationSuccess,
-      t,
-      verificationError,
-      resending,
-      resendVerification,
-      openAppLogin
-    }
+    return { openAppLogin, pageCopy, t, verificationError, verificationSuccess }
   }
 }
 </script>
 
 <style scoped>
-.verification-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-  padding: 2rem;
-}
-
-.verification-container {
-  width: 100%;
-  max-width: 500px;
-}
-
-.verification-card {
-  background: white;
-  padding: 0;
-  overflow: hidden;
-}
-
-.verification-header {
-  background: linear-gradient(135deg, #1a1a2e, #0f3460);
-  color: white;
-  padding: 2rem;
-  text-align: center;
-}
-
-.verification-logo {
-  height: 120px;
-  width: auto;
-  max-width: 280px;
-  object-fit: contain;
-  margin-bottom: 1rem;
-  background: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.verification-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.verification-body {
-  padding: 2rem;
-  text-align: center;
-}
-
-.verification-pending {
-  padding: 2rem 0;
-}
-
-.spinner-container {
-  margin-bottom: 1rem;
-}
-
-.spinner-container i {
-  font-size: 3rem;
-  color: var(--primary-color);
-}
-
-.verification-pending h3 {
-  color: var(--dark-color);
-  margin-bottom: 1rem;
-}
-
-.verification-pending p {
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.alert {
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.alert-success {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
-}
-
-.alert-danger {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
-}
-
-.alert i {
-  margin-right: 0.5rem;
-}
-
-.alert p {
-  margin: 0.5rem 0 0 0;
-}
-
-.btn {
-  margin-top: 1rem;
-}
-
-.venue-info {
-  text-align: center;
-  margin-top: 1.5rem;
-  color: white;
-  opacity: 0.8;
-}
-
-.venue-info p {
-  margin: 0.5rem 0;
-}
-
-/* Mobile Optimization */
-@media (max-width: 768px) {
-  .verification-page {
-    padding: 1rem;
-    align-items: flex-start;
-    padding-top: 2rem;
-  }
-
-  .verification-header {
-    padding: 1.5rem;
-  }
-
-  .verification-logo {
-    height: 100px;
-    max-width: 240px;
-    padding: 10px 20px;
-  }
-
-  .verification-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .verification-body {
-    padding: 1.5rem;
-  }
-
-  .spinner-container i {
-    font-size: 2.5rem;
-  }
-
-  .verification-pending h3 {
-    font-size: 1.25rem;
-  }
-
-  .alert {
-    padding: 1.25rem;
-  }
-
-  .venue-info {
-    margin-top: 1.25rem;
-    font-size: 14px;
-  }
+.verification-page { min-height: 100svh; position: relative; overflow: hidden; display: grid; place-items: center; padding: 24px; background: linear-gradient(155deg, #fff 0%, #faf8f5 56%, #f2eee9 100%); color: #171719; }
+.ambient { position: fixed; border-radius: 999px; filter: blur(5px); pointer-events: none; }
+.ambient-red { width: 360px; height: 360px; right: -170px; top: -150px; background: radial-gradient(circle, rgba(215,25,32,.12), transparent 68%); }
+.ambient-gold { width: 330px; height: 330px; left: -180px; bottom: -150px; background: radial-gradient(circle, rgba(194,145,48,.14), transparent 68%); }
+.verification-shell { position: relative; z-index: 1; width: min(100%, 520px); }
+.brand-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px; }
+.brand-row img { width: 142px; height: 58px; object-fit: contain; }
+.brand-row div { padding-left: 16px; border-left: 1px solid #ded8d1; display: grid; gap: 4px; }
+.brand-row strong { font-size: 15px; letter-spacing: .16em; }
+.brand-row span { color: #9b2025; font-size: 9px; letter-spacing: .14em; }
+.verification-card { background: rgba(255,255,255,.94); border: 1px solid rgba(40,32,28,.08); border-radius: 30px; padding: 36px; box-shadow: 0 24px 70px rgba(52,40,31,.12); backdrop-filter: blur(16px); }
+.eyebrow { margin: 0 0 28px; text-align: center; color: #a87720; font-size: 11px; font-weight: 800; letter-spacing: .19em; }
+.status-panel { text-align: center; }
+.status-icon { width: 82px; height: 82px; margin: 0 auto 22px; border-radius: 27px; display: grid; place-items: center; transform: rotate(8deg); }
+.status-icon span { transform: rotate(-8deg); font-size: 38px; font-weight: 800; }
+.success-icon { color: #fff; background: linear-gradient(145deg, #e22831, #b90f18); box-shadow: 0 15px 35px rgba(195,22,30,.26); }
+.error-icon { color: #a50f17; background: #fff0f1; border: 1px solid #f0c6c9; }
+.pending-icon { background: #fff5f5; border: 1px solid #efd6d7; }
+.pending-icon span { width: 30px; height: 30px; border: 3px solid #f1c7c9; border-top-color: #cc1921; border-radius: 50%; animation: spin .8s linear infinite; }
+.status-panel h1 { margin: 0; font-size: clamp(27px, 7vw, 36px); letter-spacing: -.035em; }
+.status-panel > p { max-width: 370px; margin: 13px auto 0; color: #747074; font-size: 15px; line-height: 1.65; }
+.primary-action { width: 100%; min-height: 56px; margin-top: 28px; border: 0; border-radius: 17px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; color: white; background: linear-gradient(100deg, #db1c25, #bd1018); box-shadow: 0 12px 25px rgba(194,18,26,.2); font: inherit; font-weight: 750; text-decoration: none; cursor: pointer; }
+.primary-action b { font-size: 21px; }
+.status-panel small { display: block; margin: 15px auto 0; max-width: 390px; color: #9a9694; font-size: 12px; line-height: 1.55; }
+.trust-row { margin-top: 30px; padding-top: 22px; border-top: 1px solid #eee9e5; display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; }
+.trust-row > i { height: 34px; background: #e5dfda; }
+.trust-row > div { display: grid; justify-items: center; gap: 5px; }
+.trust-row b { color: #cc1921; font-size: 12px; letter-spacing: .08em; }
+.trust-row span { color: #777270; font-size: 11px; }
+footer { display: grid; justify-items: center; gap: 5px; margin-top: 21px; color: #999491; }
+footer strong { color: #6b6663; font-size: 10px; letter-spacing: .18em; }
+footer span { font-size: 11px; letter-spacing: .05em; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 560px) {
+  .verification-page { padding: 20px 16px; }
+  .brand-row img { width: 124px; height: 52px; }
+  .brand-row div { padding-left: 12px; }
+  .verification-card { border-radius: 25px; padding: 29px 22px 25px; }
+  .eyebrow { margin-bottom: 23px; }
+  .status-icon { width: 74px; height: 74px; border-radius: 24px; }
 }
 </style>
