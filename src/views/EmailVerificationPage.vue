@@ -100,7 +100,9 @@ export default {
           // one that started registration, so that browser may not hold the
           // PKCE verifier needed to create a session. The account is still
           // confirmed; login remains protected by Supabase and happens in App.
-          if (error) console.info('Email confirmed; session handoff was skipped:', error.message)
+          const crossDeviceHandoff = /code verifier|pkce|flow[ _-]?state/i.test(error?.message || '')
+          if (error && !crossDeviceHandoff) throw error
+          if (error) console.info('Email confirmed; cross-device session handoff was skipped:', error.message)
         } else {
           const { data, error } = await supabase.auth.getSession()
           if (error) throw error
