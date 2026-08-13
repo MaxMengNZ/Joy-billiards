@@ -23,12 +23,13 @@ export const downloadOptionsForClient = (platform = detectClientPlatform()) => {
   ]
 }
 
-export const openAppLoginWithDownloadFallback = (platform = detectClientPlatform()) => {
+export const openAppRouteWithDownloadFallback = (route = '/login', platform = detectClientPlatform()) => {
   if (typeof window === 'undefined') return false
+  const safeRoute = /^\/[a-z0-9/_-]*$/i.test(route) ? route : '/login'
 
   if (platform === 'android') {
     const fallbackUrl = encodeURIComponent(ANDROID_PLAY_STORE_URL)
-    window.location.href = `intent:///login#Intent;scheme=joybilliardsapp;package=nz.co.joybilliards.app;S.browser_fallback_url=${fallbackUrl};end`
+    window.location.href = `intent://${safeRoute}#Intent;scheme=joybilliardsapp;package=nz.co.joybilliards.app;S.browser_fallback_url=${fallbackUrl};end`
     return true
   }
 
@@ -38,7 +39,7 @@ export const openAppLoginWithDownloadFallback = (platform = detectClientPlatform
       if (document.visibilityState === 'hidden') appOpened = true
     }
     document.addEventListener('visibilitychange', trackAppOpen)
-    window.location.href = 'joybilliardsapp:///login'
+    window.location.href = `joybilliardsapp://${safeRoute}`
     window.setTimeout(() => {
       document.removeEventListener('visibilitychange', trackAppOpen)
       if (!appOpened && document.visibilityState === 'visible') {
@@ -50,3 +51,6 @@ export const openAppLoginWithDownloadFallback = (platform = detectClientPlatform
 
   return false
 }
+
+export const openAppLoginWithDownloadFallback = (platform = detectClientPlatform()) =>
+  openAppRouteWithDownloadFallback('/login', platform)

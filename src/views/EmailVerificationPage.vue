@@ -26,9 +26,9 @@
           <div class="status-icon error-icon"><span>!</span></div>
           <h1>{{ t('verification.failed') }}</h1>
           <p>{{ verificationError }}</p>
-          <router-link class="primary-action" to="/register">
+          <button type="button" class="primary-action" @click="openAppRegistration">
             <span>{{ pageCopy.retry }}</span><b>→</b>
-          </router-link>
+          </button>
           <small>{{ pageCopy.support }}</small>
         </div>
 
@@ -57,7 +57,7 @@
 import { onMounted, ref } from 'vue'
 import { supabase } from '../config/supabase'
 import { useI18n } from '../i18n'
-import { openAppLoginWithDownloadFallback } from '../utils/appDownload'
+import { openAppLoginWithDownloadFallback, openAppRouteWithDownloadFallback } from '../utils/appDownload'
 
 const confirmationType = (value) => {
   if (!value || value === 'signup' || value === 'email') return 'email'
@@ -70,8 +70,8 @@ export default {
     const { t } = useI18n()
     const isZh = /^zh\b/i.test(navigator.language || '')
     const pageCopy = isZh
-      ? { eyebrow: 'JOY 安全验证', secure: '安全账户', profile: '会员档案已就绪', ready: '验证完成后即可使用你的 JOY 会员档案与全部功能', retry: '返回注册页面', support: '仍需帮助？请联系 info@joybilliards.co.nz' }
-      : { eyebrow: 'JOY SECURE VERIFICATION', secure: 'Secure account', profile: 'Member profile ready', ready: 'Your JOY member profile and all account features are now ready', retry: 'Return to registration', support: 'Need help? Contact info@joybilliards.co.nz' }
+      ? { eyebrow: 'JOY 安全验证', secure: '安全账户', profile: '会员档案已就绪', ready: '验证完成后请返回 Joy Club App 登录', retry: '打开 Joy Club App 重新发送', support: '验证链接失效时，请在 App 注册页面使用同一邮箱重新发送。仍需帮助？请联系 info@joybilliards.co.nz' }
+      : { eyebrow: 'JOY SECURE VERIFICATION', secure: 'Secure account', profile: 'Member profile ready', ready: 'Return to the Joy Club App to sign in after verification', retry: 'Open Joy Club App to resend', support: 'If the link expired, resend it from the App registration screen using the same email. Need help? Contact info@joybilliards.co.nz' }
     const verificationSuccess = ref(false)
     const verificationError = ref('')
 
@@ -121,8 +121,12 @@ export default {
       if (!openAppLoginWithDownloadFallback()) window.location.href = '/#app-download'
     }
 
+    const openAppRegistration = () => {
+      if (!openAppRouteWithDownloadFallback('/register')) window.location.href = '/#app-download'
+    }
+
     onMounted(completeVerification)
-    return { openAppLogin, pageCopy, t, verificationError, verificationSuccess }
+    return { openAppLogin, openAppRegistration, pageCopy, t, verificationError, verificationSuccess }
   }
 }
 </script>

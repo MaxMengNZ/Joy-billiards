@@ -18,6 +18,7 @@ const clubPublicPaths = [
   /^\/reset-password$/,
   /^\/app-reset$/,
   /^\/auth\/callback$/,
+  /^\/auth\/confirm$/,
   /^\/verify-email$/,
   /^\/register$/,
   /^\/join$/,
@@ -68,7 +69,13 @@ const routes = [
   {
     path: '/auth/callback',
     name: 'EmailConfirm',
-    component: () => import('../views/EmailConfirmPage.vue'),
+    component: () => import('../views/EmailVerificationPage.vue'),
+    meta: { title: 'Email Confirmation' }
+  },
+  {
+    path: '/auth/confirm',
+    name: 'EmailConfirmToken',
+    component: () => import('../views/EmailVerificationPage.vue'),
     meta: { title: 'Email Confirmation' }
   },
   {
