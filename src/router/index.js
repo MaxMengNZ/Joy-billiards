@@ -8,6 +8,8 @@ const currentHost = typeof window === 'undefined' ? '' : window.location.hostnam
 const isClubHost = currentHost === CLUB_HOST
 const clubPublicPaths = [
   /^\/$/,
+  /^\/pricing$/,
+  /^\/membership$/,
   /^\/app\/player\/[^/]+$/,
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
@@ -155,6 +157,12 @@ const routes = [
     name: 'Membership',
     component: () => import('../views/MembershipPage.vue'),
     meta: { title: 'Membership Benefits' }
+  },
+  {
+    path: '/pricing',
+    name: 'Pricing',
+    component: () => import('../views/PricingPage.vue'),
+    meta: { title: 'Pricing & Services' }
   },
   {
     path: '/share/player/:token',
