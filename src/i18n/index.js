@@ -5,6 +5,9 @@
 import { computed, ref } from 'vue'
 import en from './locales/en'
 import zh from './locales/zh'
+import { detectDeviceLocale } from './deviceLocale'
+
+export { detectDeviceLocale } from './deviceLocale'
 
 export const STORAGE_KEY = 'joy_locale'
 export const SUPPORTED = ['en', 'zh']
@@ -19,23 +22,6 @@ function readStoredLocale() {
     /* ignore */
   }
   return null
-}
-
-/** zh* → Chinese; everything else → English (default). */
-export function detectDeviceLocale() {
-  try {
-    const candidates = [
-      ...(navigator.languages || []),
-      navigator.language,
-      navigator.userLanguage
-    ].filter(Boolean)
-    for (const raw of candidates) {
-      if (String(raw).toLowerCase().startsWith('zh')) return 'zh'
-    }
-  } catch {
-    /* ignore */
-  }
-  return 'en'
 }
 
 function initialLocale() {
