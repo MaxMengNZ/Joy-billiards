@@ -147,7 +147,6 @@ import { useAuthStore } from '../stores/authStore'
 import { createClient } from '@supabase/supabase-js'
 import { useI18n } from '../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
-import { CLUB_HOME_URL, canUseLegacyRankWebsite, isRankWebsiteHost } from '../utils/rankWebsiteAccess'
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -230,14 +229,6 @@ export default {
         })
 
         if (result.success) {
-          if (
-            isRankWebsiteHost(window.location.hostname) &&
-            !canUseLegacyRankWebsite(authStore)
-          ) {
-            window.location.replace(CLUB_HOME_URL)
-            return
-          }
-
           const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
           // Only allow same-origin relative redirects
           if (redirect.startsWith('/') && !redirect.startsWith('//')) {

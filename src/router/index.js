@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
-import { canUseLegacyRankWebsite } from '../utils/rankWebsiteAccess'
 
 const CLUB_HOST = 'club.joybilliards.co.nz'
 const RANK_HOST = 'rank.joybilliards.co.nz'
@@ -26,9 +25,6 @@ const clubPublicPaths = [
   /^\/join$/,
   /^\/login$/,
 ]
-const legacyClubPaths = clubPublicPaths.filter(pattern => !pattern.test('/') && !pattern.test('/register'))
-  .filter(pattern => !pattern.test('/login'))
-
 const routes = [
   {
     path: '/',
@@ -274,15 +270,16 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   try {
-    // Keep the Club subdomain app-first: public support and share pages only.
-    if (isClubHost && !clubPublicPaths.some(pattern => pattern.test(to.path))) {
-      next('/')
+    // Rank is permanently retired. This client guard is a fallback behind the
+    // Vercel edge redirect and intentionally has no administrator exception.
+    if (currentHost === RANK_HOST) {
+      window.location.replace(`https://${CLUB_HOST}/`)
       return
     }
 
-    // Preserve old QR codes and review URLs while moving public App pages to Club.
-    if (currentHost === RANK_HOST && legacyClubPaths.some(pattern => pattern.test(to.path))) {
-      window.location.replace(`https://${CLUB_HOST}${to.fullPath}${window.location.hash || ''}`)
+    // Keep the Club subdomain app-first: public support and share pages only.
+    if (isClubHost && !clubPublicPaths.some(pattern => pattern.test(to.path))) {
+      next('/')
       return
     }
 
@@ -308,11 +305,6 @@ router.beforeEach(async (to, from, next) => {
         return
       }
 
-      if (currentHost === RANK_HOST && !canUseLegacyRankWebsite(authStore)) {
-        window.location.replace(`https://${CLUB_HOST}/`)
-        return
-      }
-      
       // Check if route requires admin role
       if (to.meta.requiresAdmin) {
         // If not admin, redirect to home

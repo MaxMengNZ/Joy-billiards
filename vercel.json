@@ -10,6 +10,17 @@
   ],
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "rank.joybilliards.co.nz"
+        }
+      ],
+      "destination": "https://club.joybilliards.co.nz/",
+      "permanent": true
+    },
+    {
       "source": "/home",
       "destination": "/",
       "permanent": false
