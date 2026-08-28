@@ -5,6 +5,7 @@ const CLUB_HOST = 'club.joybilliards.co.nz'
 const RANK_HOST = 'rank.joybilliards.co.nz'
 const currentHost = typeof window === 'undefined' ? '' : window.location.hostname.toLowerCase()
 const isClubHost = currentHost === CLUB_HOST
+const isRetiredWebHost = currentHost === RANK_HOST || currentHost.endsWith('.vercel.app')
 const clubPublicPaths = [
   /^\/$/,
   /^\/pricing$/,
@@ -272,7 +273,7 @@ router.beforeEach(async (to, from, next) => {
   try {
     // Rank is permanently retired. This client guard is a fallback behind the
     // Vercel edge redirect and intentionally has no administrator exception.
-    if (currentHost === RANK_HOST) {
+    if (isRetiredWebHost) {
       window.location.replace(`https://${CLUB_HOST}/`)
       return
     }

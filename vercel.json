@@ -21,6 +21,28 @@
       "permanent": true
     },
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "joy-billiards.vercel.app"
+        }
+      ],
+      "destination": "https://club.joybilliards.co.nz/",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "joy-billiards-[a-z0-9]+-max-mengs-projects\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://club.joybilliards.co.nz/",
+      "permanent": true
+    },
+    {
       "source": "/home",
       "destination": "/",
       "permanent": false
