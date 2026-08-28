@@ -1,44 +1,35 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
-import {
-  canUseLegacyRankWebsite,
-  isRankWebsiteHost,
-} from '../src/utils/rankWebsiteAccess.js'
-import { readFile } from 'node:fs/promises'
+test('Vercel permanently retires every Rank path at the edge', async () => {
+  const config = JSON.parse(
+    await readFile(new URL('../vercel.json', import.meta.url), 'utf8'),
+  )
+  const redirect = config.redirects.find((rule) =>
+    rule.has?.some(
+      (condition) =>
+        condition.type === 'host' &&
+        condition.value === 'rank.joybilliards.co.nz',
+    ),
+  )
 
-test('only Max Meng administrator account can retain the legacy Rank website', () => {
-  assert.equal(
-    canUseLegacyRankWebsite({
-      user: { email: 'MaxMengNZ@qq.com' },
-      profile: { role: 'admin', name: 'Max Meng' },
-    }),
-    true,
-  )
-  assert.equal(
-    canUseLegacyRankWebsite({
-      user: { email: 'maxmengnz@qq.com' },
-      profile: { role: 'player', name: 'Max Meng' },
-    }),
-    false,
-  )
-  assert.equal(
-    canUseLegacyRankWebsite({
-      user: { email: 'another-admin@example.com' },
-      profile: { role: 'admin' },
-    }),
-    false,
-  )
+  assert.ok(redirect)
+  assert.equal(redirect.source, '/(.*)')
+  assert.equal(redirect.destination, 'https://club.joybilliards.co.nz/')
+  assert.equal(redirect.permanent, true)
 })
 
-test('Rank host matching is exact and case insensitive', () => {
-  assert.equal(isRankWebsiteHost('RANK.JOYBILLIARDS.CO.NZ'), true)
-  assert.equal(isRankWebsiteHost('club.joybilliards.co.nz'), false)
-  assert.equal(isRankWebsiteHost('evil-rank.joybilliards.co.nz'), false)
-})
-
-test('protected Rank routes enforce the same Max-only rule before rendering', async () => {
-  const router = await readFile(new URL('../src/router/index.js', import.meta.url), 'utf8')
-  assert.match(router, /currentHost === RANK_HOST && !canUseLegacyRankWebsite\(authStore\)/)
-  assert.match(router, /window\.location\.replace\(`https:\/\/\$\{CLUB_HOST\}\/`\)/)
+test('the client fallback has no administrator exception', async () => {
+  const router = await readFile(
+    new URL('../src/router/index.js', import.meta.url),
+    'utf8',
+  )
+  assert.match(router, /if \(currentHost === RANK_HOST\)/)
+  assert.match(
+    router,
+    /window\.location\.replace\(`https:\/\/\$\{CLUB_HOST\}\/`\)/,
+  )
+  assert.doesNotMatch(router, /canUseLegacyRankWebsite/)
+  assert.doesNotMatch(router, /LEGACY_RANK_OPERATOR_EMAIL/)
 })
