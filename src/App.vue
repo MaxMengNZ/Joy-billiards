@@ -207,6 +207,8 @@ export default {
     onMounted(async () => {
       // Setup global error handler
       setupGlobalErrorHandler()
+
+      if (['/reset-password', '/app-reset'].includes(window.location.pathname)) return
       
       // Initialize auth
       await authStore.initialize()

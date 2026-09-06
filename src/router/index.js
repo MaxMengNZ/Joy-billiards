@@ -56,7 +56,7 @@ const routes = [
   {
     path: '/reset-password',
     name: 'ResetPassword',
-    component: () => import('../views/ResetPasswordPage.vue'),
+    component: () => import('../views/AppPasswordResetBridge.vue'),
     meta: { title: 'Reset Password' }
   },
   {

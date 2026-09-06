@@ -7,7 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables. Please check your .env file.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Recovery credentials belong to the native App, not a website session.
+const isRecoveryBridge = typeof window !== 'undefined' && ['/reset-password', '/app-reset'].includes(window.location.pathname)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { detectSessionInUrl: !isRecoveryBridge },
+})
 
 // Test connection
 export const testConnection = async () => {
@@ -26,4 +30,3 @@ export const testConnection = async () => {
     return false
   }
 }
-
