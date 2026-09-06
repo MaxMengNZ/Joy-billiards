@@ -139,7 +139,7 @@
       ]
     },
     {
-      "source": "/(verify-email|auth/callback|auth/confirm)",
+      "source": "/(verify-email|auth/callback|auth/confirm|reset-password|app-reset)",
       "headers": [
         {
           "key": "Cache-Control",
