@@ -46,7 +46,6 @@
 
         <article class="detail-card">
           <p class="eyebrow">{{ text.officialEntry }}</p>
-          <h2>{{ text.clearReliable }}</h2>
           <p class="description">{{ event.description || text.defaultDescription }}</p>
           <div class="trust"><b>✓</b><span>{{ text.security }}</span></div>
         </article>
@@ -105,7 +104,7 @@ const copy = {
     loading: '正在载入官方赛事', notFound: '找不到该赛事', notFoundHint: '请检查分享链接，或从 Joy Club App 赛事页面重新进入。',
     share: '分享赛事', entryFee: '报名费', players: '参赛人数', status: '当前状态', free: '免费',
     open: '接受报名', full: '名额已满', soon: '即将开放', closed: '报名已结束',
-    officialEntry: '官方赛事报名', clearReliable: '信息清楚，报名可靠',
+    officialEntry: '官方赛事报名',
     defaultDescription: '查看赛事时间、参赛资格、报名费用和当前报名状态。',
     security: '每个分享链接只对应这一场赛事；付款与报名确认由 Joy Club 安全处理。',
     createAndEnter: '创建账户并报名', alreadyMember: '已有 Joy Club App？打开并报名',
@@ -116,7 +115,7 @@ const copy = {
     loading: 'Loading the official event', notFound: 'Tournament not found', notFoundHint: 'Check the shared link or reopen the event from the Joy Club App.',
     share: 'Share event', entryFee: 'ENTRY FEE', players: 'PLAYERS', status: 'STATUS', free: 'Free',
     open: 'Registration open', full: 'Full', soon: 'Opening soon', closed: 'Registration closed',
-    officialEntry: 'OFFICIAL EVENT ENTRY', clearReliable: 'Clear details. Secure entry.',
+    officialEntry: 'OFFICIAL EVENT ENTRY',
     defaultDescription: 'Review the event time, eligibility, entry fee and current registration status.',
     security: 'Each shared link belongs to this event only. Joy Club securely handles payment and entry confirmation.',
     createAndEnter: 'Create account & enter', alreadyMember: 'Already have Joy Club? Open the App',
