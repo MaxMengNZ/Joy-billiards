@@ -13,6 +13,7 @@ const clubPublicPaths = [
   /^\/app\/player\/[^/]+$/,
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
+  /^\/app\/event\/[0-9a-f-]+$/i,
   /^\/share\/(player|monthly|annual)\/[0-9a-f-]+$/i,
   /^\/privacy-policy$/,
   /^\/terms-of-service$/,
@@ -200,6 +201,12 @@ const routes = [
     name: 'SharedAnnualHonours',
     component: () => import('../views/AnnualHonoursSharePage.vue'),
     meta: { title: 'JOY Annual Honours' }
+  },
+  {
+    path: '/app/event/:id',
+    name: 'SharedTournamentEntry',
+    component: () => import('../views/TournamentEntrySharePage.vue'),
+    meta: { title: 'JOY Tournament Entry' }
   },
   {
     path: '/wechat',

@@ -25,7 +25,9 @@ export const downloadOptionsForClient = (platform = detectClientPlatform()) => {
 
 export const openAppRouteWithDownloadFallback = (route = '/login', platform = detectClientPlatform()) => {
   if (typeof window === 'undefined') return false
-  const safeRoute = /^\/[a-z0-9/_-]*$/i.test(route) ? route : '/login'
+  const isSimpleRoute = /^\/[a-z0-9/_-]*$/i.test(route)
+  const isTournamentEntry = /^\/tournament\/[0-9a-f-]+\?entrySource=share&entryAction=register$/i.test(route)
+  const safeRoute = isSimpleRoute || isTournamentEntry ? route : '/login'
 
   if (platform === 'android') {
     const fallbackUrl = encodeURIComponent(ANDROID_PLAY_STORE_URL)

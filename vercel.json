@@ -122,6 +122,19 @@
       ]
     },
     {
+      "source": "/app/event/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
       "source": "/join",
       "headers": [
         {

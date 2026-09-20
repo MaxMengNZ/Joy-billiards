@@ -74,6 +74,10 @@ export default {
       : { eyebrow: 'JOY SECURE VERIFICATION', secure: 'Secure account', profile: 'Member profile ready', ready: 'Return to the Joy Club App to sign in after verification', retry: 'Open Joy Club App to resend', support: 'If the link expired, resend it from the App registration screen using the same email. Need help? Contact info@joybilliards.co.nz' }
     const verificationSuccess = ref(false)
     const verificationError = ref('')
+    const requestedEvent = (() => {
+      const value = new URLSearchParams(window.location.search).get('event') || ''
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : ''
+    })()
 
     const completeVerification = async () => {
       try {
@@ -118,7 +122,10 @@ export default {
     }
 
     const openAppLogin = () => {
-      if (!openAppLoginWithDownloadFallback()) window.location.href = '/#app-download'
+      const opened = requestedEvent
+        ? openAppRouteWithDownloadFallback(`/tournament/${requestedEvent}?entrySource=share&entryAction=register`)
+        : openAppLoginWithDownloadFallback()
+      if (!opened) window.location.href = '/#app-download'
     }
 
     const openAppRegistration = () => {

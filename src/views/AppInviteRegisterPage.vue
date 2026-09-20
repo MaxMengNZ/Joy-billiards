@@ -26,6 +26,14 @@
         </div>
         <i>↗</i>
       </section>
+      <section v-else-if="eventInvitation.name" class="invitation-strip event-invitation">
+        <div class="event-mark">8</div>
+        <div>
+          <span>{{ text.eventEntry }}</span>
+          <strong>{{ eventInvitation.name }}</strong>
+        </div>
+        <i>↗</i>
+      </section>
 
       <article class="register-card">
         <div class="card-heading">
@@ -165,19 +173,22 @@ import { useRoute } from 'vue-router'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { supabase } from '../config/supabase'
 import { useI18n } from '../i18n'
-import { downloadOptionsForClient, openAppLoginWithDownloadFallback } from '../utils/appDownload'
+import { downloadOptionsForClient, openAppLoginWithDownloadFallback, openAppRouteWithDownloadFallback } from '../utils/appDownload'
 
 const route = useRoute()
 const secureInviteToken = computed(() => String(route.query.invite || ''))
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const eventId = computed(() => uuid.test(String(route.query.event || '')) ? String(route.query.event) : '')
 const { locale } = useI18n()
 const copy = {
-  zh: { invitedBy: '来自 JOY 球员的邀请', invitesYou: '邀请你加入 Joy Club', title: '创建会员账户', intro: '免费加入 Lite 会员，获得专属会员编号，开启你的 JOY 球员档案。', name: '真实姓名 *', nameHint: '用于赛事名单与球员档案', birthday: '出生日期 *', birthdayNote: '注册后不可自行修改', phone: '手机号码 *', email: '邮箱 *', emailHint: '用于登录与安全验证', emailChecking: '正在确认邮箱…', emailAvailable: '邮箱可以使用', password: '密码 *', passwordHint: '至少 8 位，包含字母和数字', confirm: '确认密码 *', confirmHint: '请再次输入密码', showPassword: '显示或隐藏密码', agree: '我已阅读并同意', terms: '《用户协议》', and: '与', privacy: '《隐私政策》', submit: '免费注册 Joy Club', hasAccount: '已有账户？打开 Joy Club App 登录', successTitle: '账户创建成功', successText: '验证邮件已经发送，请点击邮件中的链接完成验证后登录 App。', resend: '没有收到？重新发送验证邮件', resending: '正在发送…', resendIn: '秒后可重新发送', goLogin: '已完成验证？打开 App 登录', memberId: '专属会员编号', tournaments: '赛事与球员档案', rewards: '积分与会员权益', getApp: '下载 Joy Club App', deviceHint: '已根据当前设备显示正确版本', invalidEmail: '请输入真实有效的邮箱地址', duplicateEmail: '该邮箱已经注册，请直接登录或使用忘记密码。', emailCheckFailed: '暂时无法检查邮箱，请稍后再试。', invalidBirthday: '请按 DD/MM/YYYY 填写真实生日，注册人须年满 13 周岁。', invalidPassword: '密码至少 8 位，并且必须同时包含字母和数字。', mismatch: '两次输入的密码不一致。', acceptTerms: '请先同意用户协议和隐私政策。', required: '请完整填写所有必填信息。', registerFailed: '注册失败，请稍后重试。', resendSuccess: '请求已提交。若邮箱仍未验证，系统会发送新邮件；若已点击过验证链接，请直接打开 App 登录。' },
-  en: { invitedBy: 'INVITED BY A JOY PLAYER', invitesYou: 'invited you to join Joy Club', title: 'Create your account', intro: 'Join as a free Lite member, receive your member number and start your official JOY player profile.', name: 'Legal name *', nameHint: 'Used for tournaments and your player profile', birthday: 'Date of birth *', birthdayNote: 'Cannot be changed after registration', phone: 'Phone number *', email: 'Email *', emailHint: 'Used for sign-in and security verification', emailChecking: 'Checking email…', emailAvailable: 'Email is available', password: 'Password *', passwordHint: '8+ characters with letters and numbers', confirm: 'Confirm password *', confirmHint: 'Enter your password again', showPassword: 'Show or hide password', agree: 'I have read and agree to the', terms: 'Terms of Service', and: 'and', privacy: 'Privacy Policy', submit: 'Create free Joy Club account', hasAccount: 'Already have an account? Open Joy Club App to sign in', successTitle: 'Account created', successText: 'We sent a verification email. Open the link in that email before signing in to the App.', resend: "Didn't receive it? Resend verification email", resending: 'Sending…', resendIn: 's before resend', goLogin: 'Verified your email? Sign in with the App', memberId: 'Personal member number', tournaments: 'Events and player profile', rewards: 'Points and member benefits', getApp: 'Download Joy Club App', deviceHint: 'Showing the correct version for this device', invalidEmail: 'Enter a valid email address.', duplicateEmail: 'This email is already registered. Sign in or use Forgot Password.', emailCheckFailed: 'We could not check this email. Try again shortly.', invalidBirthday: 'Enter a real date as DD/MM/YYYY. You must be at least 13.', invalidPassword: 'Use at least 8 characters containing both letters and numbers.', mismatch: 'Passwords do not match.', acceptTerms: 'Accept the Terms and Privacy Policy to continue.', required: 'Complete all required fields.', registerFailed: 'Registration failed. Please try again.', resendSuccess: 'Request submitted. If the account is still unverified, a new email will be sent. If you already opened the verification link, sign in with the App.' },
+  zh: { invitedBy: '来自 JOY 球员的邀请', invitesYou: '邀请你加入 Joy Club', eventEntry: '创建账户后继续报名', title: '创建会员账户', intro: '免费加入 Lite 会员，获得专属会员编号，开启你的 JOY 球员档案。', name: '真实姓名 *', nameHint: '用于赛事名单与球员档案', birthday: '出生日期 *', birthdayNote: '注册后不可自行修改', phone: '手机号码 *', email: '邮箱 *', emailHint: '用于登录与安全验证', emailChecking: '正在确认邮箱…', emailAvailable: '邮箱可以使用', password: '密码 *', passwordHint: '至少 8 位，包含字母和数字', confirm: '确认密码 *', confirmHint: '请再次输入密码', showPassword: '显示或隐藏密码', agree: '我已阅读并同意', terms: '《用户协议》', and: '与', privacy: '《隐私政策》', submit: '免费注册 Joy Club', hasAccount: '已有账户？打开 Joy Club App 登录', successTitle: '账户创建成功', successText: '验证邮件已经发送，请点击邮件中的链接完成验证后登录 App。', resend: '没有收到？重新发送验证邮件', resending: '正在发送…', resendIn: '秒后可重新发送', goLogin: '已完成验证？打开 App 继续报名', memberId: '专属会员编号', tournaments: '赛事与球员档案', rewards: '积分与会员权益', getApp: '下载 Joy Club App', deviceHint: '已根据当前设备显示正确版本', invalidEmail: '请输入真实有效的邮箱地址', duplicateEmail: '该邮箱已经注册，请直接登录或使用忘记密码。', emailCheckFailed: '暂时无法检查邮箱，请稍后再试。', invalidBirthday: '请按 DD/MM/YYYY 填写真实生日，注册人须年满 13 周岁。', invalidPassword: '密码至少 8 位，并且必须同时包含字母和数字。', mismatch: '两次输入的密码不一致。', acceptTerms: '请先同意用户协议和隐私政策。', required: '请完整填写所有必填信息。', registerFailed: '注册失败，请稍后重试。', resendSuccess: '请求已提交。若邮箱仍未验证，系统会发送新邮件；若已点击过验证链接，请直接打开 App 登录。' },
+  en: { invitedBy: 'INVITED BY A JOY PLAYER', invitesYou: 'invited you to join Joy Club', eventEntry: 'CREATE AN ACCOUNT TO CONTINUE', title: 'Create your account', intro: 'Join as a free Lite member, receive your member number and start your official JOY player profile.', name: 'Legal name *', nameHint: 'Used for tournaments and your player profile', birthday: 'Date of birth *', birthdayNote: 'Cannot be changed after registration', phone: 'Phone number *', email: 'Email *', emailHint: 'Used for sign-in and security verification', emailChecking: 'Checking email…', emailAvailable: 'Email is available', password: 'Password *', passwordHint: '8+ characters with letters and numbers', confirm: 'Confirm password *', confirmHint: 'Enter your password again', showPassword: 'Show or hide password', agree: 'I have read and agree to the', terms: 'Terms of Service', and: 'and', privacy: 'Privacy Policy', submit: 'Create free Joy Club account', hasAccount: 'Already have an account? Open Joy Club App to sign in', successTitle: 'Account created', successText: 'We sent a verification email. Open the link in that email before signing in to the App.', resend: "Didn't receive it? Resend verification email", resending: 'Sending…', resendIn: 's before resend', goLogin: 'Verified? Open the App to continue entry', memberId: 'Personal member number', tournaments: 'Events and player profile', rewards: 'Points and member benefits', getApp: 'Download Joy Club App', deviceHint: 'Showing the correct version for this device', invalidEmail: 'Enter a valid email address.', duplicateEmail: 'This email is already registered. Sign in or use Forgot Password.', emailCheckFailed: 'We could not check this email. Try again shortly.', invalidBirthday: 'Enter a real date as DD/MM/YYYY. You must be at least 13.', invalidPassword: 'Use at least 8 characters containing both letters and numbers.', mismatch: 'Passwords do not match.', acceptTerms: 'Accept the Terms and Privacy Policy to continue.', required: 'Complete all required fields.', registerFailed: 'Registration failed. Please try again.', resendSuccess: 'Request submitted. If the account is still unverified, a new email will be sent. If you already opened the verification link, sign in with the App.' },
 }
 const text = computed(() => copy[locale.value] || copy.en)
 const downloadOptions = downloadOptionsForClient()
 const downloadCard = ref(null)
 const inviter = reactive({ name: '', avatar: '' })
+const eventInvitation = reactive({ name: '' })
 const name = ref('')
 const birthday = ref('')
 const phone = ref('')
@@ -204,7 +215,10 @@ const normalizedEmail = () => email.value.trim().toLowerCase().replace(/[\s\u200
 const validEmail = (value) => /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)
 
 const openAppLogin = () => {
-  if (openAppLoginWithDownloadFallback()) return
+  const opened = eventId.value
+    ? openAppRouteWithDownloadFallback(`/tournament/${eventId.value}?entrySource=share&entryAction=register`)
+    : openAppLoginWithDownloadFallback()
+  if (opened) return
   downloadCard.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
@@ -271,7 +285,9 @@ const submit = async () => {
       email: normalizedEmail(),
       password: password.value,
       options: {
-        emailRedirectTo: 'https://club.joybilliards.co.nz/verify-email',
+        emailRedirectTo: eventId.value
+          ? `https://club.joybilliards.co.nz/verify-email?event=${encodeURIComponent(eventId.value)}`
+          : 'https://club.joybilliards.co.nz/verify-email',
         data: {
           full_name: name.value,
           phone: phone.value,
@@ -309,13 +325,25 @@ const startCooldown = () => {
 const resend = async () => {
   if (resending.value || cooldown.value > 0) return
   resending.value = true
-  const { error } = await supabase.auth.resend({ type: 'signup', email: normalizedEmail(), options: { emailRedirectTo: 'https://club.joybilliards.co.nz/verify-email' } })
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: normalizedEmail(),
+    options: {
+      emailRedirectTo: eventId.value
+        ? `https://club.joybilliards.co.nz/verify-email?event=${encodeURIComponent(eventId.value)}`
+        : 'https://club.joybilliards.co.nz/verify-email',
+    },
+  })
   resending.value = false
   message.value = error?.message || text.value.resendSuccess
   if (!error) startCooldown()
 }
 
 onMounted(async () => {
+  if (eventId.value) {
+    const { data } = await supabase.from('tournaments').select('name').eq('id', eventId.value).maybeSingle()
+    if (data?.name) eventInvitation.name = data.name
+  }
   if (secureInviteToken.value) {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(secureInviteToken.value)) return
     const { data, error } = await supabase.rpc('resolve_public_app_share', { p_token: secureInviteToken.value })
@@ -344,6 +372,7 @@ onBeforeUnmount(() => clearInterval(cooldownTimer))
 .login-link{width:100%}
 .success-panel .app-login-link{height:auto;margin-top:15px;padding:0;background:transparent;color:#d43d47;font-size:9px;font-weight:900}
 .success-panel .success-notice{margin:8px auto;color:#2e835b}
+.event-invitation .event-mark{width:39px;height:39px;flex:0 0 auto;display:grid;place-items:center;border:1.5px solid #d8ad5f;border-radius:50%;background:#0e1014;color:#fff;font:900 18px Georgia,serif}
 .join-page,.join-page *{box-sizing:border-box}
 .join-shell,.register-card,.register-card form,.field-grid,.field,.input-shell{width:100%;max-width:100%;min-width:0}
 .field-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
