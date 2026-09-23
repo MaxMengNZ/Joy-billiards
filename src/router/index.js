@@ -14,6 +14,7 @@ const clubPublicPaths = [
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
   /^\/app\/event\/[0-9a-f-]+$/i,
+  /^\/app\/zz$/,
   /^\/share\/(player|monthly|annual)\/[0-9a-f-]+$/i,
   /^\/privacy-policy$/,
   /^\/terms-of-service$/,
@@ -53,6 +54,12 @@ const routes = [
     name: 'JoyClubInviteRegister',
     component: () => import('../views/AppInviteRegisterPage.vue'),
     meta: { title: 'Join Joy Club' }
+  },
+  {
+    path: '/app/zz',
+    name: 'ZzVenueJoin',
+    component: () => import('../views/ZzVenueJoinPage.vue'),
+    meta: { title: 'Join ZZ Joy Billiards Club' }
   },
   {
     path: '/reset-password',

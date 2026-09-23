@@ -35,6 +35,15 @@
         <i>↗</i>
       </section>
 
+      <section v-else-if="registrationVenue" class="invitation-strip">
+        <div class="inviter-avatar"><span>ZZ</span></div>
+        <div>
+          <span>{{ locale === 'zh' ? '注册后的默认门店' : 'YOUR DEFAULT VENUE' }}</span>
+          <strong>{{ registrationVenue.name }}</strong>
+        </div>
+        <i>✓</i>
+      </section>
+
       <article class="register-card">
         <div class="card-heading">
           <p>JOY MEMBERSHIP</p>
@@ -45,7 +54,11 @@
         <div v-if="success" class="success-panel">
           <div class="success-mark">✓</div>
           <h2>{{ text.successTitle }}</h2>
-          <p>{{ text.successText }}</p>
+          <p>{{ registrationVenue
+            ? (locale === 'zh'
+              ? '验证邮件已经发送。完成验证并首次登录 App 后，将自动成为 ZZ 门店会员。'
+              : 'We sent a verification email. After verification, your first App sign-in will automatically join ZZ.')
+            : text.successText }}</p>
           <strong>{{ email }}</strong>
           <p v-if="message" class="success-notice">{{ message }}</p>
           <button type="button" :disabled="resending || cooldown > 0" @click="resend">
@@ -185,6 +198,9 @@ const copy = {
   en: { invitedBy: 'INVITED BY A JOY PLAYER', invitesYou: 'invited you to join Joy Club', eventEntry: 'CREATE AN ACCOUNT TO CONTINUE', title: 'Create your account', intro: 'Join as a free Lite member, receive your member number and start your official JOY player profile.', name: 'Legal name *', nameHint: 'Used for tournaments and your player profile', birthday: 'Date of birth *', birthdayNote: 'Cannot be changed after registration', phone: 'Phone number *', email: 'Email *', emailHint: 'Used for sign-in and security verification', emailChecking: 'Checking email…', emailAvailable: 'Email is available', password: 'Password *', passwordHint: '8+ characters with letters and numbers', confirm: 'Confirm password *', confirmHint: 'Enter your password again', showPassword: 'Show or hide password', agree: 'I have read and agree to the', terms: 'Terms of Service', and: 'and', privacy: 'Privacy Policy', submit: 'Create free Joy Club account', hasAccount: 'Already have an account? Open Joy Club App to sign in', successTitle: 'Account created', successText: 'We sent a verification email. Open the link in that email before signing in to the App.', resend: "Didn't receive it? Resend verification email", resending: 'Sending…', resendIn: 's before resend', goLogin: 'Verified? Open the App to continue entry', memberId: 'Personal member number', tournaments: 'Events and player profile', rewards: 'Points and member benefits', getApp: 'Download Joy Club App', deviceHint: 'Showing the correct version for this device', invalidEmail: 'Enter a valid email address.', duplicateEmail: 'This email is already registered. Sign in or use Forgot Password.', emailCheckFailed: 'We could not check this email. Try again shortly.', invalidBirthday: 'Enter a real date as DD/MM/YYYY. You must be at least 13.', invalidPassword: 'Use at least 8 characters containing both letters and numbers.', mismatch: 'Passwords do not match.', acceptTerms: 'Accept the Terms and Privacy Policy to continue.', required: 'Complete all required fields.', registerFailed: 'Registration failed. Please try again.', resendSuccess: 'Request submitted. If the account is still unverified, a new email will be sent. If you already opened the verification link, sign in with the App.' },
 }
 const text = computed(() => copy[locale.value] || copy.en)
+const registrationVenue = computed(() => String(route.query.venue || '') === 'zz-joy-melbourne'
+  ? { id: 'zz-joy-melbourne', name: 'ZZ Joy Billiards Club · Melbourne' }
+  : null)
 const downloadOptions = downloadOptionsForClient()
 const downloadCard = ref(null)
 const inviter = reactive({ name: '', avatar: '' })
@@ -217,7 +233,9 @@ const validEmail = (value) => /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 const openAppLogin = () => {
   const opened = eventId.value
     ? openAppRouteWithDownloadFallback(`/tournament/${eventId.value}?entrySource=share&entryAction=register`)
-    : openAppLoginWithDownloadFallback()
+    : registrationVenue.value
+      ? openAppRouteWithDownloadFallback('/app/zz')
+      : openAppLoginWithDownloadFallback()
   if (opened) return
   downloadCard.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
@@ -298,6 +316,8 @@ const submit = async () => {
           privacy_version: '2026-08-01-v1',
           referral_share_token: secureInviteToken.value || null,
           legacy_referral_source: secureInviteToken.value ? null : (route.query.ref ? String(route.query.ref) : null),
+          registration_venue_id: registrationVenue.value?.id || null,
+          registration_venue_source: registrationVenue.value ? 'venue_link' : null,
         },
       },
     })
