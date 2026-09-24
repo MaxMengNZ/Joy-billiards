@@ -155,7 +155,8 @@ const openApp = () => {
 }
 const shareEvent = async () => {
   const url = window.location.href
-  if (navigator.share) return navigator.share({ title: event.value.name, text: text.value.officialEntry, url }).catch(() => undefined)
+  const shareText = `${event.value.name}\n${text.value.officialEntry}: ${url}`
+  if (navigator.share) return navigator.share({ title: event.value.name, text: shareText }).catch(() => undefined)
   await navigator.clipboard?.writeText(url)
 }
 
