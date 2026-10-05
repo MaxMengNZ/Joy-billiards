@@ -7,8 +7,14 @@ import {
   eventRegistrationState,
   safeEventBanner,
   EVENT_REFERENCE,
+  publicEventCounts,
 } from "../src/utils/eventShare.js";
 const id = "d02b933c-6491-4fbb-846f-29a788c8ace6";
+test('public counts distinguish zero from unavailable and reject invalid data', () => {
+  assert.deepEqual(publicEventCounts(null), {confirmedCount:null,pendingCount:null,waitlistedCount:null});
+  assert.deepEqual(publicEventCounts({confirmedCount:0,pendingCount:2,waitlistedCount:1}), {confirmedCount:0,pendingCount:2,waitlistedCount:1});
+  assert.deepEqual(publicEventCounts({confirmedCount:-1,pendingCount:'3',waitlistedCount:1.5}), {confirmedCount:null,pendingCount:null,waitlistedCount:null});
+});
 test("sharing uses one canonical event path and strips checkout tracking", () => {
   assert.equal(
     eventSharePath({ id, share_code: "04FDEEEE" }),

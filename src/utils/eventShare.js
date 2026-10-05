@@ -2,6 +2,17 @@ export const EVENT_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const EVENT_REFERENCE = /^[a-z0-9][a-z0-9-]{2,46}[a-z0-9]$/i;
 
+export function publicEventCounts(data) {
+  const count = (value) =>
+    typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+      ? value : null;
+  return {
+    confirmedCount: count(data?.confirmedCount),
+    pendingCount: count(data?.pendingCount),
+    waitlistedCount: count(data?.waitlistedCount),
+  };
+}
+
 export function eventSharePath(event) {
   if (!EVENT_UUID.test(event?.id || "")) return null;
   const reference = event.share_alias || event.share_code;

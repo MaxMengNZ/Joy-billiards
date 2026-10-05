@@ -59,6 +59,13 @@
             ><strong>{{ playerCount }}</strong>
           </div>
         </section>
+        <p v-if="counts.pendingCount !== null" class="fee-note" role="status">
+          {{ text.pending }} {{ counts.pendingCount }} · {{ text.waitlisted }} {{ counts.waitlistedCount ?? '—' }}
+        </p>
+        <p v-if="registrationCount === null" class="fee-note" role="status">
+          {{ text.countUnavailable }}
+          <button class="share" type="button" @click="loadEvent({ quiet: true })">{{ text.retry }}</button>
+        </p>
         <p
           v-if="
             publicEntry?.onlinePaymentEnabled && Number(event.entry_fee) > 0
@@ -155,6 +162,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
+import { publicEventCounts } from '../utils/eventShare.js';
 import { supabase } from "../config/supabase";
 import { useI18n } from "../i18n";
 import {
@@ -177,6 +185,7 @@ const event = ref(null),
   publicEntry = ref(null),
   venue = ref({}),
   registrationCount = ref(null);
+const counts = ref(publicEventCounts(null));
 const loading = ref(true),
   error = ref(""),
   bannerFailed = ref(false),
@@ -193,6 +202,9 @@ const copy = {
     share: "分享赛事",
     entryFee: "报名费",
     players: "已确认参赛",
+    pending: "待付款／确认",
+    waitlisted: "候补",
+    countUnavailable: "报名人数暂未载入，不影响打开 App 查看赛事。",
     free: "免费报名",
     open: "接受报名",
     full: "名额已满",
@@ -238,6 +250,9 @@ const copy = {
     share: "Share event",
     entryFee: "Entry fee",
     players: "Confirmed players",
+    pending: "Awaiting payment / confirmation",
+    waitlisted: "Waitlisted",
+    countUnavailable: "Entry counts are unavailable. You can still open the event in the App.",
     free: "Free entry",
     open: "Registration open",
     full: "Full",
@@ -390,7 +405,7 @@ async function loadEvent({ quiet = false } = {}) {
       if (resolved.error || !resolved.data?.id) throw new Error("NOT_FOUND");
       id = resolved.data.id;
     }
-    const [eventResult, entryResult] = await Promise.all([
+    const [eventResult, entryResult, countResult] = await Promise.all([
       supabase
         .from("tournaments")
         .select(
@@ -399,6 +414,7 @@ async function loadEvent({ quiet = false } = {}) {
         .eq("id", id)
         .maybeSingle(),
       supabase.rpc("app_get_public_tournament_entry", { p_tournament_id: id }),
+      supabase.rpc("app_get_public_tournament_counts", { p_tournament_id: id }),
     ]);
     if (eventResult.error || !eventResult.data) throw new Error("NOT_FOUND");
     const venueResult = await supabase
@@ -410,9 +426,10 @@ async function loadEvent({ quiet = false } = {}) {
     event.value = eventResult.data;
     publicEntry.value = entryResult.error ? null : entryResult.data;
     // Do not query private roster rows or invent a zero if counts are unavailable.
-    registrationCount.value = entryResult.error
-      ? null
-      : (entryResult.data?.confirmedCount ?? null);
+    counts.value = publicEventCounts(countResult.error ? null : countResult.data);
+    registrationCount.value = counts.value.confirmedCount ?? publicEventCounts(
+      entryResult.error ? null : entryResult.data,
+    ).confirmedCount;
     venue.value = venueResult.error ? {} : venueResult.data || {};
     bannerFailed.value = false;
     document.title = `${event.value.name} · JOY CLUB`;
