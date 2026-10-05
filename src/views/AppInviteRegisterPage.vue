@@ -198,9 +198,11 @@ const copy = {
   en: { invitedBy: 'INVITED BY A JOY PLAYER', invitesYou: 'invited you to join Joy Club', eventEntry: 'CREATE AN ACCOUNT TO CONTINUE', title: 'Create your account', intro: 'Join as a free Lite member, receive your member number and start your official JOY player profile.', name: 'Legal name *', nameHint: 'Used for tournaments and your player profile', birthday: 'Date of birth *', birthdayNote: 'Cannot be changed after registration', phone: 'Phone number *', email: 'Email *', emailHint: 'Used for sign-in and security verification', emailChecking: 'Checking email…', emailAvailable: 'Email is available', password: 'Password *', passwordHint: '8+ characters with letters and numbers', confirm: 'Confirm password *', confirmHint: 'Enter your password again', showPassword: 'Show or hide password', agree: 'I have read and agree to the', terms: 'Terms of Service', and: 'and', privacy: 'Privacy Policy', submit: 'Create free Joy Club account', hasAccount: 'Already have an account? Open Joy Club App to sign in', successTitle: 'Account created', successText: 'We sent a verification email. Open the link in that email before signing in to the App.', resend: "Didn't receive it? Resend verification email", resending: 'Sending…', resendIn: 's before resend', goLogin: 'Verified? Open the App to continue entry', memberId: 'Personal member number', tournaments: 'Events and player profile', rewards: 'Points and member benefits', getApp: 'Download Joy Club App', deviceHint: 'Showing the correct version for this device', invalidEmail: 'Enter a valid email address.', duplicateEmail: 'This email is already registered. Sign in or use Forgot Password.', emailCheckFailed: 'We could not check this email. Try again shortly.', invalidBirthday: 'Enter a real date as DD/MM/YYYY. You must be at least 13.', invalidPassword: 'Use at least 8 characters containing both letters and numbers.', mismatch: 'Passwords do not match.', acceptTerms: 'Accept the Terms and Privacy Policy to continue.', required: 'Complete all required fields.', registerFailed: 'Registration failed. Please try again.', resendSuccess: 'Request submitted. If the account is still unverified, a new email will be sent. If you already opened the verification link, sign in with the App.' },
 }
 const text = computed(() => copy[locale.value] || copy.en)
-const registrationVenue = computed(() => String(route.query.venue || '') === 'zz-joy-melbourne'
+const eventVenue = ref(null)
+const eventContextReady = ref(!eventId.value)
+const registrationVenue = computed(() => eventVenue.value || (String(route.query.venue || '') === 'zz-joy-melbourne'
   ? { id: 'zz-joy-melbourne', name: 'ZZ Joy Billiards Club · Melbourne' }
-  : null)
+  : null))
 const downloadOptions = downloadOptionsForClient()
 const downloadCard = ref(null)
 const inviter = reactive({ name: '', avatar: '' })
@@ -290,6 +292,10 @@ const birthdayIso = () => {
 const submit = async () => {
   if (busy.value) return
   message.value = ''
+  if (eventId.value && !eventContextReady.value) {
+    await loadEventContext()
+    if (!eventContextReady.value) return
+  }
   if (!name.value || !phone.value || !birthday.value || !email.value || !password.value || !confirm.value) return (message.value = text.value.required)
   const isoBirthday = birthdayIso()
   if (!isoBirthday) return (message.value = text.value.invalidBirthday)
@@ -317,7 +323,7 @@ const submit = async () => {
           referral_share_token: secureInviteToken.value || null,
           legacy_referral_source: secureInviteToken.value ? null : (route.query.ref ? String(route.query.ref) : null),
           registration_venue_id: registrationVenue.value?.id || null,
-          registration_venue_source: registrationVenue.value ? 'venue_link' : null,
+          registration_venue_source: eventVenue.value ? 'event_share' : registrationVenue.value ? 'venue_link' : null,
         },
       },
     })
@@ -359,11 +365,23 @@ const resend = async () => {
   if (!error) startCooldown()
 }
 
-onMounted(async () => {
-  if (eventId.value) {
-    const { data } = await supabase.from('tournaments').select('name').eq('id', eventId.value).maybeSingle()
-    if (data?.name) eventInvitation.name = data.name
+async function loadEventContext() {
+  if (!eventId.value) return
+  try {
+    const result = await supabase.from('tournaments').select('name,venue_id').eq('id', eventId.value).maybeSingle()
+    if (result.error || !result.data?.venue_id) throw new Error('EVENT_UNAVAILABLE')
+    const venueResult = await supabase.from('venues').select('id,name').eq('id', result.data.venue_id).maybeSingle()
+    if (venueResult.error || !venueResult.data) throw new Error('VENUE_UNAVAILABLE')
+    eventInvitation.name = result.data.name
+    eventVenue.value = venueResult.data
+    eventContextReady.value = true
+  } catch {
+    eventContextReady.value = false
+    message.value = locale.value === 'zh' ? '赛事门店暂未载入，请检查网络后再次提交。不会默认注册到其他门店。' : 'The event venue could not load. Check your connection and submit again. Your account will not default to another venue.'
   }
+}
+onMounted(async () => {
+  await loadEventContext()
   if (secureInviteToken.value) {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(secureInviteToken.value)) return
     const { data, error } = await supabase.rpc('resolve_public_app_share', { p_token: secureInviteToken.value })

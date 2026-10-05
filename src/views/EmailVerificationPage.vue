@@ -114,7 +114,7 @@ export default {
         }
 
         verificationSuccess.value = true
-        window.history.replaceState({}, document.title, window.location.pathname)
+        window.history.replaceState({}, document.title, window.location.pathname + (requestedEvent ? `?event=${encodeURIComponent(requestedEvent)}` : ''))
       } catch (error) {
         console.error('Email verification error:', error)
         verificationError.value = error.message || t('verification.genericFailed')
@@ -125,7 +125,7 @@ export default {
       const opened = requestedEvent
         ? openAppRouteWithDownloadFallback(`/tournament/${requestedEvent}?entrySource=share&entryAction=register`)
         : openAppLoginWithDownloadFallback()
-      if (!opened) window.location.href = '/#app-download'
+      if (!opened) window.location.href = requestedEvent ? `/app/event/${requestedEvent}` : '/#app-download'
     }
 
     const openAppRegistration = () => {

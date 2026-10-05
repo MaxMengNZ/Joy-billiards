@@ -25,8 +25,11 @@ export const downloadOptionsForClient = (platform = detectClientPlatform()) => {
 
 export const openAppRouteWithDownloadFallback = (route = '/login', platform = detectClientPlatform()) => {
   if (typeof window === 'undefined') return false
+  // Embedded WeChat blocks app schemes on many devices. Keep users on the
+  // event/verification page instead of sending them to a store dead end.
+  if (/MicroMessenger/i.test(navigator.userAgent || '')) return false
   const isSimpleRoute = /^\/[a-z0-9/_-]*$/i.test(route)
-  const isTournamentEntry = /^\/tournament\/[0-9a-f-]+\?entrySource=share&entryAction=register$/i.test(route)
+  const isTournamentEntry = /^\/tournament\/[0-9a-f-]+\?entrySource=share&entryAction=register(?:&payment=(?:success|cancelled))?(?:&checkoutSessionId=cs_(?:test_|live_)?[a-z0-9]{10,240})?$/i.test(route)
   const safeRoute = isSimpleRoute || isTournamentEntry ? route : '/login'
 
   if (platform === 'android') {

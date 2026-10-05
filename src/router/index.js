@@ -14,8 +14,8 @@ const clubPublicPaths = [
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
   /^\/app\/event\/[0-9a-f-]+$/i,
-  /^\/app\/zz$/,
   /^\/app\/e\/[a-z0-9][a-z0-9-]{2,46}[a-z0-9]$/i,
+  /^\/app\/zz$/,
   /^\/share\/(player|monthly|annual)\/[0-9a-f-]+$/i,
   /^\/privacy-policy$/,
   /^\/terms-of-service$/,
@@ -212,8 +212,8 @@ const routes = [
   },
   {
     path: '/app/e/:reference',
-    name: 'SharedTournamentShortLink',
-    component: () => import('../views/TournamentShortLinkPage.vue'),
+    name: 'SharedTournamentShortEntry',
+    component: () => import('../views/TournamentEntrySharePage.vue'),
     meta: { title: 'JOY Tournament Entry' }
   },
   {

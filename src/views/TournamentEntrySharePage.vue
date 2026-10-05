@@ -1,187 +1,742 @@
 <template>
   <main class="event-page">
-    <div class="ambient ambient-red"></div>
-    <div class="ambient ambient-gold"></div>
-
     <section class="event-shell">
       <header class="top-bar">
-        <div class="brand">
-          <img src="/JoyBilliards-Logo.svg" alt="Joy Billiards New Zealand">
-          <div><strong>JOY CLUB</strong><span>PLAY · ENJOY · BELONG</span></div>
-        </div>
+        <a href="/" class="brand" aria-label="Joy Club">JOY CLUB</a>
         <LanguageSwitcher />
       </header>
-
-      <article v-if="loading" class="state-card">
+      <article v-if="loading" class="state-card" role="status">
         <div class="spinner"></div>
         <h1>{{ text.loading }}</h1>
       </article>
-
-      <article v-else-if="error || !event" class="state-card">
-        <b class="state-mark">!</b>
+      <article v-else-if="error || !event" class="state-card" role="alert">
         <h1>{{ text.notFound }}</h1>
         <p>{{ text.notFoundHint }}</p>
+        <button class="secondary" type="button" @click="loadEvent">
+          {{ text.retry }}
+        </button>
       </article>
-
       <template v-else>
-        <article class="hero" :style="heroStyle">
-          <div class="hero-shade"></div>
-          <div class="hero-top">
-            <span>JOY OFFICIAL</span>
-            <button type="button" @click="shareEvent">{{ text.share }} ↗</button>
-          </div>
-          <div class="hero-copy">
-            <p>{{ eventKind }}</p>
-            <h1>{{ event.name }}</h1>
-            <strong>{{ eventDate }}</strong>
-            <span>JOY BILLIARDS · HAMILTON CENTRAL</span>
-          </div>
-        </article>
-
-        <section class="facts">
-          <div><span>{{ text.entryFee }}</span><strong>{{ entryFee }}</strong></div>
-          <div><span>{{ text.players }}</span><strong>{{ playerCount }}</strong></div>
-          <div><span>{{ text.status }}</span><strong>{{ statusText }}</strong></div>
-        </section>
-
-        <article class="detail-card">
-          <p class="eyebrow">{{ text.officialEntry }}</p>
-          <p class="description">{{ event.description || text.defaultDescription }}</p>
-          <div class="trust"><b>✓</b><span>{{ text.security }}</span></div>
-        </article>
-
-        <section class="entry-card">
-          <template v-if="canEnter">
-            <button class="primary" type="button" @click="createAccount">
-              <span>{{ text.createAndEnter }}</span><b>→</b>
-            </button>
-            <button class="secondary" type="button" @click="openApp">
-              {{ text.alreadyMember }}
-            </button>
-          </template>
-          <button v-else class="primary disabled" type="button" disabled>
-            <span>{{ statusText }}</span><b>—</b>
+        <div class="event-actions">
+          <span class="status" :class="{ live: state === 'live' }">{{
+            statusText
+          }}</span>
+          <button class="share" type="button" @click="shareEvent">
+            {{ text.share }}
           </button>
-          <div class="stores">
-            <a v-for="option in downloadOptions" :key="option.platform" :href="option.url" target="_blank" rel="noopener">
-              {{ option.platform === 'ios' ? 'App Store' : 'Google Play' }}
-            </a>
+        </div>
+        <p v-if="shareNotice" role="status" class="notice">{{ shareNotice }}</p>
+        <div class="poster">
+          <img
+            v-if="banner && !bannerFailed"
+            :src="banner"
+            :alt="event.name"
+            @error="bannerFailed = true"
+          />
+          <div v-else class="poster-fallback">
+            <strong>JOY CLUB</strong><span>Play · Enjoy · Belong</span>
           </div>
-          <small>{{ text.appHint }}</small>
+        </div>
+        <article class="intro">
+          <p class="kind">{{ eventKind }}</p>
+          <h1>{{ event.name }}</h1>
+          <p class="date">{{ eventDate }}</p>
+          <p class="local-time">
+            {{ text.localTime }} · {{ venue.timezone || "Pacific/Auckland" }}
+          </p>
+          <strong class="venue">{{
+            venue.name || text.venueUnavailable
+          }}</strong>
+          <p class="address">{{ venue.address || "" }}</p>
+        </article>
+        <section class="facts">
+          <div>
+            <span>{{ text.entryFee }}</span
+            ><strong>{{ entryFee }}</strong>
+          </div>
+          <div>
+            <span>{{ text.players }}</span
+            ><strong>{{ playerCount }}</strong>
+          </div>
         </section>
+        <p
+          v-if="
+            publicEntry?.onlinePaymentEnabled && Number(event.entry_fee) > 0
+          "
+          class="fee-note"
+        >
+          {{ text.feeNote }}
+        </p>
+        <article class="details">
+          <h2>{{ text.details }}</h2>
+          <p class="description">
+            {{ event.description || text.defaultDescription }}
+          </p>
+          <template
+            v-if="
+              publicEntry?.eligibilityKind === 'u21' ||
+              publicEntry?.eligibilityKind === 'women'
+            "
+          >
+            <h2>{{ text.eligibility }}</h2>
+            <p>
+              {{
+                publicEntry.eligibilityKind === "women" ? text.women : text.u21
+              }}<template
+                v-if="
+                  publicEntry.eligibilityKind === 'u21' &&
+                  publicEntry.ageCutoffDate
+                "
+              >
+                · {{ publicEntry.ageCutoffDate }}</template
+              >
+            </p>
+          </template>
+          <h2>{{ text.confirmation }}</h2>
+          <p>{{ text.security }}</p>
+        </article>
+        <aside
+          v-if="paymentReturned"
+          class="notice payment-notice"
+          role="status"
+        >
+          <strong>{{
+            route.query.payment === "success"
+              ? text.paymentReturn
+              : text.paymentCancelled
+          }}</strong>
+          <p>{{ text.paymentHint }}</p>
+        </aside>
+        <aside v-if="inWeChat" class="notice" role="note">
+          {{ text.wechat }}
+        </aside>
+        <section class="entry-card">
+          <button class="primary" type="button" @click="openApp">
+            {{
+              paymentReturned
+                ? text.checkEntry
+                : canEnter
+                  ? text.openAndEnter
+                  : text.openEvent
+            }}
+          </button>
+          <button
+            v-if="canEnter && !paymentReturned"
+            class="secondary"
+            type="button"
+            @click="createAccount"
+          >
+            {{ text.createAndEnter }}
+          </button>
+          <p v-else class="closed-note">{{ statusText }}</p>
+          <p class="app-hint">{{ text.appHint }}</p>
+          <div class="stores">
+            <a
+              v-for="option in downloadOptions"
+              :key="option.platform"
+              :href="option.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ option.label }}</a
+            >
+          </div>
+        </section>
+        <footer>
+          <strong>{{ venue.name || "JOY CLUB" }}</strong
+          ><span>{{ venue.address || "" }}</span
+          ><span>Play · Enjoy · Belong</span>
+        </footer>
       </template>
-
-      <footer>
-        <strong>JOY BILLIARDS NEW ZEALAND</strong>
-        <span>88 Tristram Street, Hamilton Central</span>
-      </footer>
     </section>
   </main>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import LanguageSwitcher from '../components/LanguageSwitcher.vue'
-import { supabase } from '../config/supabase'
-import { useI18n } from '../i18n'
-import { downloadOptionsForClient, openAppRouteWithDownloadFallback } from '../utils/appDownload'
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
+import { supabase } from "../config/supabase";
+import { useI18n } from "../i18n";
+import {
+  downloadOptionsForClient,
+  openAppRouteWithDownloadFallback,
+} from "../utils/appDownload";
+import {
+  EVENT_UUID,
+  EVENT_REFERENCE,
+  eventAppRoute,
+  eventSharePath,
+  eventRegistrationState,
+  safeEventBanner,
+} from "../utils/eventShare";
 
-const route = useRoute()
-const router = useRouter()
-const { locale } = useI18n()
-const event = ref(null)
-const publicEntry = ref(null)
-const registrationCount = ref(0)
-const loading = ref(true)
-const error = ref('')
-const downloadOptions = downloadOptionsForClient()
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const eventId = computed(() => uuid.test(String(route.params.id || '')) ? String(route.params.id) : '')
-
+const route = useRoute();
+const router = useRouter();
+const { locale } = useI18n();
+const event = ref(null),
+  publicEntry = ref(null),
+  venue = ref({}),
+  registrationCount = ref(null);
+const loading = ref(true),
+  error = ref(""),
+  bannerFailed = ref(false),
+  shareNotice = ref("");
+const downloadOptions = downloadOptionsForClient();
+const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
+let request = 0;
 const copy = {
   zh: {
-    loading: '正在载入官方赛事', notFound: '找不到该赛事', notFoundHint: '请检查分享链接，或从 Joy Club App 赛事页面重新进入。',
-    share: '分享赛事', entryFee: '报名费', players: '参赛人数', status: '当前状态', free: '免费',
-    open: '接受报名', full: '名额已满', soon: '即将开放', closed: '报名已结束',
-    officialEntry: '官方赛事报名',
-    defaultDescription: '查看赛事时间、参赛资格、报名费用和当前报名状态。',
-    security: '每个分享链接只对应这一场赛事；付款与报名确认由 Joy Club 安全处理。',
-    createAndEnter: '创建账户并报名', alreadyMember: '已有 Joy Club App？打开并报名',
-    appHint: '已安装 App 的设备会直接进入本赛事；新用户创建账户后仍会保留本赛事入口。',
-    weekly: 'JOY WEEKLY', student: 'JOY STUDENT', official: 'JOY OFFICIAL EVENT',
+    loading: "正在载入赛事",
+    notFound: "暂时无法打开赛事",
+    notFoundHint: "请检查网络或分享链接，然后重试。",
+    retry: "重新加载",
+    share: "分享赛事",
+    entryFee: "报名费",
+    players: "已确认参赛",
+    free: "免费报名",
+    open: "接受报名",
+    full: "名额已满",
+    soon: "即将开放",
+    closed: "报名已结束",
+    live: "正在进行",
+    completed: "已结束",
+    details: "赛事详情",
+    defaultDescription: "完整赛事安排和报名信息请在 Joy Club App 内查看。",
+    eligibility: "参赛资格",
+    women: "女子赛事；资格由赛事主办方核验。",
+    u21: "U21 赛事，须按主办方规定的年龄截止日核验。",
+    confirmation: "报名确认",
+    security:
+      "在线支付须经服务器确认；银行转账须由门店管理员核实到账。未完成确认前不代表正式报名成功。",
+    createAndEnter: "没有账户？创建账户",
+    openAndEnter: "在 App 中查看并报名",
+    openEvent: "在 App 中查看赛事",
+    appHint:
+      "创建并验证账户后，请从原赛事链接返回。下载 App 不会自动完成报名。",
+    weekly: "周赛",
+    student: "学生赛",
+    official: "公开赛事",
+    localTime: "门店当地时间",
+    venueUnavailable: "门店信息暂未载入",
+    feeNote: "在线支付的手续费会在付款前列明；最终金额以结账页面为准。",
+    wechat:
+      "微信内可能无法打开 App 或应用商店。请点右上角「…」，选择在浏览器打开，再继续报名。",
+    copied: "赛事链接已复制",
+    shareFailed: "暂时无法分享，请复制浏览器地址。",
+    desktop: "请在手机上打开此赛事链接；尚无 App 可从下方下载。",
+    paymentReturn: "已从付款页面返回",
+    paymentCancelled: "付款未完成",
+    paymentHint:
+      "返回链接不是付款凭证。请打开 App 查看服务器确认后的个人报名状态；不要重复付款。",
+    checkEntry: "打开 App 核对报名",
   },
   en: {
-    loading: 'Loading the official event', notFound: 'Tournament not found', notFoundHint: 'Check the shared link or reopen the event from the Joy Club App.',
-    share: 'Share event', entryFee: 'ENTRY FEE', players: 'PLAYERS', status: 'STATUS', free: 'Free',
-    open: 'Registration open', full: 'Full', soon: 'Opening soon', closed: 'Registration closed',
-    officialEntry: 'OFFICIAL EVENT ENTRY',
-    defaultDescription: 'Review the event time, eligibility, entry fee and current registration status.',
-    security: 'Each shared link belongs to this event only. Joy Club securely handles payment and entry confirmation.',
-    createAndEnter: 'Create account & enter', alreadyMember: 'Already have Joy Club? Open the App',
-    appHint: 'Installed devices open this exact event. New accounts keep this event ready after registration.',
-    weekly: 'JOY WEEKLY', student: 'JOY STUDENT', official: 'JOY OFFICIAL EVENT',
+    loading: "Loading event details",
+    notFound: "Unable to open this event",
+    notFoundHint: "Check your connection or shared link, then try again.",
+    retry: "Try again",
+    share: "Share event",
+    entryFee: "Entry fee",
+    players: "Confirmed players",
+    free: "Free entry",
+    open: "Registration open",
+    full: "Full",
+    soon: "Opening soon",
+    closed: "Registration closed",
+    live: "Live now",
+    completed: "Completed",
+    details: "Event details",
+    defaultDescription:
+      "View the full event arrangements and entry information in Joy Club.",
+    eligibility: "Eligibility",
+    women: "Women’s event. Eligibility is verified by the organiser.",
+    u21: "U21 event. Age is checked against the organiser’s eligibility cutoff.",
+    confirmation: "Entry confirmation",
+    security:
+      "Online payments require server confirmation. Bank transfers require the venue administrator to verify receipt. Your entry is not confirmed before this step.",
+    createAndEnter: "New to Joy Club? Create account",
+    openAndEnter: "Open App to view & enter",
+    openEvent: "Open event in App",
+    appHint:
+      "After creating and verifying your account, return using this event link. Downloading the App does not complete your entry.",
+    weekly: "Weekly tournament",
+    student: "Student tournament",
+    official: "Public event",
+    localTime: "Venue local time",
+    venueUnavailable: "Venue information unavailable",
+    feeNote:
+      "Online processing fees are shown before payment. The final total is displayed at checkout.",
+    wechat:
+      "WeChat may block App and store links. Tap “…” at the top right and open this page in your browser to continue.",
+    copied: "Event link copied",
+    shareFailed: "Sharing unavailable. Copy the address from your browser.",
+    desktop:
+      "Open this event link on your phone. Download Joy Club below if needed.",
+    paymentReturn: "Returned from checkout",
+    paymentCancelled: "Payment not completed",
+    paymentHint:
+      "The return link is not proof of payment. Open the App to check your server-confirmed entry status. Do not pay again.",
+    checkEntry: "Open App to check entry",
   },
-}
-const text = computed(() => copy[locale.value] || copy.en)
-const options = computed(() => event.value?.event_options || {})
-const eventKind = computed(() => {
-  if (options.value.kind === 'weekly_pro') return text.value.weekly
-  if (options.value.kind === 'weekly_student') return text.value.student
-  return locale.value === 'zh'
-    ? (options.value.customLabel || text.value.official)
-    : (options.value.customLabelEn || text.value.official)
-})
-const eventDate = computed(() => new Intl.DateTimeFormat(locale.value === 'zh' ? 'zh-NZ' : 'en-NZ', {
-  dateStyle: 'long', timeStyle: 'short', timeZone: 'Pacific/Auckland',
-}).format(new Date(event.value.start_date)))
-const entryFee = computed(() => Number(event.value?.entry_fee || 0) > 0 ? `NZ$${Number(event.value.entry_fee).toFixed(2)}` : text.value.free)
-const playerCount = computed(() => `${registrationCount.value}${event.value?.max_players ? ` / ${event.value.max_players}` : ''}`)
-const registrationNotStarted = computed(() => Boolean(publicEntry.value?.registrationOpensAt && new Date(publicEntry.value.registrationOpensAt).getTime() > Date.now()))
-const registrationEnded = computed(() => Boolean(publicEntry.value?.registrationClosesAt && new Date(publicEntry.value.registrationClosesAt).getTime() <= Date.now()))
-const isFull = computed(() => Boolean(event.value?.max_players && registrationCount.value >= event.value.max_players))
-const statusAllowsEntry = computed(() => ['registration', 'upcoming'].includes(event.value?.status))
-const canEnter = computed(() => statusAllowsEntry.value && !registrationNotStarted.value && !registrationEnded.value && !isFull.value)
-const statusText = computed(() => registrationNotStarted.value ? text.value.soon : isFull.value ? text.value.full : canEnter.value ? text.value.open : text.value.closed)
-const heroStyle = computed(() => {
-  const banner = options.value.bannerUrl
-  return banner ? { backgroundImage: `url(${JSON.stringify(String(banner)).slice(1, -1)})` } : {}
-})
-const appRoute = computed(() => `/tournament/${eventId.value}?entrySource=share&entryAction=register`)
-
-const createAccount = () => router.push({ path: '/register', query: { event: eventId.value } })
-const openApp = () => {
-  if (!openAppRouteWithDownloadFallback(appRoute.value)) document.querySelector('.stores')?.scrollIntoView({ behavior: 'smooth' })
-}
-const shareEvent = async () => {
-  const url = window.location.href
-  const shareText = `${event.value.name}\n${text.value.officialEntry}: ${url}`
-  if (navigator.share) return navigator.share({ title: event.value.name, text: shareText }).catch(() => undefined)
-  await navigator.clipboard?.writeText(url)
-}
-
-onMounted(async () => {
-  if (!eventId.value) { error.value = 'INVALID_EVENT'; loading.value = false; return }
+};
+const text = computed(() => copy[locale.value] || copy.en);
+const options = computed(() => event.value?.event_options || {});
+const eventKind = computed(() =>
+  options.value.kind === "weekly_pro"
+    ? text.value.weekly
+    : options.value.kind === "weekly_student"
+      ? text.value.student
+      : (locale.value === "zh"
+          ? options.value.customLabel
+          : options.value.customLabelEn) || text.value.official,
+);
+const eventDate = computed(() => {
+  if (!event.value || !Number.isFinite(Date.parse(event.value.start_date)))
+    return "—";
   try {
-    const [eventResult, entryResult, registrationsResult] = await Promise.all([
-      supabase.from('tournaments').select('*').eq('id', eventId.value).maybeSingle(),
-      supabase.rpc('app_get_public_tournament_entry', { p_tournament_id: eventId.value }),
-      supabase.from('tournament_registrations').select('id', { count: 'exact', head: true }).eq('tournament_id', eventId.value).eq('status', 'registered'),
-    ])
-    if (eventResult.error) throw eventResult.error
-    event.value = eventResult.data
-    publicEntry.value = entryResult.error ? null : entryResult.data
-    registrationCount.value = registrationsResult.error ? Number(entryResult.data?.confirmedCount || 0) : Number(registrationsResult.count || 0)
-    if (!event.value) error.value = 'NOT_FOUND'
-  } catch (reason) {
-    console.warn('Unable to load shared tournament', reason)
-    error.value = 'LOAD_FAILED'
-  } finally {
-    loading.value = false
+    return new Intl.DateTimeFormat(
+      locale.value === "zh"
+        ? "zh-CN"
+        : event.value.currency === "aud"
+          ? "en-AU"
+          : "en-NZ",
+      {
+        dateStyle: "long",
+        timeStyle: "short",
+        timeZone: venue.value.timezone || "Pacific/Auckland",
+      },
+    ).format(new Date(event.value.start_date));
+  } catch {
+    return "—";
   }
-})
+});
+const entryFee = computed(() => {
+  const fee = Number(publicEntry.value?.entryFeeNzd ?? event.value?.entry_fee);
+  if (!Number.isFinite(fee)) return "—";
+  return fee > 0
+    ? `${String(publicEntry.value?.currency || event.value?.currency || "nzd").toUpperCase()} $${fee.toFixed(2)}`
+    : text.value.free;
+});
+const playerCount = computed(
+  () =>
+    `${registrationCount.value ?? "—"}${event.value?.max_players ? ` / ${event.value.max_players}` : ""}`,
+);
+const state = computed(() =>
+  eventRegistrationState(
+    event.value,
+    publicEntry.value,
+    registrationCount.value,
+  ),
+);
+const canEnter = computed(() => state.value === "open");
+const statusText = computed(() => text.value[state.value]);
+const banner = computed(() => safeEventBanner(options.value.bannerUrl));
+const paymentReturned = computed(() =>
+  ["success", "cancelled"].includes(route.query.payment),
+);
+const createAccount = () =>
+  router.push({
+    path: "/join",
+    query: { event: event.value.id, venue: event.value.venue_id || undefined },
+  });
+const openApp = () => {
+  if (inWeChat) {
+    shareNotice.value = text.value.wechat;
+    return;
+  }
+  if (
+    !openAppRouteWithDownloadFallback(
+      eventAppRoute(event.value.id, route.query),
+    )
+  ) {
+    shareNotice.value = text.value.desktop;
+    document.querySelector(".stores")?.scrollIntoView({ behavior: "smooth" });
+  }
+};
+const shareEvent = async () => {
+  const url = new URL(eventSharePath(event.value), window.location.origin).href;
+  try {
+    if (navigator.share && !inWeChat)
+      await navigator.share({
+        title: event.value.name,
+        text: event.value.name,
+        url,
+      });
+    else {
+      await navigator.clipboard.writeText(url);
+      shareNotice.value = text.value.copied;
+    }
+  } catch (reason) {
+    if (reason?.name !== "AbortError")
+      shareNotice.value = text.value.shareFailed;
+  }
+};
+async function loadEvent({ quiet = false } = {}) {
+  const seq = ++request;
+  if (!quiet) loading.value = true;
+  error.value = "";
+  try {
+    let id = String(route.params.id || "");
+    if (!EVENT_UUID.test(id)) {
+      const reference = String(route.params.reference || "");
+      if (!EVENT_REFERENCE.test(reference)) throw new Error("INVALID_LINK");
+      const resolved = await supabase
+        .from("tournaments")
+        .select("id")
+        .or(
+          `share_code.eq.${reference.toUpperCase()},share_alias.eq.${reference.toLowerCase()}`,
+        )
+        .maybeSingle();
+      if (resolved.error || !resolved.data?.id) throw new Error("NOT_FOUND");
+      id = resolved.data.id;
+    }
+    const [eventResult, entryResult] = await Promise.all([
+      supabase
+        .from("tournaments")
+        .select(
+          "id,venue_id,name,description,event_options,start_date,status,max_players,entry_fee,currency,share_alias,share_code",
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase.rpc("app_get_public_tournament_entry", { p_tournament_id: id }),
+    ]);
+    if (eventResult.error || !eventResult.data) throw new Error("NOT_FOUND");
+    const venueResult = await supabase
+      .from("venues")
+      .select("id,name,address,timezone,currency")
+      .eq("id", eventResult.data.venue_id)
+      .maybeSingle();
+    if (seq !== request) return;
+    event.value = eventResult.data;
+    publicEntry.value = entryResult.error ? null : entryResult.data;
+    // Do not query private roster rows or invent a zero if counts are unavailable.
+    registrationCount.value = entryResult.error
+      ? null
+      : (entryResult.data?.confirmedCount ?? null);
+    venue.value = venueResult.error ? {} : venueResult.data || {};
+    bannerFailed.value = false;
+    document.title = `${event.value.name} · JOY CLUB`;
+  } catch {
+    if (seq === request) error.value = "LOAD_FAILED";
+  } finally {
+    if (seq === request) loading.value = false;
+  }
+}
+const resume = () => {
+  if (document.visibilityState === "visible" && !loading.value)
+    void loadEvent({ quiet: true });
+};
+watch(
+  () => route.fullPath,
+  () => {
+    event.value = null;
+    void loadEvent();
+  },
+);
+onMounted(() => {
+  void loadEvent();
+  document.addEventListener("visibilitychange", resume);
+});
+onUnmounted(() => {
+  request++;
+  document.removeEventListener("visibilitychange", resume);
+});
 </script>
 
 <style scoped>
-.event-page,.event-page *{box-sizing:border-box}.event-page{--red:#e52b36;min-height:100svh;position:relative;overflow:hidden;padding:27px 16px 42px;background:radial-gradient(circle at 50% -8%,#fff 0,#f8f5f1 36%,#eef1f4 100%);color:#17191d;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.event-shell{position:relative;z-index:2;width:min(100%,560px);margin:0 auto}.ambient{position:absolute;border-radius:50%;pointer-events:none}.ambient-red{width:350px;height:350px;left:-230px;top:18%;background:rgba(229,43,54,.055)}.ambient-gold{width:380px;height:380px;right:-260px;bottom:3%;border:50px solid rgba(202,155,74,.055)}.top-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:19px}.brand{display:flex;align-items:center;gap:13px;min-width:0}.brand img{width:96px;height:50px;object-fit:contain}.brand>div{display:flex;flex-direction:column;padding-left:13px;border-left:1px solid #d5d8dc}.brand strong{font-size:15px;letter-spacing:.14em}.brand span{margin-top:4px;color:#999da4;font-size:6px;font-weight:900;letter-spacing:.18em}.hero{position:relative;min-height:360px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:23px;border-radius:31px;background:linear-gradient(145deg,#25181a,#111318 72%);background-size:cover;background-position:center;box-shadow:0 24px 58px rgba(24,18,20,.2);color:#fff}.hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,7,8,.08),rgba(4,7,8,.2) 40%,rgba(4,7,8,.91))}.hero-top,.hero-copy{position:relative;z-index:1}.hero-top{display:flex;align-items:center;justify-content:space-between}.hero-top>span{padding:7px 11px;border-radius:99px;background:var(--red);font-size:8px;font-weight:950;letter-spacing:.12em}.hero-top button{border:1px solid rgba(255,255,255,.34);border-radius:99px;padding:8px 11px;background:rgba(17,19,24,.35);color:#fff;font-size:9px;font-weight:850}.hero-copy p{margin:0 0 7px;color:#e6c370;font-size:10px;font-weight:900;letter-spacing:.16em}.hero-copy h1{margin:0;font-size:clamp(31px,8vw,43px);line-height:1.05;letter-spacing:-.035em}.hero-copy strong,.hero-copy span{display:block}.hero-copy strong{margin-top:16px;font-size:14px}.hero-copy span{margin-top:7px;color:rgba(255,255,255,.68);font-size:8px;font-weight:800;letter-spacing:.1em}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}.facts>div{min-width:0;min-height:82px;padding:13px;border:1px solid #e5e7ea;border-radius:17px;background:#fff}.facts span,.facts strong{display:block}.facts span{color:#969aa2;font-size:7px;font-weight:900;letter-spacing:.1em}.facts strong{margin-top:9px;font-size:14px;overflow-wrap:anywhere}.detail-card,.entry-card,.state-card{margin-top:11px;padding:22px;border:1px solid rgba(255,255,255,.94);border-radius:25px;background:rgba(255,255,255,.92);box-shadow:0 14px 37px rgba(29,34,43,.07)}.eyebrow{margin:0;color:var(--red);font-size:8px;font-weight:950;letter-spacing:.18em}.detail-card h2{margin:7px 0 0;font-size:22px}.description{margin:10px 0 0;color:#70757d;font-size:12px;line-height:1.7}.trust{display:flex;gap:9px;margin-top:16px;padding-top:15px;border-top:1px solid #eceef0;color:#6f747c;font-size:10px;line-height:1.55}.trust b{color:#168158}.primary,.secondary{width:100%;min-height:55px;border-radius:16px;font:inherit;font-weight:900;cursor:pointer}.primary{display:flex;align-items:center;justify-content:space-between;padding:0 19px;border:0;background:linear-gradient(110deg,#ef1f2c,#d91d29);box-shadow:0 12px 24px rgba(229,43,54,.22);color:#fff}.primary.disabled{opacity:.52;box-shadow:none}.secondary{margin-top:9px;border:1px solid #dfe1e5;background:#fff;color:#24272c}.stores{display:flex;justify-content:center;gap:15px;margin-top:14px}.stores a{color:#31343a;font-size:10px;font-weight:850}.entry-card small{display:block;margin-top:12px;color:#969aa2;font-size:8px;line-height:1.55;text-align:center}.state-card{min-height:330px;display:grid;place-items:center;align-content:center;text-align:center}.state-card h1{margin:13px 0 0;font-size:23px}.state-card p{color:#7c8188;font-size:12px}.state-mark{width:58px;height:58px;display:grid;place-items:center;border-radius:20px;background:#fff0f1;color:var(--red);font-size:24px}.spinner{width:48px;height:48px;border:3px solid #eceef1;border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}footer{display:flex;flex-direction:column;gap:4px;margin-top:23px;color:#8a8e95;font-size:8px;text-align:center}footer strong{color:#625b50;font-size:7px;letter-spacing:.13em}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:390px){.event-page{padding-left:10px;padding-right:10px}.hero{min-height:330px;padding:19px}.facts{gap:5px}.facts>div{padding:11px 9px}.detail-card,.entry-card{padding:19px 17px}.brand img{width:82px}.brand strong{font-size:13px}}
+.event-page,
+.event-page * {
+  box-sizing: border-box;
+}
+.event-page {
+  --red: #d32235;
+  min-height: 100svh;
+  padding: 24px 20px 36px;
+  background: #f5f6f8;
+  color: #202127;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.event-shell {
+  max-width: 720px;
+  margin: auto;
+}
+.top-bar,
+.event-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.brand {
+  color: #202127;
+  font-size: 20px;
+  font-weight: 850;
+  text-decoration: none;
+}
+.event-actions {
+  margin-bottom: 16px;
+}
+.status {
+  background: #fce9ec;
+  color: #a9182a;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.status.live {
+  background: var(--red);
+  color: white;
+}
+.share {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #dedfe4;
+  border-radius: 12px;
+  background: white;
+  color: var(--red);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.poster {
+  aspect-ratio: 1.65;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eceef1;
+}
+.poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.poster-fallback {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #202127;
+  color: white;
+}
+.poster-fallback strong {
+  font-size: clamp(28px, 6vw, 48px);
+}
+.poster-fallback span {
+  font-size: 15px;
+  color: #e2e5eb;
+}
+.intro {
+  padding: 24px 0;
+}
+.kind {
+  margin: 0 0 8px;
+  color: #a9182a;
+  font-size: 14px;
+  font-weight: 750;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(28px, 6vw, 38px);
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.date {
+  margin: 20px 0 4px;
+  font-size: 18px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+.local-time {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #626774;
+}
+.venue {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.address {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #626774;
+  line-height: 1.6;
+}
+.facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.facts > div {
+  padding: 18px;
+  border: 1px solid #e2e5eb;
+  border-radius: 16px;
+  background: white;
+}
+.facts span,
+.facts strong {
+  display: block;
+}
+.facts span {
+  font-size: 13px;
+  color: #626774;
+}
+.facts strong {
+  font-size: 23px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.fee-note {
+  color: #626774;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.details {
+  margin-top: 28px;
+  padding: 0 0 20px;
+}
+h2 {
+  font-size: 19px;
+  margin: 24px 0 10px;
+}
+.details p {
+  margin: 0;
+  color: #525863;
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 70ch;
+}
+.description {
+  white-space: pre-line;
+}
+.notice {
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 12px;
+  background: #fff0f2;
+  color: #8e1b2c;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.payment-notice p {
+  margin: 8px 0;
+}
+.entry-card {
+  position: sticky;
+  bottom: 0;
+  padding: 18px 0 max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid #dedfe4;
+  background: #f5f6f8;
+}
+.primary,
+.secondary {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.primary {
+  border: 0;
+  background: var(--red);
+  color: white;
+}
+.secondary {
+  margin-top: 10px;
+  border: 1px solid #dedfe4;
+  background: white;
+  color: var(--red);
+}
+.app-hint,
+.closed-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #626774;
+  margin: 12px 0;
+}
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.stores a {
+  color: #a9182a;
+  font-size: 14px;
+  line-height: 1.7;
+  text-underline-offset: 4px;
+}
+footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 30px;
+  color: #626774;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.5;
+}
+.state-card {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+}
+.state-card p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #626774;
+}
+.state-card .secondary {
+  max-width: 240px;
+}
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #dedfe4;
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #8e1b2c;
+  outline-offset: 4px;
+}
+::selection {
+  background: #fbd9df;
+  color: #202127;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+@media (max-width: 390px) {
+  .event-page {
+    padding: 18px 16px 28px;
+  }
+  .facts > div {
+    padding: 15px;
+  }
+  .facts strong {
+    font-size: 20px;
+  }
+}
 </style>
