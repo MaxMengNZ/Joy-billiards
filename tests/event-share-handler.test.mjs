@@ -20,11 +20,11 @@ test('production adapter keeps checkout query in browser, emits no redirect or p
       assert.match(res.body,/<div id="app"><\/div>/);
       assert.match(res.body,/src="\/assets\/index-/);
     }
-    const publicRes=response();await handler({url:'/api/event-share/e/FD1D51AD',method:'GET',headers:{}},publicRes);
+    const publicRes=response();await handler({url:'/api/event-share?eventKind=e&eventRef=FD1D51AD',method:'GET',headers:{}},publicRes);
     assert.match(publicRes.headers['Vercel-CDN-Cache-Control'],/s-maxage=300/);
-    const cookieRes=response();await handler({url:'/api/event-share/e/FD1D51AD',method:'GET',headers:{cookie:'session=not-forwarded'}},cookieRes);
+    const cookieRes=response();await handler({url:'/api/event-share?eventKind=e&eventRef=FD1D51AD',method:'GET',headers:{cookie:'session=not-forwarded'}},cookieRes);
     assert.equal(cookieRes.headers['Vercel-CDN-Cache-Control'],undefined);
-    const head=response();await handler({url:'/api/event-share/e/FD1D51AD',method:'HEAD',headers:{}},head);assert.equal(head.body,'');
+    const head=response();await handler({url:'/api/event-share?eventKind=e&eventRef=FD1D51AD',method:'HEAD',headers:{}},head);assert.equal(head.body,'');
   }finally{
     globalThis.fetch=originalFetch;
     if(originalUrl===undefined)delete process.env.VITE_SUPABASE_URL;else process.env.VITE_SUPABASE_URL=originalUrl;

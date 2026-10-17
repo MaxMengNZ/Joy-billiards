@@ -3,7 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/event-share.js": { "includeFiles": "dist/index.html", "maxDuration": 10 }
+    "api/event-share.js": { "includeFiles": "dist/index.html", "maxDuration": 10, "regions": ["syd1"] }
   },
   "rewrites": [
     { "source": "/app/e/:reference", "destination": "/api/event-share?eventKind=e&eventRef=:reference" },
