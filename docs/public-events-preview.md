@@ -43,3 +43,19 @@ raster ships. Schedule imagery is cropped with `object-fit: cover`, uses empty
 alternative text alongside the accessible event link, and loads lazily; the
 featured image uses a dark CSS overlay. The existing header identity asset is
 `public/JoyBilliards-Logo.svg`, reused unchanged.
+
+## Local verification outcome
+
+22 tests and the production build passed. Existing student-event short link
+opened the unchanged detail page with venue-local 15:00, NZD20 and original
+registration controls; no entry or payment was submitted. Open and venue filters
+were exercised; Challenges & more returned the real Friday series after its
+null/unknown-kind correction. Read-only live and future retrieval use independent
+chronological pagination; a >12 mixed-status regression protects imminent events.
+
+Independent finish-review verdict: ship for local preview only; all three named
+fixes resolved (pagination, category membership, desktop/mobile captures).
+Evidence: .impeccable/review/desktop.png 1280x960, mobile.png 390x844, plus the
+actual 795px user-width schedule capture. Documentation/provenance pass completed.
+The detector's inherited App.vue bounce-icon warning is outside this scope and
+was not changed. No remote push, deployment, database mutation or App OTA update.
