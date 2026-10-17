@@ -74,6 +74,12 @@
         >
           {{ text.feeNote }}
         </p>
+        <p v-if="linkNotice" class="notice" role="status">{{ linkNotice }}</p>
+        <EventEntryGuide
+          :locale="locale" :can-enter="canEnter" :payment-returned="paymentReturned"
+          :in-we-chat="inWeChat" :show-steps="showSteps" :status-text="statusText" :download-options="downloadOptions"
+          @open="openApp" @create="createAccount" @copy="copyEventLink"
+        />
         <article class="details">
           <h2>{{ text.details }}</h2>
           <p class="description">
@@ -99,55 +105,7 @@
               >
             </p>
           </template>
-          <h2>{{ text.confirmation }}</h2>
-          <p>{{ text.security }}</p>
         </article>
-        <aside
-          v-if="paymentReturned"
-          class="notice payment-notice"
-          role="status"
-        >
-          <strong>{{
-            route.query.payment === "success"
-              ? text.paymentReturn
-              : text.paymentCancelled
-          }}</strong>
-          <p>{{ text.paymentHint }}</p>
-        </aside>
-        <aside v-if="inWeChat" class="notice" role="note">
-          {{ text.wechat }}
-        </aside>
-        <section class="entry-card">
-          <button class="primary" type="button" @click="openApp">
-            {{
-              paymentReturned
-                ? text.checkEntry
-                : canEnter
-                  ? text.openAndEnter
-                  : text.openEvent
-            }}
-          </button>
-          <button
-            v-if="canEnter && !paymentReturned"
-            class="secondary"
-            type="button"
-            @click="createAccount"
-          >
-            {{ text.createAndEnter }}
-          </button>
-          <p v-else class="closed-note">{{ statusText }}</p>
-          <p class="app-hint">{{ text.appHint }}</p>
-          <div class="stores">
-            <a
-              v-for="option in downloadOptions"
-              :key="option.platform"
-              :href="option.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              >{{ option.label }}</a
-            >
-          </div>
-        </section>
         <footer>
           <strong>{{ venue.name || "JOY CLUB" }}</strong
           ><span>{{ venue.address || "" }}</span
@@ -162,6 +120,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
+import EventEntryGuide from "../components/EventEntryGuide.vue";
 import { publicEventCounts } from '../utils/eventShare.js';
 import { supabase } from "../config/supabase";
 import { useI18n } from "../i18n";
@@ -192,6 +151,18 @@ const loading = ref(true),
   shareNotice = ref("");
 const downloadOptions = downloadOptionsForClient();
 const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
+const linkNotice = ref('');
+const showSteps = ref(false);
+const copyEventLink = async () => {
+  const path = eventSharePath(event.value);
+  if (!path) return;
+  try {
+    await navigator.clipboard.writeText(new URL(path, window.location.origin).href);
+    linkNotice.value = text.value.copied;
+  } catch {
+    linkNotice.value = text.value.shareFailed;
+  }
+};
 let request = 0;
 const copy = {
   zh: {
@@ -365,7 +336,8 @@ const openApp = () => {
     )
   ) {
     shareNotice.value = text.value.desktop;
-    document.querySelector(".stores")?.scrollIntoView({ behavior: "smooth" });
+    linkNotice.value = text.value.desktop;
+    showSteps.value = true;
   }
 };
 const shareEvent = async () => {
