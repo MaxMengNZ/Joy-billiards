@@ -2,7 +2,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "functions": {
+    "api/event-share/*.js": { "includeFiles": "dist/index.html", "maxDuration": 10 }
+  },
   "rewrites": [
+    { "source": "/app/e/:reference", "destination": "/api/event-share/e/:reference" },
+    { "source": "/app/event/:id", "destination": "/api/event-share/event/:id" },
+    { "source": "/api/event-share/:path*", "destination": "/api/event-share/:path*" },
     {
       "source": "/(.*)",
       "destination": "/index.html"

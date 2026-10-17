@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>赛事分享展示 · JOY CLUB 本地预览</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#202127;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1000px;margin:auto;padding:32px 20px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:24px;border-bottom:1px solid #dedfe4}header strong{font-size:20px}header span,p,small{color:#626774}h1{font-size:30px;letter-spacing:-.025em;margin:28px 0 12px}p{line-height:1.65;font-size:14px}label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}select{width:100%;max-width:600px;padding:13px;border:1px solid #dedfe4;border-radius:12px;background:white;color:#202127;font:inherit}a{color:#a9182a;text-underline-offset:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:30px}h2{font-size:18px;margin:0 0 16px}.chat{background:#e9e9e9;padding:24px 16px;border-radius:16px;min-height:210px}.wechat{display:flex;align-items:start;gap:16px;max-width:380px;background:white;padding:18px;text-decoration:none;color:#202127}.wechat strong{display:block;font-size:16px;line-height:1.5}.wechat p{font-size:12px;line-height:1.6;margin:10px 0 0}.wechat img{width:72px;height:72px;object-fit:cover;flex-shrink:0}.facebook{display:block;overflow:hidden;border:1px solid #dedfe4;border-radius:12px;background:#fff;text-decoration:none;color:#202127}.facebook img{display:block;width:100%;aspect-ratio:1.91;object-fit:cover}.facebook .caption{padding:16px;background:#f0f2f5}.facebook small{font-size:11px}.facebook strong{display:block;margin-top:8px;line-height:1.4;font-size:18px}.facebook p{font-size:13px;margin:8px 0 0}.note{margin-top:24px;padding:16px 0;border-top:1px solid #dedfe4}.tools{display:flex;flex-wrap:wrap;gap:18px;margin-top:20px}details{margin-top:24px}summary{cursor:pointer;padding:12px 0;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.7;color:#626774}a:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #8e1b2c;outline-offset:4px}.error{color:#a9182a}a[hidden],section[hidden]{display:none}@media(max-width:640px){.grid{grid-template-columns:1fr;gap:24px}main{padding:20px 16px 40px}h1{font-size:26px}header span{font-size:12px}}
+  </style>
+</head>
+<body><main>
+  <header><strong>JOY CLUB</strong><span>本地预览 · 未上线</span></header>
+  <h1>让每一场比赛，有自己的分享名片。</h1>
+  <p>使用真实赛事的 banner、名称、门店当地时间和门店名称。下方为展示模拟，不是平台实际截图；最终排版及缓存以微信 / Facebook 为准。</p>
+  <label for="event">选择赛事</label>
+  <select id="event"><option value="FD1D51AD">学生赛 · 18 Oct 2026</option><option value="EE312D8C">周赛 · 22 Oct 2026</option><option value="1795A4F2">U21 公开赛</option></select>
+  <p id="notice" role="status">正在读取分享信息…</p>
+  <section class="grid" id="results" hidden>
+    <div><h2>微信 · 链接卡片模拟</h2><div class="chat"><a class="wechat target"><div><strong class="title"></strong><p class="description"></p></div><div class="image-slot"></div></a></div></div>
+    <div><h2>Facebook · 链接预览模拟</h2><a class="facebook target"><div class="image-slot"></div><div class="caption"><small>CLUB.JOYBILLIARDS.CO.NZ</small><strong class="title"></strong><p class="description"></p></div></a></div>
+  </section>
+  <div class="tools"><a id="detail" hidden>打开原赛事详情及报名页</a><a id="source" target="_blank" rel="noopener" hidden>查看带分享信息的网页</a></div>
+  <details><summary>检查实际分享数据</summary><pre id="metadata">请选择赛事。</pre></details>
+  <p class="note">微信通常使用小图，Facebook 通常使用大图；长标题和描述可能被平台截断。此改动只补充分享信息，报名、支付和返回赛事的地址不变。本地地址无法供平台公开抓取，上线后再完成真实分享验收。</p>
+</main>
+<script type="module">
+  const select = document.querySelector('#event'), notice = document.querySelector('#notice');
+  let request = 0;
+  async function load() {
+    const seq = ++request, path = `/app/e/${select.value}`;
+    notice.textContent = '正在读取分享信息…';
+    document.querySelector('#results').hidden = true;
+    for (const id of ['detail', 'source']) document.getElementById(id).hidden = true;
+    try {
+      const response = await fetch(path, {cache:'no-store'});
+      const html = await response.text();
+      if (seq !== request) return;
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const get = name => doc.querySelector(`meta[property="${name}"]`)?.content || '';
+      const data = {title:get('og:title'), description:get('og:description'), image:get('og:image'), url:get('og:url')};
+      if (!data.title || !data.image || !data.description) throw new Error('metadata');
+      for (const element of document.querySelectorAll('.title')) element.textContent = data.title;
+      for (const element of document.querySelectorAll('.description')) element.textContent = data.description;
+      for (const slot of document.querySelectorAll('.image-slot')) {
+        const image = document.createElement('img'); image.src = data.image; image.alt = data.title;
+        slot.replaceChildren(image);
+      }
+      for (const element of document.querySelectorAll('.target')) element.href = path;
+      for (const id of ['detail','source']) {document.getElementById(id).href = path;document.getElementById(id).hidden = false;}
+      document.querySelector('#metadata').textContent = JSON.stringify(data, null, 2);
+      document.querySelector('#results').hidden = false;
+      notice.textContent = '分享信息已载入 · 点击预览卡片仍进入原赛事页面。';
+    } catch {
+      if (seq !== request) return;
+      notice.textContent = '分享信息暂未载入，请重新选择赛事重试。原报名功能不受影响。';
+    }
+  }
+  select.addEventListener('change', load); load();
+</script>
+</body></html>

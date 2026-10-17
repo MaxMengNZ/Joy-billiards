@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
+import { eventShareDev } from './server/eventShareDev.js'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
@@ -287,7 +288,7 @@ function spotifyDevProxies() {
 }
 
 export default defineConfig({
-  plugins: [vue(), spotifyDevProxies()],
+  plugins: [vue(), spotifyDevProxies(), eventShareDev(loadEnv)],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
