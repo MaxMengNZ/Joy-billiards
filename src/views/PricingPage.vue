@@ -39,9 +39,8 @@
         </div>
         <aside class="visit-card">
           <p class="eyebrow">PLAN YOUR VISIT</p><h2>{{ isZh ? '今天来打一场' : 'Come play today' }}</h2>
-          <div><span>{{ isZh ? '周一至周四' : 'Mon – Thu' }}</span><strong>12:30 PM – 1:00 AM</strong></div>
-          <div><span>{{ isZh ? '周五至周六' : 'Fri – Sat' }}</span><strong>12:30 PM – 2:00 AM</strong></div>
-          <div><span>{{ isZh ? '周日' : 'Sunday' }}</span><strong>12:30 PM – 1:00 AM</strong></div>
+          <div><span>{{ isZh ? '周日至周三' : 'Sun – Wed' }}</span><strong>{{ isZh ? '12:30–00:00' : '12:30 PM – midnight' }}</strong></div>
+          <div><span>{{ isZh ? '周四至周六' : 'Thu – Sat' }}</span><strong>{{ isZh ? '12:30–次日01:00' : '12:30 PM – 1:00 AM' }}</strong></div>
           <a href="https://maps.google.com/?q=88+Tristram+Street+Hamilton+Central" target="_blank" rel="noopener">88 Tristram Street, Hamilton Central <b>↗</b></a>
         </aside>
       </section>
