@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T03:09:17Z",
+  "title": "Design System: JOY public club pages",
+  "extensions": {
+    "motion": [
+      { "name": "event-card-hover", "value": "transform 180ms ease-out,border-color 180ms ease-out", "purpose": "Events cards lift 3px on hover; disabled for reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "events-two-columns", "value": "1000px" },
+      { "name": "events-single-column", "value": "600px" },
+      { "name": "public-brand-compact", "value": "520px" },
+      { "name": "public-footer-stack", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Events primary link",
+      "kind": "button",
+      "refersTo": "event-primary-link",
+      "description": "Source-extracted intro action; no additional hover treatment is invented.",
+      "html": "<a class=\"ds-primary\" href=\"#schedule\">Explore the schedule <span aria-hidden=\"true\">↘</span></a>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;gap:25px;color:#fff;background:#d9212f;padding:13px 18px;min-height:46px;border-radius:12px;font:750 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-decoration:none}.ds-primary:focus-visible{outline:3px solid #d9212f;outline-offset:4px}"
+    },
+    {
+      "name": "Events secondary button",
+      "kind": "button",
+      "description": "Load more/retry button; disabled state dims and uses wait cursor.",
+      "html": "<button class=\"ds-secondary\" type=\"button\">Load more events</button>",
+      "css": ".ds-secondary{min-height:44px;border:1px solid #cec5bb;border-radius:12px;padding:0 20px;background:#fff;color:#28221f;font:700 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer}.ds-secondary:disabled{opacity:.6;cursor:wait}.ds-secondary:focus-visible{outline:3px solid #d9212f;outline-offset:4px}"
+    },
+    {
+      "name": "Event category",
+      "kind": "chip",
+      "refersTo": "event-filter-selected",
+      "description": "Pressed state is represented by aria-pressed, not by a fabricated hover state.",
+      "html": "<button class=\"ds-filter\" type=\"button\" aria-pressed=\"true\">All events</button>",
+      "css": ".ds-filter{border:1px solid #ded8d2;border-radius:12px;min-height:42px;padding:0 16px;background:#fff;color:#5e5751;font:650 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer}.ds-filter[aria-pressed=true]{background:#191719;color:#fff;border-color:#191719}.ds-filter:focus-visible{outline:3px solid #d9212f;outline-offset:4px}"
+    },
+    {
+      "name": "Venue selection",
+      "kind": "input",
+      "description": "Native select and visible label; preview includes only the local public-page styling, not inherited management focus effects.",
+      "html": "<label class=\"ds-venue\">Host venue<select><option>All venues</option></select></label>",
+      "css": ".ds-venue{display:flex;flex-direction:column;gap:7px;color:#625c57;font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-venue select{max-width:300px;min-height:44px;padding:0 35px 0 13px;border:1px solid #d8d1c9;border-radius:12px;background:#fff;color:#272320;font-family:inherit}.ds-venue select:focus-visible{outline:3px solid #d9212f;outline-offset:4px}"
+    },
+    {
+      "name": "Event card shell",
+      "kind": "card",
+      "refersTo": "event-card",
+      "description": "Text-only preview of the card shell; campaign imagery is live event data, not bundled example art.",
+      "html": "<a class=\"ds-card\" href=\"#event\"><div class=\"ds-card-copy\"><h4>Event name</h4><p>Venue local date and time</p></div></a>",
+      "css": ".ds-card{display:flex;flex-direction:column;border:1px solid #e2ddd7;border-radius:16px;background:#fff;overflow:hidden;color:#191817;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 180ms ease-out,border-color 180ms ease-out}.ds-card:hover{transform:translateY(-3px);border-color:#c9afa0}.ds-card-copy{padding:20px}.ds-card h4{font-size:17px;line-height:1.4;letter-spacing:-.015em;margin:0 0 16px}.ds-card p{font-size:12px;margin:0}.ds-card:focus-visible{outline:3px solid #d9212f;outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-card{transition:none}.ds-card:hover{transform:none}}"
+    },
+    {
+      "name": "Public navigation",
+      "kind": "nav",
+      "description": "Existing public navigation link treatment; current page uses the active class.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Public navigation\"><a href=\"#pricing\">Pricing</a><a href=\"#membership\">Membership</a><a class=\"ds-active\" href=\"#events\" aria-current=\"page\">Events</a><button type=\"button\">中文</button></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:6px}.ds-nav a,.ds-nav button{min-height:38px;padding:0 13px;border:0;border-radius:12px;background:transparent;color:#5d5b59;font:700 12px/38px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-decoration:none;white-space:nowrap}.ds-nav a.ds-active{background:#f4e8e7;color:#c9202d}.ds-nav button{border:1px solid #dedbd7;background:#fff;cursor:pointer}.ds-nav :is(a,button):focus-visible{outline:3px solid #d9212f;outline-offset:4px}@media(max-width:520px){.ds-nav a,.ds-nav button{padding:0 10px;font-size:11px}}"
+    }
+  ]
+}

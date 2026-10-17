@@ -10,6 +10,7 @@ const clubPublicPaths = [
   /^\/$/,
   /^\/pricing$/,
   /^\/membership$/,
+  /^\/events$/,
   /^\/app\/player\/[^/]+$/,
   /^\/app\/monthly-honours$/,
   /^\/app\/annual-honours$/,
@@ -171,6 +172,12 @@ const routes = [
     meta: { title: 'Pricing & Services' }
   },
   {
+    path: '/events',
+    name: 'PublicEvents',
+    component: () => import('../views/PublicEventsPage.vue'),
+    meta: { title: 'Events' }
+  },
+  {
     path: '/share/player/:token',
     name: 'SecureSharedPlayer',
     component: () => import('../views/AppSharePage.vue'),
@@ -281,6 +288,9 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
+    if (to.path === '/events' && to.hash === '#event-list') {
+      return { el: '#event-list', top: 24, behavior: 'smooth' }
+    }
     // Always scroll to top when navigating to a new page
     if (savedPosition) {
       return savedPosition

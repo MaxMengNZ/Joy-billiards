@@ -7,6 +7,7 @@
     <nav aria-label="Public navigation">
       <router-link to="/pricing">{{ isZh ? '价格' : 'Pricing' }}</router-link>
       <router-link to="/membership">{{ isZh ? '会员' : 'Membership' }}</router-link>
+      <router-link to="/events">{{ isZh ? '赛事' : 'Events' }}</router-link>
       <button type="button" @click="toggleLocale" :aria-label="isZh ? 'Switch to English' : '切换到中文'">{{ isZh ? 'EN' : '中文' }}</button>
     </nav>
   </header>
