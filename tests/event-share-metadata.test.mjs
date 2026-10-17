@@ -68,4 +68,8 @@ test('routing changes only the two event links; payment return query is not part
   const eventRules=config.rewrites.filter(rule=>rule.source.startsWith('/app/'));
   assert.deepEqual(eventRules,[{source:'/app/e/:reference',destination:'/api/event-share/e/:reference'},{source:'/app/event/:id',destination:'/api/event-share/event/:id'}]);
   assert.equal(config.functions['api/event-share/*.js'].includeFiles,'dist/index.html');
+  const fallback=config.rewrites.find(rule=>rule.destination==='/index.html');
+  const matcher=new RegExp(`^${fallback.source}$`);
+  assert.equal(matcher.test('/api/event-share/e/FD1D51AD'),false);
+  for(const path of ['/','/events','/join','/pricing','/membership','/verify-email']) assert.equal(matcher.test(path),true);
 });

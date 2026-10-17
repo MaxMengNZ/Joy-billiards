@@ -8,9 +8,8 @@
   "rewrites": [
     { "source": "/app/e/:reference", "destination": "/api/event-share/e/:reference" },
     { "source": "/app/event/:id", "destination": "/api/event-share/event/:id" },
-    { "source": "/api/event-share/:path*", "destination": "/api/event-share/:path*" },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/event-share/).*)",
       "destination": "/index.html"
     }
   ],
