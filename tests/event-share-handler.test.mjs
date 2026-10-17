@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import handler from '../api/event-share/[...path].js';
+import handler from '../api/event-share.js';
 
 const event={id:'5d14d9e5-799b-4ea0-837d-6d6397974a15',name:'Handler test',status:'registration',start_date:'2026-10-18T02:00:00Z',share_code:'FD1D51AD',venue_id:'hamilton-central',event_options:{}};
 const response=()=>({headers:{},setHeader(key,value){this.headers[key]=value;},end(body=''){this.body=body;}});
@@ -10,9 +10,9 @@ test('production adapter keeps checkout query in browser, emits no redirect or p
   process.env.VITE_SUPABASE_URL='https://example.supabase.co';process.env.VITE_SUPABASE_ANON_KEY='test-public';
   globalThis.fetch=async(url)=>Response.json([String(url).includes('/tournaments?')?event:{name:'JOY Hamilton',timezone:'Pacific/Auckland'}]);
   try{
-    for(const path of ['/api/event-share/e/FD1D51AD','/app/e/FD1D51AD']){
+    for(const path of ['/api/event-share','/app/e/FD1D51AD']){
       const res=response();
-      await handler({url:`${path}?payment=success&checkout_session_id=cs_live_0123456789abcdef`,method:'GET',headers:{}},res);
+      await handler({url:`${path}?payment=success&checkout_session_id=cs_live_0123456789abcdef`,query:{eventKind:'e',eventRef:'FD1D51AD'},method:'GET',headers:{}},res);
       assert.equal(res.statusCode,200);assert.equal(res.headers.Location,undefined);
       assert.equal(res.headers['Vercel-CDN-Cache-Control'],undefined);
       assert.match(res.body,/og:title" content="Handler test/);

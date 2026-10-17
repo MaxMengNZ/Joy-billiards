@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { eventShareHtml } from '../../server/eventShareMetadata.js';
+import { eventShareHtml, eventShareTarget } from '../server/eventShareMetadata.js';
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -13,9 +13,20 @@ export default async function handler(req, res) {
   try {
     const template = await readFile(join(process.cwd(), 'dist/index.html'), 'utf8');
     const url = new URL(req.url, 'https://club.joybilliards.co.nz');
-    const result = await eventShareHtml(template, url.pathname, process.env);
+    let pathname = url.pathname;
+    if (!eventShareTarget(pathname) && pathname === '/api/event-share') {
+      const kind = req.query?.eventKind ?? url.searchParams.get('eventKind');
+      const reference = req.query?.eventRef ?? url.searchParams.get('eventRef');
+      if (typeof kind === 'string' && typeof reference === 'string') {
+        const candidate = `/app/${kind}/${reference}`;
+        if (eventShareTarget(candidate)) pathname = candidate;
+      }
+    }
+    const result = await eventShareHtml(template, pathname, process.env);
+    const publicQuery = new URLSearchParams(url.search);
+    publicQuery.delete('eventKind'); publicQuery.delete('eventRef');
     // Public title/banner only; never CDN-cache checkout returns, auth queries or cookies.
-    if (result.enriched && !url.search && !req.headers?.cookie && !req.headers?.authorization) {
+    if (result.enriched && !publicQuery.size && !req.headers?.cookie && !req.headers?.authorization) {
       res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
     }
     if (!result.enriched) console.warn('event-share: serving unchanged page without event metadata');
